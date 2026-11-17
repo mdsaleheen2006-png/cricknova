@@ -1386,12 +1386,14 @@ input:checked + .slider:before {
     box-sizing: border-box !important;
   }
   .aviator-main-area {
+    order: 1 !important;
     width: 100% !important;
   }
   .aviator-stage {
     width: 100% !important;
     max-width: 100% !important;
     min-height: 220px !important;
+    height: 220px !important;
   }
   .aviator-canvas {
     width: 100% !important;
@@ -1400,7 +1402,7 @@ input:checked + .slider:before {
     display: block !important;
   }
   .aviator-center-mult {
-    font-size: 42px !important;
+    font-size: 38px !important;
   }
   .aviator-control-deck {
     display: flex !important;
@@ -1409,8 +1411,9 @@ input:checked + .slider:before {
     width: 100% !important;
   }
   .aviator-players-stream {
-    order: 10 !important;
+    order: 2 !important;
     width: 100% !important;
+    min-height: auto !important;
     max-height: 200px !important;
     box-sizing: border-box !important;
   }

@@ -251,22 +251,42 @@
     /* ========================================================== */
     .aviator-hud {
       display: grid;
-      grid-template-columns: 240px 1fr;
-      gap: 12px;
+      grid-template-columns: 280px 1fr;
+      grid-template-areas: "sidebar main";
+      gap: 14px;
       background: #090e18;
       border: 1px solid var(--border-light);
       border-radius: 12px;
       overflow: hidden;
-      padding: 12px;
+      padding: 14px;
       margin-bottom: 20px;
       width: 100%;
+      box-sizing: border-box;
+    }
+
+    .aviator-players-stream {
+      grid-area: sidebar;
+      background: #060a12;
+      border: 1px solid var(--border-dark);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 11px;
+      height: 100%;
+      min-height: 480px;
+      max-height: 560px;
+      overflow-y: auto;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .aviator-main-area {
+      grid-area: main;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
     }
 
     .aviator-stage {
@@ -274,9 +294,11 @@
       background: radial-gradient(circle at 10% 90%, #1e1b4b 0%, #030712 70%);
       border: 1px solid #1e293b;
       border-radius: 8px;
-      min-height: 240px;
+      min-height: 350px;
+      height: 350px;
       overflow: hidden;
       width: 100%;
+      box-sizing: border-box;
     }
 
     .aviator-history-ribbon {
@@ -305,7 +327,7 @@
 
     .aviator-canvas {
       width: 100%;
-      height: 240px;
+      height: 350px;
       display: block;
     }
 
@@ -314,10 +336,10 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 52px;
+      font-size: 58px;
       font-weight: 900;
       color: #fff;
-      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.95);
       letter-spacing: 1px;
       z-index: 5;
       text-align: center;
@@ -327,19 +349,21 @@
     .aviator-control-deck {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      gap: 12px;
       width: 100%;
+      box-sizing: border-box;
     }
 
     .aviator-bet-box {
       background: #091120;
       border: 1px solid var(--border-light);
       border-radius: 8px;
-      padding: 10px 12px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
       width: 100%;
+      box-sizing: border-box;
     }
 
     .chip-btn-deck {
@@ -349,7 +373,7 @@
 
     .chip-btn {
       flex: 1;
-      padding: 4px 0;
+      padding: 5px 0;
       background: #0f1c33;
       border: 1px solid var(--border-dark);
       border-radius: 4px;
@@ -381,17 +405,6 @@
       color: #000;
       box-shadow: 0 4px 14px rgba(245, 166, 35, 0.4);
       animation: pulse 1s infinite;
-    }
-
-    .aviator-players-stream {
-      background: #060a12;
-      border: 1px solid var(--border-dark);
-      border-radius: 8px;
-      padding: 8px 10px;
-      font-size: 11px;
-      max-height: 380px;
-      overflow-y: auto;
-      width: 100%;
     }
 
     .player-bet-row {
@@ -689,9 +702,9 @@
     }
 
     /* ========================================================== */
-    /* 3. STRICT MOBILE RESPONSIVE MEDIA QUERIES (<= 768px)      */
+    /* 3. STRICT MOBILE RESPONSIVE MEDIA QUERIES (<= 860px)      */
     /* ========================================================== */
-    @media (max-width: 768px) {
+    @media (max-width: 860px) {
       .casino-arena-container {
         padding: 4px 6px 84px !important;
         width: 100% !important;
@@ -719,12 +732,14 @@
       }
 
       .aviator-main-area {
+        order: 1 !important;
         width: 100% !important;
       }
 
       .aviator-stage {
         width: 100% !important;
         min-height: 220px !important;
+        height: 220px !important;
         border-radius: 6px !important;
       }
 
@@ -734,19 +749,19 @@
       }
 
       .aviator-center-mult {
-        font-size: 42px !important;
+        font-size: 38px !important;
       }
 
       .aviator-control-deck {
-        display: flex !important;
-        flex-direction: column !important;
+        grid-template-columns: 1fr !important;
         gap: 8px !important;
         width: 100% !important;
       }
 
       .aviator-players-stream {
-        order: 10 !important;
+        order: 2 !important;
         width: 100% !important;
+        min-height: auto !important;
         max-height: 200px !important;
       }
 
@@ -1789,7 +1804,7 @@
     function resizeAviatorCanvas() {
       if (aviatorCanvas && aviatorCanvas.parentElement) {
         aviatorCanvas.width = aviatorCanvas.parentElement.clientWidth || 360;
-        aviatorCanvas.height = 240;
+        aviatorCanvas.height = aviatorCanvas.parentElement.clientHeight || (window.innerWidth <= 860 ? 220 : 350);
       }
     }
     window.addEventListener('resize', resizeAviatorCanvas);
