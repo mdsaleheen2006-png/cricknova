@@ -549,13 +549,22 @@
           document.getElementById('reg-phone-step').style.display = 'none';
           document.getElementById('reg-verify-step').style.display = 'block';
           const msgEl = document.getElementById('reg-otp-msg');
-          if (data.sms_provider === 'demo') {
-            if (msgEl) msgEl.innerHTML = `⚡ Demo Mode Active (No live API key set yet). Test OTP is <strong style="color: var(--winbuzz-gold);">${data.test_otp || '123456'}</strong>`;
-            document.getElementById('reg-otp').value = data.test_otp || '123456';
+          document.getElementById('reg-otp').value = '';
+          document.getElementById('reg-otp').placeholder = 'Enter 6-digit OTP';
+          document.getElementById('reg-otp').focus();
+
+          if (data.sms_status === 'error') {
+            if (msgEl) {
+              msgEl.style.border = '1px solid #f59e0b';
+              msgEl.style.background = 'rgba(245, 158, 11, 0.15)';
+              msgEl.innerHTML = `⚠️ <strong>Fast2SMS Gateway Notice:</strong> ${data.gateway_message || 'Please check Fast2SMS balance/template'}.<br><span style="font-size: 10px; color: #fcd34d;">Enter the 6-digit OTP received on WhatsApp:</span>`;
+            }
           } else {
-            if (msgEl) msgEl.innerHTML = `📲 <strong>WhatsApp OTP Sent!</strong> A 6-digit code has been delivered to your WhatsApp <strong>+91 ${mobile}</strong>. Check your WhatsApp!`;
-            document.getElementById('reg-otp').value = '';
-            document.getElementById('reg-otp').focus();
+            if (msgEl) {
+              msgEl.style.border = '1px solid var(--color-green)';
+              msgEl.style.background = 'rgba(0, 230, 118, 0.12)';
+              msgEl.innerHTML = `📲 <strong>WhatsApp OTP Sent!</strong> A 6-digit code has been delivered to your WhatsApp <strong>+91 ${mobile}</strong>. Check your WhatsApp!`;
+            }
           }
           document.getElementById('reg-pwd').focus();
         } else {
@@ -624,13 +633,13 @@
         if (res.ok) {
           document.getElementById('otp-phone-step').style.display = 'none';
           document.getElementById('otp-verify-step').style.display = 'block';
-          if (data.sms_provider === 'demo') {
-            document.getElementById('otp-code').value = data.test_otp || '123456';
+          document.getElementById('otp-code').value = '';
+          document.getElementById('otp-code').placeholder = 'Enter 6-digit OTP';
+          document.getElementById('otp-code').focus();
+          if (data.sms_status === 'error') {
+            alert(`⚠️ Fast2SMS Notice: ${data.gateway_message || 'Please check Fast2SMS settings in Admin panel'}.`);
           } else {
             alert(`📲 WhatsApp OTP Sent! A 6-digit code has been delivered to your WhatsApp (+91 ${mobile}).`);
-            document.getElementById('otp-code').value = '';
-            document.getElementById('otp-code').placeholder = 'Enter 6-digit OTP';
-            document.getElementById('otp-code').focus();
           }
         } else {
           alert('❌ ' + (data.detail || 'Failed to send OTP'));

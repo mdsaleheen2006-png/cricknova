@@ -953,21 +953,44 @@ def send_sms_otp(mobile: str, otp: str) -> Dict[str, Any]:
 
             # 3. Direct Fast2SMS OTP Route
             try:
-                url = f"https://www.fast2sms.com/dev/bulkV2?authorization={api_key}&variables_values={otp}&route=otp&numbers={mobile}"
-                req = urllib.request.Request(url, headers={"User-Agent": "CrickNova/1.0"})
+                url = "https://www.fast2sms.com/dev/bulkV2"
+                payload = json.dumps({
+                    "route": "otp",
+                    "variables_values": otp,
+                    "numbers": mobile
+                }).encode("utf-8")
+                req = urllib.request.Request(url, data=payload, headers={"authorization": api_key, "Content-Type": "application/json", "User-Agent": "CrickNova/1.0"}, method="POST")
                 with urllib.request.urlopen(req, timeout=7) as resp:
                     res_body = resp.read().decode()
                     print(f"[Fast2SMS OTP Route Response]: {res_body}")
                     return {"status": "sent", "channel": "otp_route", "provider": "fast2sms", "response": res_body}
-            except Exception as otp_err:
-                print(f"[Fast2SMS OTP Route Error, trying Quick route]: {otp_err}")
+            except urllib.error.HTTPError as otp_err:
+                err_text = otp_err.read().decode("utf-8") if hasattr(otp_err, "read") else str(otp_err)
+                print(f"[Fast2SMS OTP Route Error, trying Quick route]: {err_text}")
                 # 4. Fast2SMS Quick Route (route=q)
-                url = f"https://www.fast2sms.com/dev/bulkV2?authorization={api_key}&message=Your+CrickNova+verification+code+is+{otp}.+Do+not+share+it.&language=english&route=q&numbers={mobile}"
-                req = urllib.request.Request(url, headers={"User-Agent": "CrickNova/1.0"})
-                with urllib.request.urlopen(req, timeout=7) as resp:
-                    res_body = resp.read().decode()
-                    print(f"[Fast2SMS Quick Route Response]: {res_body}")
-                    return {"status": "sent", "channel": "quick_sms", "provider": "fast2sms", "response": res_body}
+                try:
+                    url = "https://www.fast2sms.com/dev/bulkV2"
+                    payload = json.dumps({
+                        "route": "q",
+                        "message": f"Your CrickNova verification code is {otp}. Do not share it.",
+                        "language": "english",
+                        "flash": 0,
+                        "numbers": mobile
+                    }).encode("utf-8")
+                    req = urllib.request.Request(url, data=payload, headers={"authorization": api_key, "Content-Type": "application/json", "User-Agent": "CrickNova/1.0"}, method="POST")
+                    with urllib.request.urlopen(req, timeout=7) as resp:
+                        res_body = resp.read().decode()
+                        print(f"[Fast2SMS Quick Route Response]: {res_body}")
+                        return {"status": "sent", "channel": "quick_sms", "provider": "fast2sms", "response": res_body}
+                except urllib.error.HTTPError as q_err:
+                    q_text = q_err.read().decode("utf-8") if hasattr(q_err, "read") else str(q_err)
+                    print(f"[Fast2SMS Quick Route Error]: {q_text}")
+                    try:
+                        q_json = json.loads(q_text)
+                        clean_msg = q_json.get("message") or q_text
+                    except Exception:
+                        clean_msg = q_text
+                    return {"status": "error", "provider": "fast2sms", "message": f"{clean_msg}"}
 
         elif provider == "authkey":
             url = f"https://api.authkey.io/request?authkey={api_key}&mobile={mobile}&country_code=91&sid=1001&otp={otp}"
@@ -986,7 +1009,7 @@ def send_sms_otp(mobile: str, otp: str) -> Dict[str, Any]:
                 return {"status": "sent", "provider": "2factor", "response": res_body}
     except Exception as e:
         print(f"[SMS Gateway Error]: {e}")
-        return {"status": "error", "error": str(e), "message": f"Gateway error: {e}"}
+        return {"status": "error", "provider": "fast2sms", "message": f"Gateway error: {e}"}
 
     return {"status": "simulated", "message": f"OTP is {otp}"}
 
@@ -1015,15 +1038,16 @@ async def send_otp(request: Request):
     user_exists = mobile in users
     has_password = bool(users.get(mobile, {}).get("password_hash")) if user_exists else False
 
+    # SECURE: NEVER return test_otp to the client browser!
     return JSONResponse(content={
         "status": "success",
         "message": f"OTP sent to +91 {mobile} successfully!",
         "mobile": mobile,
         "user_exists": user_exists,
         "has_password": has_password,
-        "sms_provider": sms_res.get("provider", "demo"),
+        "sms_provider": sms_res.get("provider", "fast2sms"),
         "sms_status": sms_res.get("status"),
-        "test_otp": otp
+        "gateway_message": sms_res.get("message", "")
     })
 
 @app.post("/api/auth/register")
@@ -1042,13 +1066,13 @@ async def register_user(request: Request):
     # OTP verification
     record = OTP_STORE.get(mobile)
     is_valid = False
-    if otp == "123456":
-        is_valid = True
+    if mobile == "9876543210" and otp == "123456":
+        is_valid = True  # Allowed only for public demo test account
     elif record and record.get("otp") == otp and time.time() < record.get("expires_at", 0):
         is_valid = True
 
     if not is_valid:
-        raise HTTPException(status_code=400, detail="Invalid or expired OTP code. Please enter the correct OTP or test OTP 123456.")
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP code. Please enter the correct 6-digit OTP sent to your WhatsApp.")
 
     all_data = load_all_user_data()
     users = all_data.setdefault("users", {})
@@ -1145,13 +1169,13 @@ async def verify_otp(request: Request):
 
     record = OTP_STORE.get(mobile)
     is_valid = False
-    if otp == "123456":
-        is_valid = True
+    if mobile == "9876543210" and otp == "123456":
+        is_valid = True  # Allowed only for public demo test account
     elif record and record.get("otp") == otp and time.time() < record.get("expires_at", 0):
         is_valid = True
 
     if not is_valid:
-        raise HTTPException(status_code=400, detail="Invalid OTP code. Please check or use demo OTP 123456.")
+        raise HTTPException(status_code=400, detail="Invalid OTP code. Please enter the correct code received on WhatsApp.")
 
     all_data = load_all_user_data()
     users = all_data.setdefault("users", {})
