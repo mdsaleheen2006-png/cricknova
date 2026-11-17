@@ -923,7 +923,7 @@ def send_sms_otp(mobile: str, otp: str) -> Dict[str, Any]:
         if provider in ["fast2sms", "fast2sms_whatsapp"]:
             # FAST2SMS OFFICIAL WHATSAPP API ONLY (Cost: ~₹0.40 / Zero expensive SMS fallback)
             whatsapp_phone_id = str(sms_cfg.get("whatsapp_phone_number_id") or "1324823784037087").strip()
-            whatsapp_msg_id = str(sms_cfg.get("whatsapp_message_id") or "45194").strip()
+            whatsapp_msg_id = str(sms_cfg.get("whatsapp_message_id") or "45196").strip()
 
             if whatsapp_phone_id and whatsapp_msg_id:
                 try:
