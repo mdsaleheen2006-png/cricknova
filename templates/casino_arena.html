@@ -859,14 +859,21 @@
           <div class="poker-chip chip-5k" onclick="selectActiveChip(5000, this)">₹5k</div>
         </div>
 
-        <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
-          <button class="btn-action-gold" style="padding: 13px 40px; font-size: 14px; font-weight: 900; letter-spacing: 1px;" onclick="dealDragonTigerRound()">
-            ⚡ DEAL DRAGON & TIGER
+        <!-- Total Bet & Live Actions (100% Automated Rounds) -->
+        <div style="display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap;">
+          <div style="font-size: 13px; font-weight: 900; color: #fff; background: rgba(0,0,0,0.65); padding: 9px 18px; border-radius: 6px; border: 1px solid rgba(255,215,0,0.4);">
+            TOTAL BET: <strong id="dt-total-bet-val" style="color: #ffd700; font-size: 16px;">₹0</strong>
+          </div>
+          <button class="btn-table-action" style="padding: 9px 20px; font-weight: 800; background: rgba(239,68,68,0.15); border: 1px solid #ef4444; color: #ef4444;" onclick="clearDtBets()">
+            CLEAR
           </button>
-          <button class="btn-table-action" onclick="clearDtBets()">CLEAR</button>
+          <button id="btn-dt-rebet" class="btn-table-action" style="padding: 9px 20px; font-weight: 800; background: rgba(245,166,35,0.15); border: 1px solid #ffd700; color: #ffd700;" onclick="rebetDtBets()">
+            🔁 REBET
+          </button>
         </div>
-        <div id="dt-status-text" style="font-size: 12.5px; font-weight: 900; color: #ffd700; text-align: center; margin-top: 10px;">
-          Place bets on Dragon (1.95x), Tiger (1.95x), Tie (9x) or Suited Tie (50x)
+
+        <div id="dt-status-text" style="font-size: 13.5px; font-weight: 900; color: #4ade80; text-align: center; margin-top: 12px; min-height: 26px; padding: 6px; background: rgba(0,0,0,0.4); border-radius: 6px; border: 1px solid #1e293b;">
+          🟢 PLACE YOUR BETS (Auto-deals in 15s • Bets lock in last 2s)
         </div>
       </div>
     </div>
@@ -1515,46 +1522,146 @@
 
     // 4. DRAGON TIGER ENGINE
     
-    // ==================== DRAGON TIGER LIVE ENGINE (MACAU STUDIO) ====================
+    // ==================== DRAGON TIGER LIVE ENGINE (100% AUTOMATED MACAU STUDIO) ====================
     let dtBets = { dragon: 0, tiger: 0, tie: 0, suited_tie: 0, d_odd: 0, d_even: 0, t_odd: 0, t_even: 0 };
+    let dtPreviousBets = {};
     let dtStats = { d: 8, t: 6, tie: 2 };
+    let dtSecondsRemaining = 15;
+    let dtPhase = 'BETTING'; // 'BETTING', 'LOCKED', 'DEALING', 'RESULT'
+    let dtTimerHandle = null;
     const DT_SUITS = ['♠', '♥', '♣', '♦'];
     const DT_RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
+    function startDragonTigerLoop() {
+      if (dtTimerHandle) clearInterval(dtTimerHandle);
+      dtSecondsRemaining = 15;
+      dtPhase = 'BETTING';
+      updateDtTimerUI();
+
+      dtTimerHandle = setInterval(() => {
+        dtSecondsRemaining--;
+        updateDtTimerUI();
+
+        if (dtSecondsRemaining <= 0) {
+          clearInterval(dtTimerHandle);
+          dtTimerHandle = null;
+          dtPhase = 'DEALING';
+          autoDealDragonTigerRound();
+        }
+      }, 1000);
+    }
+
+    function updateDtTimerUI() {
+      const badge = document.getElementById('dt-timer-badge');
+      const statusEl = document.getElementById('dt-status-text');
+
+      if (dtSecondsRemaining > 2) {
+        dtPhase = 'BETTING';
+        if (badge) {
+          badge.style.background = 'rgba(34, 197, 94, 0.2)';
+          badge.style.borderColor = '#22c55e';
+          badge.style.color = '#4ade80';
+          badge.innerHTML = `⏱️ ${dtSecondsRemaining}s`;
+        }
+        if (statusEl) {
+          statusEl.innerHTML = `<span style="color:#4ade80;">🟢 PLACE YOUR BETS (Auto-deals in ${dtSecondsRemaining}s • Bets lock at 2s)</span>`;
+        }
+      } else if (dtSecondsRemaining > 0) {
+        // STRICT LOCK: Last 2 seconds (No bets accepted!)
+        dtPhase = 'LOCKED';
+        if (badge) {
+          badge.style.background = 'rgba(239, 68, 68, 0.3)';
+          badge.style.borderColor = '#ef4444';
+          badge.style.color = '#ef4444';
+          badge.innerHTML = `🛑 BETS CLOSED`;
+        }
+        if (statusEl) {
+          statusEl.innerHTML = `<span style="color:#ef4444; font-size:14px; font-weight:900;">🛑 BETS CLOSED • NO MORE BETS FOR THIS ROUND</span>`;
+        }
+      } else {
+        dtPhase = 'DEALING';
+        if (badge) {
+          badge.style.background = 'rgba(245, 166, 35, 0.3)';
+          badge.style.borderColor = '#ffd700';
+          badge.style.color = '#ffd700';
+          badge.innerHTML = `⏳ DEALING`;
+        }
+        if (statusEl) {
+          statusEl.innerHTML = `<span style="color:#ffd700;">⏳ DEALING CARDS FROM SHOE...</span>`;
+        }
+      }
+    }
+
     function placeDtBet(side) {
+      // Reject any bet during last 2 seconds or during dealing
+      if (dtPhase !== 'BETTING' || dtSecondsRemaining <= 2) {
+        const statusEl = document.getElementById('dt-status-text');
+        if (statusEl) {
+          statusEl.innerHTML = '<span style="color:#ef4444; font-size:13px; font-weight:900;">⚠️ BETS ARE CLOSED FOR THIS ROUND! PLEASE WAIT FOR NEXT ROUND.</span>';
+        }
+        return;
+      }
       playCardSound();
       dtBets[side] = (dtBets[side] || 0) + abActiveChip;
       const el = document.getElementById(`dt-bet-${side}`);
       if (el) el.innerText = `₹${dtBets[side]}`;
+      updateDtTotalBetDisplay();
     }
 
     function clearDtBets() {
+      if (dtPhase !== 'BETTING' || dtSecondsRemaining <= 2) return;
       for (let k in dtBets) {
         dtBets[k] = 0;
         const el = document.getElementById(`dt-bet-${k}`);
         if (el) el.innerText = '₹0';
       }
+      updateDtTotalBetDisplay();
     }
 
-    async function dealDragonTigerRound() {
-      let totalStake = 0;
-      for (let k in dtBets) totalStake += dtBets[k];
-      if (totalStake <= 0) {
-        alert('Please place a bet on Dragon (1.95x), Tiger (1.95x), Tie (9x) or Side Bets!');
+    function rebetDtBets() {
+      if (dtPhase !== 'BETTING' || dtSecondsRemaining <= 2) {
+        alert('Bets are closed for this round!');
         return;
       }
+      let hasRebet = false;
+      for (let k in dtPreviousBets) {
+        if (dtPreviousBets[k] > 0) {
+          dtBets[k] = dtPreviousBets[k];
+          const el = document.getElementById(`dt-bet-${k}`);
+          if (el) el.innerText = `₹${dtBets[k]}`;
+          hasRebet = true;
+        }
+      }
+      if (hasRebet) {
+        playCardSound();
+        updateDtTotalBetDisplay();
+      }
+    }
+
+    function updateDtTotalBetDisplay() {
+      let tot = 0;
+      for (let k in dtBets) tot += dtBets[k];
+      const el = document.getElementById('dt-total-bet-val');
+      if (el) el.innerText = `₹${tot.toLocaleString('en-IN')}`;
+    }
+
+    async function autoDealDragonTigerRound() {
+      dtPhase = 'DEALING';
+      let totalStake = 0;
+      for (let k in dtBets) totalStake += dtBets[k];
+      dtPreviousBets = Object.assign({}, dtBets);
 
       playCardSound();
       const statusEl = document.getElementById('dt-status-text');
       if (statusEl) statusEl.innerHTML = '<span style="color:#ffd700;">⏳ Dealing Dragon and Tiger from Shoe...</span>';
 
-      // Animate dealing back of cards first
+      // Dealing face-down cards
       const dCardEl = document.getElementById('card-dragon');
       const tCardEl = document.getElementById('card-tiger');
       if (dCardEl) dCardEl.innerHTML = '<div class="play-card" style="background:#1e293b; color:#ffd700; border-color:#ffd700;">🂠</div>';
       if (tCardEl) tCardEl.innerHTML = '<div class="play-card" style="background:#1e293b; color:#ffd700; border-color:#ffd700;">🂠</div>';
 
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise(r => setTimeout(r, 700));
       playCardSound();
 
       const rD = Math.floor(Math.random() * 13);
@@ -1562,15 +1669,15 @@
       const sD = DT_SUITS[Math.floor(Math.random() * 4)];
       const sT = DT_SUITS[Math.floor(Math.random() * 4)];
 
-      // Reveal Dragon
+      // Reveal Dragon card
       if (dCardEl) {
         dCardEl.innerHTML = `<div class="play-card ${['♥','♦'].includes(sD) ? 'red' : ''}" style="box-shadow: 0 4px 15px rgba(220,38,38,0.5);"><span>${DT_RANKS[rD]}</span><span>${sD}</span></div>`;
       }
 
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 600));
       playCardSound();
 
-      // Reveal Tiger
+      // Reveal Tiger card
       if (tCardEl) {
         tCardEl.innerHTML = `<div class="play-card ${['♥','♦'].includes(sT) ? 'red' : ''}" style="box-shadow: 0 4px 15px rgba(245,158,11,0.5);"><span>${DT_RANKS[rT]}</span><span>${sT}</span></div>`;
       }
@@ -1631,28 +1738,42 @@
         if (statTie) statTie.innerText = dtStats.tie;
       }
 
+      dtPhase = 'RESULT';
+
       if (totalPayout > 0) {
         playWinFanfare();
-        if (statusEl) statusEl.innerHTML = `<span style="color:#00e676; font-size:14px;">🎉 ${winSide.toUpperCase()} WINS! YOU WON ₹${totalPayout.toLocaleString('en-IN')}!</span>`;
+        if (statusEl) statusEl.innerHTML = `<span style="color:#00e676; font-size:15px; font-weight:900;">🎉 ${winSide.toUpperCase()} WINS! YOU WON ₹${totalPayout.toLocaleString('en-IN')}!</span>`;
         triggerWinCelebration(`DRAGON TIGER (${winSide.toUpperCase()})`, totalPayout, '🐉');
         fetch('/api/casino/settle', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({ game_id: 'dragon-tiger', outcome: 'WIN', stake: totalStake, payout: totalPayout })
         }).then(r => r.json()).then(d => { if (d.new_balance) updateBalanceDisplay(d.new_balance); });
-      } else {
-        if (statusEl) statusEl.innerHTML = `<span style="color:#ef4444;">Round Result: ${winSide.toUpperCase()} WINS (Dragon: ${DT_RANKS[rD]}, Tiger: ${DT_RANKS[rT]})</span>`;
+      } else if (totalStake > 0) {
+        const col = winSide === 'dragon' ? '#ef4444' : (winSide === 'tiger' ? '#f59e0b' : '#22c55e');
+        if (statusEl) statusEl.innerHTML = `<span style="color:#cbd5e1; font-size:13.5px; font-weight:900;">Result: <strong style="color:${col};">${winSide.toUpperCase()} WINS</strong> (Dragon: ${DT_RANKS[rD]}, Tiger: ${DT_RANKS[rT]})</span>`;
         fetch('/api/casino/settle', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({ game_id: 'dragon-tiger', outcome: 'LOSS', stake: totalStake, payout: 0 })
         }).then(r => r.json()).then(d => { if (d.new_balance) updateBalanceDisplay(d.new_balance); });
+      } else {
+        const col = winSide === 'dragon' ? '#ef4444' : (winSide === 'tiger' ? '#f59e0b' : '#22c55e');
+        if (statusEl) statusEl.innerHTML = `<span style="color:#cbd5e1; font-size:13.5px; font-weight:900;">Result: <strong style="color:${col};">${winSide.toUpperCase()} WINS</strong> (Dragon: ${DT_RANKS[rD]}, Tiger: ${DT_RANKS[rT]})</span>`;
       }
 
-      clearDtBets();
+      // Wait 4 seconds for display, then automatically reset and restart next round!
+      await new Promise(r => setTimeout(r, 4000));
+      for (let k in dtBets) {
+        dtBets[k] = 0;
+        const el = document.getElementById(`dt-bet-${k}`);
+        if (el) el.innerText = '₹0';
+      }
+      updateDtTotalBetDisplay();
+      startDragonTigerLoop();
     }
-
-    // ==================== LIGHTNING EUROPEAN ROULETTE 3D ENGINE ====================
+    
+// ==================== LIGHTNING EUROPEAN ROULETTE 3D ENGINE ====================
     const ROULETTE_ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const RED_NUMS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
     let rouletteBets = {};
@@ -2042,6 +2163,12 @@
         }
       } catch(e) {}
     }
+    window.addEventListener('load', () => {
+      if (typeof initRouletteBoard === 'function') { initRouletteBoard(); }
+      if (currentGameId === 'dragon-tiger' && typeof startDragonTigerLoop === 'function') {
+        startDragonTigerLoop();
+      }
+    });
   </script>
 </body>
 </html>
