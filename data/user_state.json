@@ -147,11 +147,11 @@
   "default_user_mobile": "9123456789",
   "sms_config": {
     "provider": "fast2sms",
-    "api_key": "",
+    "api_key": "xufCvAq3FjACsArkesyaZcTlMrDoxcVXLsGfIDr0sRAKDmKOhuI1m1NwoBUuyIFTmbwhBWxVzShw4qjB",
     "sender_id": "",
     "whatsapp_phone_number_id": "1324823784037087",
     "whatsapp_message_id": "45194",
     "smart_otp_id": "",
-    "updated_at": "2026-11-18 00:48:00"
+    "updated_at": "2026-11-18 01:00:00"
   }
 }

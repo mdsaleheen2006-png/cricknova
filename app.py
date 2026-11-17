@@ -964,15 +964,14 @@ def send_sms_otp(mobile: str, otp: str) -> Dict[str, Any]:
                     res_body = resp.read().decode()
                     print(f"[Fast2SMS OTP Route Response]: {res_body}")
                     return {"status": "sent", "channel": "otp_route", "provider": "fast2sms", "response": res_body}
-            except urllib.error.HTTPError as otp_err:
-                err_text = otp_err.read().decode("utf-8") if hasattr(otp_err, "read") else str(otp_err)
-                print(f"[Fast2SMS OTP Route Error, trying Quick route]: {err_text}")
+            except Exception as otp_err:
+                print(f"[Fast2SMS OTP Route fallback to Quick route]: {otp_err}")
                 # 4. Fast2SMS Quick Route (route=q)
                 try:
                     url = "https://www.fast2sms.com/dev/bulkV2"
                     payload = json.dumps({
                         "route": "q",
-                        "message": f"Your CrickNova verification code is {otp}. Do not share it.",
+                        "message": f"Your CrickNova verification code is {otp}. Do not share it with anyone.",
                         "language": "english",
                         "flash": 0,
                         "numbers": mobile
@@ -981,7 +980,7 @@ def send_sms_otp(mobile: str, otp: str) -> Dict[str, Any]:
                     with urllib.request.urlopen(req, timeout=7) as resp:
                         res_body = resp.read().decode()
                         print(f"[Fast2SMS Quick Route Response]: {res_body}")
-                        return {"status": "sent", "channel": "quick_sms", "provider": "fast2sms", "response": res_body}
+                        return {"status": "sent", "channel": "fast2sms_otp", "provider": "fast2sms", "response": res_body}
                 except urllib.error.HTTPError as q_err:
                     q_text = q_err.read().decode("utf-8") if hasattr(q_err, "read") else str(q_err)
                     print(f"[Fast2SMS Quick Route Error]: {q_text}")
