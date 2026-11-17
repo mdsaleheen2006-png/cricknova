@@ -15,45 +15,39 @@ let currentMobileBet = {
 
 // ==================== 1. DUAL PLATFORM VIEW SWITCHER ====================
 function initPlatformView() {
-  const savedView = localStorage.getItem('cricknova_view');
-  let view = 'laptop';
-
-  if (savedView === 'android' || savedView === 'laptop') {
-    view = savedView;
-  } else if (window.innerWidth <= 768) {
-    view = 'android';
+  const savedPreview = localStorage.getItem('cricknova_preview_mode');
+  if (window.innerWidth > 768 && savedPreview === 'android') {
+    document.body.classList.add('mode-android-preview');
+    updateToggleBtn(true);
   } else {
-    view = 'laptop';
+    document.body.classList.remove('mode-android-preview');
+    updateToggleBtn(false);
   }
-
-  setPlatformView(view);
-}
-
-function setPlatformView(view) {
-  const body = document.body;
-  body.classList.remove('mode-android', 'mode-laptop');
-  body.classList.add(`mode-${view}`);
-  localStorage.setItem('cricknova_view', view);
-
-  const toggleText = document.getElementById('toggle-text');
-  const toggleIcon = document.getElementById('toggle-icon');
-
-  if (view === 'android') {
-    if (toggleText) toggleText.innerText = 'Laptop View';
-    if (toggleIcon) toggleIcon.innerText = '💻';
-  } else {
-    if (toggleText) toggleText.innerText = 'Android View';
-    if (toggleIcon) toggleIcon.innerText = '📱';
-  }
-
-  // Auto scroll to top on switch
-  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 function togglePlatformView() {
-  const current = document.body.classList.contains('mode-android') ? 'android' : 'laptop';
-  const next = current === 'android' ? 'laptop' : 'android';
-  setPlatformView(next);
+  if (window.innerWidth <= 768) {
+    document.body.classList.toggle('force-desktop');
+    const isDesktop = document.body.classList.contains('force-desktop');
+    alert(isDesktop ? 'Switched to Desktop Site View' : 'Switched to Mobile App View');
+  } else {
+    document.body.classList.toggle('mode-android-preview');
+    const isPreview = document.body.classList.contains('mode-android-preview');
+    localStorage.setItem('cricknova_preview_mode', isPreview ? 'android' : 'desktop');
+    updateToggleBtn(isPreview);
+  }
+}
+
+function updateToggleBtn(isPreview) {
+  const toggleText = document.getElementById('toggle-text');
+  const toggleIcon = document.getElementById('toggle-icon');
+  if (isPreview) {
+    if (toggleText) toggleText.innerText = 'Laptop View';
+    if (toggleIcon) toggleIcon.innerText = '💻';
+  } else {
+    if (toggleText) toggleText.innerText = 'Android App View';
+    if (toggleIcon) toggleIcon.innerText = '📱';
+  }
 }
 
 // ==================== 2. ANDROID BOTTOM NAVIGATION ====================
@@ -469,12 +463,19 @@ async function completeOtpOnlyLogin() {
 }
 
 async function logoutUser() {
-  try {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    alert('Logged out successfully.');
-    window.location.reload();
-  } catch (e) {
-    window.location.reload();
+  window.location.href = '/logout';
+}
+
+function copyUpiId(upiId) {
+  if (!upiId) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(upiId).then(() => {
+      alert(`✅ UPI ID Copied!\n${upiId}\n\nOpen PhonePe / Google Pay / Paytm to pay.`);
+    }).catch(() => {
+      prompt("Copy UPI ID:", upiId);
+    });
+  } else {
+    prompt("Copy UPI ID:", upiId);
   }
 }
 
@@ -516,6 +517,11 @@ async function submitDepositRequest() {
       })
     });
     const data = await res.json();
+    if (res.status === 401) {
+      alert('⚠️ Please login first to deposit money into your account.');
+      window.location.href = '/login';
+      return;
+    }
     if (res.ok) {
       alert(`✅ Deposit Request of ₹${amount.toLocaleString('en-IN')} submitted successfully!\n\nYour request is pending in Admin Desk. Once Admin verifies, your wallet balance will be credited instantly.`);
       closeDepositModal();
@@ -725,6 +731,11 @@ async function submitMobileBet() {
       })
     });
     const data = await res.json();
+    if (res.status === 401) {
+      alert('⚠️ Please login first to place bets on CrickNova!');
+      window.location.href = '/login';
+      return;
+    }
     if (res.ok) {
       alert(`✅ Bet Placed Successfully!\n${currentMobileBet.type.toUpperCase()} on ${currentMobileBet.runner} @ ${odds}`);
       closeMobileBetSlip();
@@ -829,6 +840,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const runner = box.dataset.runner;
       const type = box.dataset.type;
       const price = box.querySelector('.m-price')?.innerText || '1.95';
+
+      if (price !== 'SUSP' && price !== '-') {
+        openMobileBetSlip(matchId, matchName, runner, type, price);
+      }
+    });
+  });
+
+  // Attach desktop click handlers for odds buttons
+  document.querySelectorAll('.odds-box').forEach(box => {
+    box.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const matchRow = box.closest('.exchange-match-row');
+      const matchName = matchRow ? (matchRow.querySelector('.match-name')?.innerText || 'Live Match') : 'Live Match';
+      const matchId = box.dataset.matchId;
+      const runner = box.dataset.runner;
+      const type = box.dataset.type;
+      const price = box.querySelector('.odds-price')?.innerText || '1.95';
 
       if (price !== 'SUSP' && price !== '-') {
         openMobileBetSlip(matchId, matchName, runner, type, price);

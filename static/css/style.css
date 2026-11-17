@@ -1308,39 +1308,191 @@ input:checked + .slider:before {
    CRICKNOVA DUAL PLATFORM: ANDROID VIEW & LAPTOP VIEW STYLES
    ======================================================== */
 
-/* DUAL VIEW DISPLAY SWITCHES */
-body.mode-laptop #android-view-container,
-body.mode-laptop .android-bottom-nav,
-body.mode-laptop .mobile-betslip-sheet {
-  display: none !important;
+/* 1. REAL MOBILE SCREENS (<= 768px):
+   ALWAYS show the full Winbuzz Android App Experience! */
+@media (max-width: 768px) {
+  .desktop-header,
+  .ticker-strip,
+  #laptop-view-container,
+  .sidebar-left,
+  .sidebar-right {
+    display: none !important;
+  }
+
+  #android-view-container {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding-bottom: 74px !important;
+  }
+
+  .android-bottom-nav {
+    display: flex !important;
+  }
+
+  body.force-desktop #android-view-container,
+  body.force-desktop .android-bottom-nav {
+    display: none !important;
+  }
+  body.force-desktop #laptop-view-container {
+    display: grid !important;
+  }
+  body.force-desktop .desktop-header {
+    display: block !important;
+  }
 }
 
-body.mode-laptop #laptop-view-container {
-  display: grid !important;
+/* 2. LAPTOP / DESKTOP SCREENS (> 768px):
+   Show the Pro 6-Column Exchange Desk by default! */
+@media (min-width: 769px) {
+  #laptop-view-container {
+    display: grid !important;
+  }
+
+  .desktop-header {
+    display: block !important;
+  }
+
+  #android-view-container,
+  .android-bottom-nav {
+    display: none !important;
+  }
+
+  /* When desktop user toggles "Preview Android App View" */
+  body.mode-android-preview #laptop-view-container,
+  body.mode-android-preview .desktop-header {
+    display: none !important;
+  }
+
+  body.mode-android-preview #android-view-container {
+    display: block !important;
+    max-width: 440px !important;
+    margin: 20px auto !important;
+    border: 2px solid var(--border-light) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 14px 45px rgba(0, 0, 0, 0.9) !important;
+    overflow: hidden !important;
+    padding-bottom: 74px !important;
+    position: relative !important;
+  }
+
+  body.mode-android-preview .android-bottom-nav {
+    display: flex !important;
+    max-width: 440px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    border-radius: 0 0 20px 20px !important;
+  }
 }
 
-body.mode-laptop .desktop-header {
-  display: block !important;
+/* WINBUZZ STYLE HEADER BUTTONS */
+.btn-winbuzz-login {
+  background: var(--winbuzz-gold);
+  color: #000;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 6px 14px;
+  border-radius: var(--radius-xs);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+}
+.btn-winbuzz-login:hover {
+  background: #e5971a;
+  box-shadow: 0 0 10px var(--winbuzz-gold-glow);
 }
 
-body.mode-android #laptop-view-container {
-  display: none !important;
+.btn-winbuzz-signup {
+  background: var(--color-green);
+  color: #000;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 6px 14px;
+  border-radius: var(--radius-xs);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+}
+.btn-winbuzz-signup:hover {
+  background: #00c853;
+  box-shadow: 0 0 10px var(--color-green-glow);
 }
 
-body.mode-android .desktop-header {
-  display: none !important;
+.btn-logout-hdr {
+  background: transparent;
+  border: 1px solid var(--color-red);
+  color: var(--color-red);
+  font-size: 10px;
+  font-weight: 900;
+  padding: 5px 8px;
+  border-radius: var(--radius-xs);
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.btn-logout-hdr:hover {
+  background: var(--color-red);
+  color: #fff;
 }
 
-body.mode-android .ticker-strip {
-  display: none !important;
+.user-badge-header {
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  padding: 4px 8px;
+  background: #0f1c30;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xs);
 }
 
-body.mode-android #android-view-container {
-  display: block !important;
+.btn-m-login {
+  background: var(--winbuzz-gold);
+  color: #000;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 3px;
+  text-decoration: none;
 }
 
-body.mode-android .android-bottom-nav {
-  display: flex !important;
+.btn-m-signup {
+  background: var(--color-green);
+  color: #000;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 3px;
+  text-decoration: none;
+}
+
+.btn-m-deposit-plus {
+  background: var(--color-green);
+  color: #000;
+  font-size: 14px;
+  font-weight: 900;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.android-btn-logout {
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+  padding: 2px 6px;
+  border: 1px solid var(--border-dark);
+  border-radius: 3px;
 }
 
 /* HEADER BUTTONS */

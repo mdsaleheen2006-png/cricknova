@@ -9,7 +9,7 @@ import hashlib
 import random
 from typing import List, Dict, Any, Optional
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
@@ -643,9 +643,31 @@ async def read_root(request: Request):
             "user": user,
             "open_bets": [b for b in user.get("bets", []) if b.get("status") == "OPEN"],
             "casino_games": CASINO_GAMES,
-            "all_users_count": len(all_data.get("users", {}))
+            "all_users_count": len(all_data.get("users", {})),
+            "payment_config": all_data.get("payment_config", {
+                "upi_id": "cricknova@upi",
+                "upi_name": "CrickNova Exchange",
+                "whatsapp_number": "919876543210"
+            })
         }
     )
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    user = get_active_user(request)
+    if not user.get("is_guest") and user.get("mobile"):
+        return RedirectResponse(url="/", status_code=302)
+    return templates.TemplateResponse(
+        request=request,
+        name="login.html",
+        context={}
+    )
+
+@app.get("/logout")
+async def logout_redirect():
+    response = RedirectResponse(url="/login?logout=1", status_code=302)
+    response.delete_cookie("cricknova_user")
+    return response
 
 @app.get("/match/{match_id}", response_class=HTMLResponse)
 async def match_detail(request: Request, match_id: str):
@@ -737,6 +759,11 @@ async def admin_portal(request: Request):
             "total_balances": round(total_balances, 2),
             "total_liabilities": round(total_liabilities, 2),
             "sms_config": all_data.get("sms_config", {"provider": "authkey", "api_key": "", "sender_id": ""}),
+            "payment_config": all_data.get("payment_config", {
+                "upi_id": "cricknova@upi",
+                "upi_name": "CrickNova Exchange",
+                "whatsapp_number": "919876543210"
+            }),
             "stats": {
                 "total_turnover": round(total_turnover, 2),
                 "total_users": len(users_list),
@@ -1112,6 +1139,25 @@ async def admin_send_test_sms(request: Request):
         "status": "success",
         "message": f"Test SMS sent to +91 {mobile} with OTP {test_otp}",
         "gateway_result": result
+    })
+
+@app.post("/api/admin/payment-config")
+async def save_payment_config(request: Request):
+    data = await request.json()
+    all_data = load_all_user_data()
+    all_data["payment_config"] = {
+        "upi_id": str(data.get("upi_id", "cricknova@upi")).strip(),
+        "upi_name": str(data.get("upi_name", "CrickNova Exchange")).strip(),
+        "whatsapp_number": str(data.get("whatsapp_number", "919876543210")).strip(),
+        "bank_account": str(data.get("bank_account", "")).strip(),
+        "bank_ifsc": str(data.get("bank_ifsc", "")).strip(),
+        "bank_name": str(data.get("bank_name", "")).strip(),
+        "updated_at": time.strftime("%Y-%m-%d %H:%M:%S")
+    }
+    save_all_user_data(all_data)
+    return JSONResponse(content={
+        "status": "success",
+        "message": "Payment and Add Money settings saved successfully!"
     })
 
 # ==================== USER PROFILE & WALLET ====================
