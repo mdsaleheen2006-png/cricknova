@@ -630,14 +630,15 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==================== 8. MOBILE SLIDING BET SLIP ====================
-function openMobileBetSlip(matchId, matchName, runner, type, price) {
+function openMobileBetSlip(matchId, matchName, runner, type, price, marketType = 'match_odds') {
   currentMobileBet = {
     matchId: matchId,
     matchName: matchName,
     runner: runner,
     type: type,
     odds: parseFloat(price) || 1.95,
-    stake: 500
+    stake: 500,
+    marketType: marketType || 'match_odds'
   };
 
   const sheet = document.getElementById('mobile-betslip-sheet');
@@ -742,7 +743,7 @@ async function submitMobileBet() {
         type: currentMobileBet.type,
         odds: odds,
         stake: stake,
-        market_type: 'match_odds'
+        market_type: currentMobileBet.marketType || 'match_odds'
       })
     });
     const data = await res.json();

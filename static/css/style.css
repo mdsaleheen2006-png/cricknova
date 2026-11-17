@@ -1312,11 +1312,20 @@ input:checked + .slider:before {
    ALWAYS show the full Winbuzz Android App Experience! */
 @media (max-width: 768px) {
   .desktop-header,
+  .sports-nav-bar,
   .ticker-strip,
   #laptop-view-container,
   .sidebar-left,
   .sidebar-right {
     display: none !important;
+  }
+
+  .android-top-bar {
+    display: flex !important;
+  }
+
+  .android-bottom-nav {
+    display: flex !important;
   }
 
   #android-view-container {
@@ -1327,8 +1336,59 @@ input:checked + .slider:before {
     padding-bottom: 74px !important;
   }
 
-  .android-bottom-nav {
-    display: flex !important;
+  .main-wrapper,
+  .main-wrapper.full-match,
+  .main-wrapper.casino-layout,
+  .casino-arena-container {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 0 74px 0 !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .content-center {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .live-stream-container {
+    width: 100% !important;
+    height: 215px !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
+  .live-stream-container iframe {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .exchange-card,
+  .market-section {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    margin-bottom: 8px !important;
+  }
+
+  .aviator-hud {
+    grid-template-columns: 1fr !important;
+    padding: 8px !important;
+    gap: 8px !important;
+  }
+  .aviator-stage {
+    min-height: 220px !important;
+  }
+  .aviator-canvas {
+    height: 220px !important;
+  }
+  .aviator-center-mult {
+    font-size: 38px !important;
   }
 
   body.force-desktop #android-view-container,
@@ -1346,6 +1406,10 @@ input:checked + .slider:before {
 /* 2. LAPTOP / DESKTOP SCREENS (> 768px):
    Show the Pro 6-Column Exchange Desk by default! */
 @media (min-width: 769px) {
+  #android-view-container {
+    display: none !important;
+  }
+
   #laptop-view-container {
     display: grid !important;
   }
@@ -1354,10 +1418,90 @@ input:checked + .slider:before {
     display: block !important;
   }
 
-  #android-view-container,
+  .android-top-bar,
   .android-bottom-nav {
     display: none !important;
   }
+
+  .main-wrapper.full-match {
+    display: grid !important;
+    grid-template-columns: 1fr 310px !important;
+  }
+
+  .sidebar-right {
+    display: flex !important;
+  }
+}
+
+/* 3. STRICT MOBILE DEVICE DETECTION ENFORCEMENT
+   When user agent or viewport is mobile, ALWAYS guarantee 100% Android App View! */
+html.is-mobile-device .desktop-header,
+html.is-mobile-device .sports-nav-bar,
+html.is-mobile-device .ticker-strip,
+html.is-mobile-device #laptop-view-container,
+html.is-mobile-device .sidebar-left,
+html.is-mobile-device .sidebar-right {
+  display: none !important;
+}
+
+html.is-mobile-device .android-top-bar {
+  display: flex !important;
+}
+
+html.is-mobile-device .android-bottom-nav {
+  display: flex !important;
+}
+
+html.is-mobile-device #android-view-container {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding-bottom: 74px !important;
+}
+
+html.is-mobile-device .main-wrapper,
+html.is-mobile-device .main-wrapper.full-match,
+html.is-mobile-device .main-wrapper.casino-layout,
+html.is-mobile-device .casino-arena-container {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 0 74px 0 !important;
+  grid-template-columns: 1fr !important;
+}
+
+/* 4. STRICT LAPTOP / DESKTOP ENFORCEMENT */
+html.is-desktop-device #android-view-container {
+  display: none !important;
+}
+
+html.is-desktop-device .android-top-bar,
+html.is-desktop-device .android-bottom-nav {
+  display: none !important;
+}
+
+html.is-desktop-device #laptop-view-container {
+  display: grid !important;
+}
+
+html.is-desktop-device .desktop-header {
+  display: block !important;
+}
+
+html.is-desktop-device .sports-nav-bar {
+  display: block !important;
+}
+
+html.is-desktop-device .main-wrapper.full-match {
+  display: grid !important;
+  grid-template-columns: 1fr 310px !important;
+}
+
+html.is-desktop-device .sidebar-right {
+  display: flex !important;
+}
 
   /* When desktop user toggles "Preview Android App View" */
   body.mode-android-preview #laptop-view-container,

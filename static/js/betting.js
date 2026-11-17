@@ -93,6 +93,17 @@ class BettingEngine {
 
   openBetSlip(matchId, runner, type, odds, marketType = 'match_odds') {
     this.playBeep('click');
+
+    // On Mobile Devices: immediately open the native sliding bottom sheet bet slip!
+    if (window.innerWidth <= 768 || document.documentElement.classList.contains('is-mobile-device') || document.getElementById('mobile-betslip-sheet')) {
+      if (typeof openMobileBetSlip === 'function') {
+        const matchNameEl = document.getElementById('sheet-match-name') || document.querySelector('.android-match-name') || document.querySelector('.match-name') || document.querySelector('.ticker-text span');
+        const matchName = matchNameEl ? matchNameEl.innerText.trim() : 'Live Match';
+        openMobileBetSlip(matchId, matchName, runner, type, odds, marketType);
+        return;
+      }
+    }
+
     if (typeof switchDeskTab === 'function') {
       switchDeskTab('betslip');
     }

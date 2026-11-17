@@ -10,6 +10,22 @@
   <meta name="theme-color" content="#060a12">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>
+    (function() {
+      function checkDevice() {
+        var isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) {
+          document.documentElement.classList.add('is-mobile-device');
+          document.documentElement.classList.remove('is-desktop-device');
+        } else {
+          document.documentElement.classList.add('is-desktop-device');
+          document.documentElement.classList.remove('is-mobile-device');
+        }
+      }
+      checkDevice();
+      window.addEventListener('resize', checkDevice);
+    })();
+  </script>
 </head>
 <body>
 
