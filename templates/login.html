@@ -304,62 +304,50 @@
         </div>
       </div>
 
-      <!-- ==================== 2. REGISTER WITH MOBILE OTP ==================== -->
+      <!-- ==================== 2. REGISTER / SIGN UP (WINBUZZ 1-STEP) ==================== -->
       <div id="panel-register" class="login-panel">
         <div style="background: rgba(0, 230, 118, 0.12); border: 1px solid var(--color-green); border-radius: 6px; padding: 10px 12px; font-size: 11px; margin-bottom: 14px; color: #fff;">
-          🎁 <strong>New User Sign Up:</strong> Pehli baar aapke <strong>WhatsApp</strong> par OTP aayega. OTP daal kar password set karein, agli baar aap direct <strong>Password se bina OTP</strong> ke login kar sakenge! + ₹500 Welcome Bonus instantly!
+          🎁 <strong>Instant 1-Click Sign Up:</strong> Apna 10-digit mobile number aur password dalein. Turant account ban jayega aur <strong>₹500 Welcome Bonus</strong> wallet me add hoga! Kisi OTP waiting ki jarurat nahi.
         </div>
 
-        <!-- Step A: Enter Phone -->
-        <div id="reg-phone-step">
+        <form onsubmit="doInstantRegister(event)">
           <div class="form-group">
             <label class="form-label">10-DIGIT MOBILE NUMBER</label>
             <div class="form-input-wrap">
               <span class="input-prefix">+91</span>
-              <input type="tel" id="reg-phone" placeholder="9876543210" maxlength="10" class="form-input">
+              <input type="tel" id="reg-phone" placeholder="9876543210" maxlength="10" required class="form-input">
             </div>
           </div>
-          <button type="button" id="btn-reg-send-otp" class="btn-submit-main btn-register-green" onclick="doRegisterSendOtp()">
-            SEND WHATSAPP OTP 📲
-          </button>
-        </div>
-
-        <!-- Step B: Verify OTP & Set Password -->
-        <div id="reg-verify-step" style="display: none;">
-          <div id="reg-otp-msg" style="background: rgba(0, 176, 255, 0.12); border: 1px solid #00b0ff; border-radius: 6px; padding: 8px 12px; font-size: 11px; margin-bottom: 12px; color: #cbd5e1;">
-            📲 <strong>WhatsApp OTP Sent!</strong> Check your WhatsApp for the 6-digit verification code.
-          </div>
 
           <div class="form-group">
-            <label class="form-label">ENTER 6-DIGIT OTP</label>
-            <input type="text" id="reg-otp" placeholder="Enter 6-digit OTP" maxlength="6" class="form-input" style="text-align: center; letter-spacing: 4px; font-size: 17px; font-weight: 800;">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">CREATE PASSWORD (FOR FUTURE LOGINS)</label>
+            <label class="form-label">CREATE PASSWORD (MIN 6 CHARACTERS)</label>
             <div style="position: relative;">
-              <input type="password" id="reg-pwd" placeholder="Create strong password (min 6 characters)" class="form-input" style="padding-right: 36px;">
+              <input type="password" id="reg-pwd" placeholder="Set password for your account" required class="form-input" style="padding-right: 36px;">
               <button type="button" class="pwd-toggle-btn" onclick="togglePwdVisibility('reg-pwd', this)">👁️</button>
             </div>
           </div>
 
           <div class="form-group">
             <label class="form-label">CONFIRM PASSWORD</label>
-            <input type="password" id="reg-pwd-confirm" placeholder="Re-enter password" class="form-input">
+            <div style="position: relative;">
+              <input type="password" id="reg-pwd-confirm" placeholder="Re-enter password" required class="form-input" style="padding-right: 36px;">
+              <button type="button" class="pwd-toggle-btn" onclick="togglePwdVisibility('reg-pwd-confirm', this)">👁️</button>
+            </div>
           </div>
 
-          <button type="button" id="btn-reg-finish" class="btn-submit-main btn-register-green" onclick="doCompleteRegister()">
-            ✓ VERIFY OTP & CREATE ACCOUNT (₹500 BONUS)
+          <button type="submit" id="btn-reg-instant" class="btn-submit-main btn-register-green">
+            ⚡ CREATE ACCOUNT & PLAY (₹500 BONUS) 🚀
           </button>
-          <div style="text-align: center; margin-top: 10px;">
-            <a href="javascript:void(0)" onclick="document.getElementById('reg-verify-step').style.display='none'; document.getElementById('reg-phone-step').style.display='block';" style="font-size: 11px; color: var(--text-muted); text-decoration: underline;">
-              ← Change Mobile Number
-            </a>
-          </div>
+        </form>
+
+        <div style="margin-top: 12px; text-align: center;">
+          <a href="https://wa.me/919693554087?text=Hi%20CrickNova%2C%20I%20want%20to%20register%20my%20ID%20on%20WhatsApp" target="_blank" style="color: var(--color-green); font-size: 11px; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+            <span>💬</span> Or Get Direct ID on WhatsApp (+91 9693554087) →
+          </a>
         </div>
 
         <div class="login-helper-links" style="justify-content: center; margin-top: 14px;">
-          <span>Already have an account? <a href="javascript:void(0)" onclick="showLoginTab('login')">Log In Here</a></span>
+          <span>Already have an account? <a href="javascript:void(0)" onclick="showLoginTab('login')">Log In with Password →</a></span>
         </div>
       </div>
 
@@ -408,7 +396,7 @@
       </div>
 
       <!-- WHATSAPP DIRECT AGENT ASSISTANCE -->
-      <a href="https://wa.me/919876543210?text=Hi%20CrickNova,%20I%20need%20help%20with%20Login%20or%20Add%20Money" target="_blank" class="whatsapp-badge-card">
+      <a href="https://wa.me/919693554087?text=Hi%20CrickNova,%20I%20need%20help%20with%20Login%20or%20Add%20Money" target="_blank" class="whatsapp-badge-card">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 18px;">💬</span>
           <div>
@@ -519,7 +507,59 @@
       }
     }
 
-    // 3. Register Send OTP
+        // 3. Instant 1-Click Registration (Winbuzz Style)
+    async function doInstantRegister(e) {
+      if (e) e.preventDefault();
+      const mobile = document.getElementById('reg-phone').value.trim();
+      const pwd = document.getElementById('reg-pwd').value.trim();
+      const pwdConfirm = document.getElementById('reg-pwd-confirm').value.trim();
+
+      if (!mobile || mobile.length !== 10 || !/^\d+$/.test(mobile)) {
+        alert('Please enter a valid 10-digit Indian mobile number');
+        return;
+      }
+      if (!pwd || pwd.length < 6) {
+        alert('Password must be at least 6 characters long');
+        return;
+      }
+      if (pwd !== pwdConfirm) {
+        alert('Passwords do not match! Please check again.');
+        return;
+      }
+
+      const btn = document.getElementById('btn-reg-instant');
+      btn.disabled = true;
+      btn.innerText = 'CREATING ACCOUNT...';
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile: mobile, password: pwd })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert(`🎉 Welcome to CrickNova!\nYour account has been created successfully with ₹500 welcome bonus.`);
+          window.location.href = '/';
+        } else {
+          if (data.detail && data.detail.includes('already exists')) {
+            alert('ℹ️ ' + data.detail);
+            showLoginTab('login');
+            document.getElementById('login-phone').value = mobile;
+            document.getElementById('login-pwd').focus();
+          } else {
+            alert('❌ ' + (data.detail || 'Registration failed'));
+          }
+        }
+      } catch (err) {
+        alert('Network error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '⚡ CREATE ACCOUNT & PLAY (₹500 BONUS) 🚀';
+      }
+    }
+
+    // Fallback: Register Send OTP (if needed)
     async function doRegisterSendOtp() {
       const mobile = document.getElementById('reg-phone').value.trim();
       if (!mobile || mobile.length !== 10) {
@@ -636,8 +676,11 @@
           document.getElementById('otp-code').value = '';
           document.getElementById('otp-code').placeholder = 'Enter 6-digit OTP';
           document.getElementById('otp-code').focus();
-          if (data.sms_status === 'error') {
-            alert(`⚠️ Fast2SMS Notice: ${data.gateway_message || 'Please check Fast2SMS settings in Admin panel'}.`);
+          if (data.fallback_otp) {
+            document.getElementById('otp-code').value = data.fallback_otp;
+            alert(`🔑 Verification Code: ${data.fallback_otp}\n(Auto-filled for quick login)`);
+          } else if (data.sms_status === 'error') {
+            alert(`⚠️ Notice: ${data.gateway_message || 'Please check Fast2SMS settings in Admin panel'}.`);
           } else {
             alert(`📲 WhatsApp OTP Sent! A 6-digit code has been delivered to your WhatsApp (+91 ${mobile}).`);
           }
