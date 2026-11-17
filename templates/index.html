@@ -2,19 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Winbuzz Plus | World's #1 Betting Exchange & Live Cricket</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CrickNova | India's #1 Betting Exchange, Live Cricket & Casino</title>
   <link rel="stylesheet" href="/static/css/style.css">
-  <link rel="icon" type="image/png" href="https://click22frnt.hurry2.net/templates/winbuzz/assets/logo-Cz5zLpWl.webp">
+  <link rel="icon" type="image/png" href="/static/icon-192.png">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#060a12">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
-<body>
+<body class="mode-laptop">
 
   <!-- TOP RUNNING TICKER -->
   <div class="ticker-strip">
-    <span class="ticker-badge">LIVE FEED</span>
+    <span class="ticker-badge">CRICKNOVA LIVE</span>
     <div class="ticker-content">
       <div class="ticker-text">
-        🏏 <span>Live Exchange Stream:</span> Real-time in-play odds from zplay1.co & Cricbuzz • ⚡ <span>Auto-Sync:</span> Matches appear & leave automatically • 💰 <span>Turbo Cash-Out:</span> Active • 1-Click Bet Execution
+        🏏 <span>Official CrickNova Exchange:</span> Real-time in-play odds from zplay1.co & Cricbuzz • ⚡ <span>Live Cricket, Football & Tennis</span> • 💰 <span>Turbo Cash-Out</span> Active • 📱 <span>Download Android App Available</span>
       </div>
     </div>
   </div>
@@ -24,12 +28,11 @@
     <span class="stale-msg">⚠️ Live sports feed disconnected. Attempting to reconnect...</span>
   </div>
 
-  <!-- WINBUZZ COMPACT PRO HEADER -->
-  <header class="winbuzz-header">
+  <!-- MAIN HEADER (DESKTOP / LAPTOP) -->
+  <header class="winbuzz-header desktop-header">
     <div class="header-top">
       <a href="/" class="brand-container">
-        <img src="https://click22frnt.hurry2.net/templates/winbuzz/assets/logo-Cz5zLpWl.webp" alt="Winbuzz" class="brand-logo" onerror="this.style.display='none'">
-        <div class="brand-text">WINBUZZ<span>.PLUS</span></div>
+        <div class="brand-text">CRICKNOVA<span>.BUZZ</span></div>
       </a>
 
       <!-- Real-time Live IST Clock -->
@@ -47,16 +50,21 @@
 
       <!-- Header Right Controls -->
       <div class="header-right">
-        <!-- 1-Click Bet Switcher -->
-        <div class="one-click-wrap" title="Toggle 1-Click Betting with default stake">
-          <span class="one-click-label">1-Click</span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="one-click-toggle" onchange="toggleOneClickBet(this.checked)">
-            <span class="slider"></span>
-          </label>
-        </div>
+        <!-- Dual View Switcher Toggle -->
+        <button id="view-mode-toggle" class="btn-view-toggle" onclick="togglePlatformView()" title="Switch between Android App View and Laptop View">
+          <span id="toggle-icon">📱</span>
+          <span id="toggle-text">Android View</span>
+        </button>
 
-        <div class="ws-status-indicator" style="width: 8px; height: 8px; border-radius: 50%; background-color: #00e676; box-shadow: 0 0 6px #00e676;" title="WebSocket Stream Connected"></div>
+        <!-- Download App Button -->
+        <button class="btn-header btn-app-dl" onclick="openDownloadModal()" title="Download Official CrickNova Android App">
+          📥 APP DOWNLOAD
+        </button>
+
+        <!-- Customer Auth Status Pill -->
+        <div id="user-auth-pill" class="user-auth-pill" onclick="handleAuthPillClick()">
+          <span id="auth-phone-label">👤 Login with OTP</span>
+        </div>
 
         <!-- Wallet Chip -->
         <div class="wallet-chip">
@@ -71,7 +79,7 @@
         </div>
 
         <button class="btn-header btn-deposit" onclick="openDepositModal()">
-          <span>+</span> DEPOSIT
+          <span>+</span> ADD MONEY
         </button>
         <button class="btn-header btn-withdraw" onclick="openWithdrawModal()">
           WITHDRAW
@@ -98,13 +106,425 @@
           <span>✈️ AVIATOR</span>
         </a>
         <a href="/casino" class="nav-item">🎰 LIVE CASINO</a>
-        <a href="/admin" class="nav-item" style="margin-left: auto; color: var(--text-dim);">⚙️ ADMIN PORTAL</a>
+        <a href="/admin" class="nav-item" style="margin-left: auto; color: var(--winbuzz-gold);">⚙️ ADMIN PANEL</a>
       </div>
     </nav>
   </header>
 
-  <!-- HIGH-DENSITY 3-COLUMN TRADING LAYOUT -->
-  <main class="main-wrapper">
+  <!-- ======================================================== -->
+  <!-- 1. ANDROID APP VIEW (MOBILE PHONE EXPERIENCE)            -->
+  <!-- ======================================================== -->
+  <div id="android-view-container" class="android-view-wrapper">
+    <!-- Android Top Bar -->
+    <header class="android-top-bar">
+      <div class="android-top-left">
+        <div class="android-brand">CRICKNOVA</div>
+        <div id="android-ist-clock" class="android-clock">--:--:-- IST</div>
+      </div>
+      <div class="android-top-right">
+        <!-- Switch to Laptop View -->
+        <button class="android-view-switch-btn" onclick="togglePlatformView()" title="Switch to Laptop View">
+          💻 Laptop View
+        </button>
+        <!-- User Wallet Pill -->
+        <div class="android-wallet-pill" onclick="switchAndroidTab('account')">
+          <span class="android-wallet-sym">₹</span>
+          <span id="android-wallet-val" class="android-wallet-val">{{ "{:,.0f}".format(user.balance) }}</span>
+        </div>
+        <!-- Download App Icon -->
+        <button class="android-app-btn" onclick="openDownloadModal()" title="Download APK">
+          📥 APK
+        </button>
+      </div>
+    </header>
+
+    <!-- App Download Banner -->
+    <div class="android-promo-banner" onclick="openDownloadModal()">
+      <div class="promo-text">
+        <span class="promo-tag">ANDROID APP</span>
+        <strong>Download CrickNova APK</strong> • 1-Click Fast Betting & Notifications
+      </div>
+      <button class="promo-btn">INSTALL</button>
+    </div>
+
+    <!-- Category Swipe Bar -->
+    <div class="android-cat-bar">
+      <button class="android-cat-btn active" data-cat="all" onclick="filterAndroidCat('all', this)">⚡ All In-Play</button>
+      <button class="android-cat-btn" data-cat="cricket" onclick="filterAndroidCat('cricket', this)">🏏 Cricket</button>
+      <button class="android-cat-btn" data-cat="soccer" onclick="filterAndroidCat('soccer', this)">⚽ Football</button>
+      <button class="android-cat-btn" data-cat="tennis" onclick="filterAndroidCat('tennis', this)">🎾 Tennis</button>
+      <button class="android-cat-btn" onclick="switchAndroidTab('casino')">✈️ Aviator</button>
+      <button class="android-cat-btn" onclick="switchAndroidTab('casino')">🎰 Casino</button>
+    </div>
+
+    <!-- MAIN ANDROID SCREENS CONTAINER -->
+    <div class="android-screens-container">
+
+      <!-- SCREEN 1: IN-PLAY MATCHES LIST -->
+      <section id="android-screen-inplay" class="android-screen active">
+        <div class="android-section-header">
+          <span>⚡ LIVE IN-PLAY MATCHES</span>
+          <span class="badge-count live-inplay-count">{{ matches|length }}</span>
+        </div>
+
+        <div class="android-matches-list">
+          {% for match in matches %}
+          {% set odds = match.match_odds %}
+          {% set r1 = odds[0] if odds|length > 0 else none %}
+          {% set r2 = odds[1] if odds|length > 1 and odds[1].runner != 'The Draw' and odds[1].runner != 'Draw' else (odds[2] if odds|length > 2 else none) %}
+          {% set rx = none %}
+          {% for r in odds %}
+            {% if r.runner == 'The Draw' or r.runner == 'Draw' %}
+              {% set rx = r %}
+            {% endif %}
+          {% endfor %}
+
+          <div class="android-match-card" data-sport="{{ match.sport|default('cricket') }}">
+            <!-- Card Header -->
+            <div class="android-card-top">
+              <div class="android-match-meta">
+                <span class="android-live-pill">LIVE</span>
+                <span class="android-comp-name">{{ match.competition }}</span>
+              </div>
+              <a href="/match/{{ match.id }}" class="android-detail-link">Full Markets & Stats →</a>
+            </div>
+
+            <!-- Match Title & Score -->
+            <div class="android-match-title-row">
+              <a href="/match/{{ match.id }}" class="android-match-name">{{ match.name }}</a>
+              <div class="android-score-badge match-score-{{ match.id }}">{{ match.score }}</div>
+            </div>
+
+            <!-- Odds Table (Back / Lay) -->
+            <div class="android-odds-grid">
+              <!-- Runner 1 -->
+              {% if r1 %}
+              {% set r1_clean = r1.runner.replace(' ', '_').replace('.', '_').replace('-', '_') %}
+              {% set r1_susp = (match.status == 'SUSPENDED') or (r1.status == 'SUSPENDED') %}
+              <div class="android-odds-runner">
+                <div class="android-runner-name">{{ r1.runner }}</div>
+                <div class="android-odds-pair">
+                  <button class="m-odds-box back {% if r1_susp %}suspended{% endif %}"
+                          id="box-back-m-{{ match.id }}-{{ r1_clean }}"
+                          data-match-id="{{ match.id }}"
+                          data-runner="{{ r1.runner }}"
+                          data-type="back"
+                          data-market-type="match_odds">
+                    <span class="m-price">{% if r1_susp %}SUSP{% elif r1.back[0].price > 0 %}{{ "{:.2f}".format(r1.back[0].price) }}{% else %}-{% endif %}</span>
+                    <span class="m-size">{% if not r1_susp and r1.back[0].size > 0 %}{{ (r1.back[0].size / 1000)|round|int }}k{% endif %}</span>
+                  </button>
+                  <button class="m-odds-box lay {% if r1_susp %}suspended{% endif %}"
+                          id="box-lay-m-{{ match.id }}-{{ r1_clean }}"
+                          data-match-id="{{ match.id }}"
+                          data-runner="{{ r1.runner }}"
+                          data-type="lay"
+                          data-market-type="match_odds">
+                    <span class="m-price">{% if r1_susp %}SUSP{% elif r1.lay[0].price > 0 %}{{ "{:.2f}".format(r1.lay[0].price) }}{% else %}-{% endif %}</span>
+                    <span class="m-size">{% if not r1_susp and r1.lay[0].size > 0 %}{{ (r1.lay[0].size / 1000)|round|int }}k{% endif %}</span>
+                  </button>
+                </div>
+              </div>
+              {% endif %}
+
+              <!-- Runner 2 -->
+              {% if r2 %}
+              {% set r2_clean = r2.runner.replace(' ', '_').replace('.', '_').replace('-', '_') %}
+              {% set r2_susp = (match.status == 'SUSPENDED') or (r2.status == 'SUSPENDED') %}
+              <div class="android-odds-runner">
+                <div class="android-runner-name">{{ r2.runner }}</div>
+                <div class="android-odds-pair">
+                  <button class="m-odds-box back {% if r2_susp %}suspended{% endif %}"
+                          id="box-back-m-{{ match.id }}-{{ r2_clean }}"
+                          data-match-id="{{ match.id }}"
+                          data-runner="{{ r2.runner }}"
+                          data-type="back"
+                          data-market-type="match_odds">
+                    <span class="m-price">{% if r2_susp %}SUSP{% elif r2.back[0].price > 0 %}{{ "{:.2f}".format(r2.back[0].price) }}{% else %}-{% endif %}</span>
+                    <span class="m-size">{% if not r2_susp and r2.back[0].size > 0 %}{{ (r2.back[0].size / 1000)|round|int }}k{% endif %}</span>
+                  </button>
+                  <button class="m-odds-box lay {% if r2_susp %}suspended{% endif %}"
+                          id="box-lay-m-{{ match.id }}-{{ r2_clean }}"
+                          data-match-id="{{ match.id }}"
+                          data-runner="{{ r2.runner }}"
+                          data-type="lay"
+                          data-market-type="match_odds">
+                    <span class="m-price">{% if r2_susp %}SUSP{% elif r2.lay[0].price > 0 %}{{ "{:.2f}".format(r2.lay[0].price) }}{% else %}-{% endif %}</span>
+                    <span class="m-size">{% if not r2_susp and r2.lay[0].size > 0 %}{{ (r2.lay[0].size / 1000)|round|int }}k{% endif %}</span>
+                  </button>
+                </div>
+              </div>
+              {% endif %}
+
+              <!-- Draw (if present) -->
+              {% if rx %}
+              {% set rx_clean = rx.runner.replace(' ', '_').replace('.', '_').replace('-', '_') %}
+              {% set rx_susp = (match.status == 'SUSPENDED') or (rx.status == 'SUSPENDED') %}
+              <div class="android-odds-runner">
+                <div class="android-runner-name">The Draw</div>
+                <div class="android-odds-pair">
+                  <button class="m-odds-box back {% if rx_susp %}suspended{% endif %}"
+                          id="box-back-m-{{ match.id }}-{{ rx_clean }}"
+                          data-match-id="{{ match.id }}"
+                          data-runner="{{ rx.runner }}"
+                          data-type="back"
+                          data-market-type="match_odds">
+                    <span class="m-price">{% if rx_susp %}SUSP{% elif rx.back[0].price > 0 %}{{ "{:.2f}".format(rx.back[0].price) }}{% else %}-{% endif %}</span>
+                    <span class="m-size">{% if not rx_susp and rx.back[0].size > 0 %}{{ (rx.back[0].size / 1000)|round|int }}k{% endif %}</span>
+                  </button>
+                  <button class="m-odds-box lay {% if rx_susp %}suspended{% endif %}"
+                          id="box-lay-m-{{ match.id }}-{{ rx_clean }}"
+                          data-match-id="{{ match.id }}"
+                          data-runner="{{ rx.runner }}"
+                          data-type="lay"
+                          data-market-type="match_odds">
+                    <span class="m-price">{% if rx_susp %}SUSP{% elif rx.lay[0].price > 0 %}{{ "{:.2f}".format(rx.lay[0].price) }}{% else %}-{% endif %}</span>
+                    <span class="m-size">{% if not rx_susp and rx.lay[0].size > 0 %}{{ (rx.lay[0].size / 1000)|round|int }}k{% endif %}</span>
+                  </button>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+
+          </div>
+          {% else %}
+          <div style="text-align: center; color: var(--text-dim); padding: 30px;">
+            No live in-play matches right now. Check back shortly!
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- SCREEN 2: ALL SPORTS & FIXTURES -->
+      <section id="android-screen-sports" class="android-screen">
+        <div class="android-section-header">
+          <span>📅 UPCOMING SCHEDULE & FIXTURES</span>
+          <span class="badge-count">{{ upcoming_matches|length }}</span>
+        </div>
+        <div style="padding: 10px;">
+          {% for up in upcoming_matches %}
+          <div class="android-match-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span class="android-comp-name">{{ up.competition }}</span>
+              <span style="font-size: 10px; color: var(--winbuzz-gold); font-weight: 800;">{{ up.date }}</span>
+            </div>
+            <div style="font-size: 13px; font-weight: 800; color: #fff;">{{ up.name }}</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">{{ up.score }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- SCREEN 3: CASINO & AVIATOR -->
+      <section id="android-screen-casino" class="android-screen">
+        <div class="android-section-header">
+          <span>🎰 LIVE CASINO & CRASH GAMES</span>
+          <span class="badge-count">HOT</span>
+        </div>
+        <div class="android-casino-grid">
+          <div class="android-casino-card" onclick="window.location.href='/casino'">
+            <div class="casino-card-badge">HOT 99% RTP</div>
+            <div class="casino-icon">✈️</div>
+            <div class="casino-name">Spribe Aviator</div>
+            <div class="casino-provider">Spribe Official</div>
+          </div>
+          <div class="android-casino-card" onclick="window.location.href='/casino'">
+            <div class="casino-card-badge">LIVE HD</div>
+            <div class="casino-icon">🎴</div>
+            <div class="casino-name">Teen Patti 20-20</div>
+            <div class="casino-provider">Evolution Live</div>
+          </div>
+          <div class="android-casino-card" onclick="window.location.href='/casino'">
+            <div class="casino-card-badge">POPULAR</div>
+            <div class="casino-icon">🃏</div>
+            <div class="casino-name">Super Andar Bahar</div>
+            <div class="casino-provider">Ezugi VIP</div>
+          </div>
+          <div class="android-casino-card" onclick="window.location.href='/casino'">
+            <div class="casino-card-badge">VIP</div>
+            <div class="casino-icon">🎡</div>
+            <div class="casino-name">Lightning Roulette</div>
+            <div class="casino-provider">Evolution Live</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 4: MY BETS & CASH-OUT -->
+      <section id="android-screen-bets" class="android-screen">
+        <div class="android-section-header">
+          <span>⚡ MY ACTIVE BETS & CASH-OUT</span>
+          <span class="badge-count" id="android-bets-count">{{ open_bets|length }}</span>
+        </div>
+        <div id="android-open-bets-list" style="padding: 10px;">
+          {% if open_bets %}
+            {% for bet in open_bets %}
+            <div class="open-bet-item">
+              <div class="open-bet-top">
+                <span class="bet-badge {{ bet.type }}">{{ bet.type|upper }}</span>
+                <span style="font-size: 11px; font-weight: 800; color: #fff;">{{ bet.runner }}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text-muted); margin: 4px 0;">
+                <span>Odds: <strong style="color: #fff;">{{ bet.odds }}</strong></span>
+                <span>Stake: <strong style="color: #fff;">₹{{ bet.stake }}</strong></span>
+                <span>Liab: <strong style="color: var(--color-red);">₹{{ bet.liability }}</strong></span>
+              </div>
+              <button class="btn-turbo-cashout cashout-btn"
+                      data-bet-id="{{ bet.id }}"
+                      data-match-id="{{ bet.match_id }}"
+                      data-runner="{{ bet.runner }}"
+                      data-orig-odds="{{ bet.odds }}"
+                      data-stake="{{ bet.stake }}">
+                <span>⚡ TURBO CASH-OUT</span>
+                <span class="cashout-payout">₹{{ bet.stake }}</span>
+              </button>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div style="text-align: center; color: var(--text-dim); padding: 30px;">
+              No active bets right now. Tap any Back or Lay button to place a bet!
+            </div>
+          {% endif %}
+        </div>
+      </section>
+
+      <!-- SCREEN 5: USER ACCOUNT & WALLET -->
+      <section id="android-screen-account" class="android-screen">
+        <div class="android-account-box">
+          <div class="account-profile-header">
+            <div class="account-avatar">👤</div>
+            <div>
+              <div id="account-phone-val" class="account-phone">{{ user.mobile }}</div>
+              <div class="account-tier">VIP Gold Player • Verified</div>
+            </div>
+          </div>
+
+          <div class="account-balance-card">
+            <div class="account-bal-lbl">WALLET BALANCE</div>
+            <div id="account-bal-val" class="account-bal-num">₹{{ "{:,.2f}".format(user.balance) }}</div>
+            <div style="font-size: 11px; color: var(--color-red); margin-top: 4px;">
+              Active Exposure: <strong id="account-exp-val">₹{{ "{:,.2f}".format(user.exposure) }}</strong>
+            </div>
+          </div>
+
+          <div class="account-actions-grid">
+            <button class="btn-deposit" style="padding: 12px; justify-content: center; font-size: 13px;" onclick="openDepositModal()">
+              <span>+</span> ADD MONEY / DEPOSIT
+            </button>
+            <button class="btn-withdraw" style="padding: 12px; justify-content: center; font-size: 13px;" onclick="openWithdrawModal()">
+              WITHDRAW TO BANK
+            </button>
+          </div>
+
+          <div class="account-links-list">
+            <a href="javascript:void(0)" onclick="openDownloadModal()" class="account-link-item">
+              <span>📥 Download Android App (APK)</span>
+              <span>→</span>
+            </a>
+            <a href="javascript:void(0)" onclick="openLoginModal()" class="account-link-item">
+              <span>📱 Switch / Login with OTP</span>
+              <span>→</span>
+            </a>
+            <a href="/admin" class="account-link-item" style="color: var(--winbuzz-gold);">
+              <span>⚙️ Master Admin Portal</span>
+              <span>→</span>
+            </a>
+            <a href="javascript:void(0)" onclick="logoutUser()" class="account-link-item" style="color: var(--color-red);">
+              <span>🚪 Sign Out / Logout</span>
+              <span>✕</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ANDROID SLIDING BOTTOM SHEET BET SLIP -->
+    <div id="mobile-betslip-sheet" class="mobile-betslip-sheet">
+      <div class="sheet-drag-handle" onclick="closeMobileBetSlip()"></div>
+      <div class="sheet-header">
+        <span id="sheet-title" class="sheet-title">⚡ PLACE EXCHANGE BET</span>
+        <button class="sheet-close" onclick="closeMobileBetSlip()">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div class="sheet-match-info">
+          <span id="sheet-match-name" class="sheet-match-name">Match Title</span>
+          <div class="sheet-runner-row">
+            <span id="sheet-runner-name" class="sheet-runner-name">Runner Name</span>
+            <span id="sheet-bet-badge" class="bet-badge back">BACK</span>
+          </div>
+        </div>
+
+        <!-- Odds Controls -->
+        <div class="sheet-input-row">
+          <label>ODDS</label>
+          <div class="sheet-stepper">
+            <button onclick="adjustSheetOdds(-0.01)">-</button>
+            <input type="number" id="sheet-odds-input" step="0.01" min="1.01">
+            <button onclick="adjustSheetOdds(0.01)">+</button>
+          </div>
+        </div>
+
+        <!-- Stake Controls -->
+        <div class="sheet-input-row">
+          <label>STAKE (₹)</label>
+          <div class="sheet-stepper">
+            <button onclick="adjustSheetStake(-100)">-</button>
+            <input type="number" id="sheet-stake-input" value="500" min="50" step="50" oninput="calculateSheetProfit()">
+            <button onclick="adjustSheetStake(100)">+</button>
+          </div>
+        </div>
+
+        <!-- Quick Stake Chips -->
+        <div class="sheet-chips-row">
+          <button type="button" onclick="setSheetStake(100)">+100</button>
+          <button type="button" onclick="setSheetStake(500)">+500</button>
+          <button type="button" onclick="setSheetStake(1000)">+1k</button>
+          <button type="button" onclick="setSheetStake(5000)">+5k</button>
+          <button type="button" onclick="setSheetStake(10000)">+10k</button>
+        </div>
+
+        <!-- Calculation info -->
+        <div class="sheet-calc-row">
+          <span id="sheet-calc-label">Potential Profit:</span>
+          <strong id="sheet-calc-val" style="color: var(--color-green);">₹0.00</strong>
+        </div>
+
+        <button id="sheet-submit-btn" class="sheet-submit-btn" onclick="submitMobileBet()">
+          PLACE BET NOW
+        </button>
+      </div>
+    </div>
+
+    <!-- ANDROID BOTTOM NAVIGATION BAR (STICKY DOCK) -->
+    <nav class="android-bottom-nav">
+      <button class="nav-tab active" data-tab="inplay" onclick="switchAndroidTab('inplay')">
+        <span class="nav-tab-icon">⚡</span>
+        <span class="nav-tab-label">In-Play</span>
+      </button>
+      <button class="nav-tab" data-tab="sports" onclick="switchAndroidTab('sports')">
+        <span class="nav-tab-icon">🏆</span>
+        <span class="nav-tab-label">Sports</span>
+      </button>
+      <button class="nav-tab" data-tab="casino" onclick="switchAndroidTab('casino')">
+        <span class="nav-tab-icon">🎰</span>
+        <span class="nav-tab-label">Casino</span>
+      </button>
+      <button class="nav-tab" data-tab="bets" onclick="switchAndroidTab('bets')">
+        <span class="nav-tab-icon">📋</span>
+        <span class="nav-tab-label">My Bets</span>
+        <span class="nav-badge" id="bottom-bets-count">{{ open_bets|length }}</span>
+      </button>
+      <button class="nav-tab" data-tab="account" onclick="switchAndroidTab('account')">
+        <span class="nav-tab-icon">👤</span>
+        <span class="nav-tab-label">Account</span>
+      </button>
+    </nav>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- 2. LAPTOP / DESKTOP VIEW (FULL 6-COLUMN EXCHANGE DESK)   -->
+  <!-- ======================================================== -->
+  <main id="laptop-view-container" class="main-wrapper">
     <!-- LEFT SIDEBAR: QUICK ACCORDION TREE -->
     <aside class="sidebar-left">
       <div class="sidebar-title">
@@ -158,6 +578,14 @@
       <a href="/casino" class="sidebar-link">
         <span>🎡 Live Roulette</span>
         <span class="count-badge">VIP</span>
+      </a>
+
+      <div class="sidebar-title" style="margin-top: 6px;">Admin & Android</div>
+      <a href="javascript:void(0)" onclick="openDownloadModal()" class="sidebar-link" style="color: var(--color-green);">
+        <span>📥 Download Android App</span>
+      </a>
+      <a href="/admin" class="sidebar-link" style="color: var(--winbuzz-gold);">
+        <span>⚙️ Master Admin Panel</span>
       </a>
     </aside>
 
@@ -485,47 +913,167 @@
     </aside>
   </main>
 
-  <!-- MODALS -->
-  <div class="modal-overlay" id="deposit-modal">
-    <div class="modal-box">
+
+  <!-- ======================================================== -->
+  <!-- 3. MODALS (OTP AUTH, ADD MONEY, APP DOWNLOAD, WITHDRAW)  -->
+  <!-- ======================================================== -->
+
+  <!-- MODAL 1: PHONE NUMBER & OTP LOGIN / REGISTER -->
+  <div class="modal-overlay" id="otp-modal">
+    <div class="modal-box" style="max-width: 400px;">
       <div class="modal-header">
-        <h3>⚡ INSTANT DEPOSIT (PLAY BALANCE)</h3>
+        <h3>📱 LOGIN WITH MOBILE & OTP</h3>
+        <button class="modal-close" onclick="closeLoginModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 12px;">
+          Enter your 10-digit mobile number. New customers automatically receive ₹500 instant welcome bonus!
+        </p>
+
+        <!-- Step 1: Mobile Input -->
+        <div id="otp-step-phone">
+          <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 4px;">
+            MOBILE NUMBER (10 DIGITS)
+          </label>
+          <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+            <span style="background: var(--bg-darkest); border: 1px solid var(--border-light); padding: 8px 10px; color: #fff; font-weight: 800; border-radius: var(--radius-xs);">+91</span>
+            <input type="tel" id="login-phone-input" placeholder="9876543210" maxlength="10"
+                   style="flex: 1; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 800; border-radius: var(--radius-xs);">
+          </div>
+          <button id="btn-send-otp" class="btn-deposit" style="width: 100%; padding: 10px; justify-content: center; font-size: 12px; font-weight: 900;" onclick="sendOtp()">
+            SEND OTP CODE 📲
+          </button>
+        </div>
+
+        <!-- Step 2: OTP Verification -->
+        <div id="otp-step-verify" style="display: none; margin-top: 10px;">
+          <div style="background: rgba(0, 230, 118, 0.1); border: 1px solid var(--color-green); border-radius: 4px; padding: 8px 10px; font-size: 11px; margin-bottom: 10px;">
+            <div style="color: var(--color-green); font-weight: 800;">⚡ OTP Code Sent!</div>
+            <div style="color: #cbd5e1; font-size: 10.5px;">For instant testing, use Demo OTP: <strong style="color: var(--winbuzz-gold); font-size: 12px;">123456</strong></div>
+          </div>
+
+          <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 4px;">
+            ENTER 6-DIGIT OTP
+          </label>
+          <input type="text" id="login-otp-input" placeholder="123456" maxlength="6"
+                 style="width: 100%; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 16px; font-weight: 900; letter-spacing: 4px; text-align: center; border-radius: var(--radius-xs); margin-bottom: 10px;">
+
+          <button id="btn-verify-otp" class="btn-deposit" style="width: 100%; padding: 10px; justify-content: center; font-size: 12px; font-weight: 900;" onclick="verifyOtp()">
+            VERIFY & START BETTING 🚀
+          </button>
+          <div style="text-align: center; margin-top: 8px;">
+            <button style="background: transparent; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer; text-decoration: underline;" onclick="resetOtpStep()">
+              ← Change Mobile Number
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: CUSTOMER ADD MONEY / DEPOSIT REQUEST -->
+  <div class="modal-overlay" id="deposit-modal">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3>💰 ADD MONEY TO WALLET</h3>
         <button class="modal-close" onclick="closeDepositModal()">✕</button>
       </div>
       <div class="modal-body">
-        <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">SELECT AMOUNT (₹)</label>
-        <div class="quick-deposit-grid">
+        <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">
+          Choose an amount and submit your deposit request. Admin will verify and credit your wallet within 2-5 minutes!
+        </p>
+
+        <label style="font-size: 10px; font-weight: 800; color: var(--text-dim);">SELECT QUICK AMOUNT (₹)</label>
+        <div class="quick-deposit-grid" style="margin-bottom: 8px;">
           <button class="quick-dep-btn" onclick="setQuickDeposit(500)">+₹500</button>
           <button class="quick-dep-btn" onclick="setQuickDeposit(1000)">+₹1,000</button>
+          <button class="quick-dep-btn" onclick="setQuickDeposit(2500)">+₹2,500</button>
           <button class="quick-dep-btn" onclick="setQuickDeposit(5000)">+₹5,000</button>
           <button class="quick-dep-btn" onclick="setQuickDeposit(10000)">+₹10,000</button>
           <button class="quick-dep-btn" onclick="setQuickDeposit(25000)">+₹25,000</button>
-          <button class="quick-dep-btn" onclick="setQuickDeposit(50000)">+₹50,000</button>
         </div>
-        <input type="number" id="deposit-amount-input" value="1000" style="width: 100%; margin-top: 4px; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 800; border-radius: var(--radius-xs);">
-        <button class="btn-deposit" style="width: 100%; padding: 10px; justify-content: center; font-size: 13px;" onclick="submitDeposit()">
-          DEPOSIT INSTANTLY
+        <input type="number" id="deposit-amount-input" value="1000" min="100" step="50"
+               style="width: 100%; margin-bottom: 10px; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 800; border-radius: var(--radius-xs);">
+
+        <label style="font-size: 10px; font-weight: 800; color: var(--text-dim);">PAYMENT METHOD</label>
+        <select id="deposit-method-input" style="width: 100%; margin-bottom: 10px; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 12px; font-weight: 700; border-radius: var(--radius-xs);">
+          <option value="UPI Instant (PhonePe / GPay / Paytm)">UPI Instant (PhonePe / GPay / Paytm)</option>
+          <option value="IMPS / NEFT Bank Transfer">IMPS / NEFT Bank Transfer</option>
+          <option value="Cash / Agent Direct Deposit">Cash / Agent Direct Deposit</option>
+        </select>
+
+        <label style="font-size: 10px; font-weight: 800; color: var(--text-dim);">UTR / REFERENCE NUMBER / NOTES</label>
+        <input type="text" id="deposit-utr-input" placeholder="e.g. UPI Ref / UTR / Cash details"
+               style="width: 100%; margin-bottom: 14px; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 12px; border-radius: var(--radius-xs);">
+
+        <button class="btn-deposit" style="width: 100%; padding: 10px; justify-content: center; font-size: 13px; font-weight: 900;" onclick="submitDepositRequest()">
+          ⚡ SUBMIT DEPOSIT REQUEST
         </button>
       </div>
     </div>
   </div>
 
+  <!-- MODAL 3: ANDROID APP DOWNLOAD & PWA INSTALL -->
+  <div class="modal-overlay" id="download-modal">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3>📥 DOWNLOAD CRICKNOVA ANDROID APP</h3>
+        <button class="modal-close" onclick="closeDownloadModal()">✕</button>
+      </div>
+      <div class="modal-body" style="text-align: center;">
+        <div style="font-size: 40px; margin-bottom: 8px;">📱</div>
+        <h4 style="color: #fff; font-size: 15px; font-weight: 900; margin-bottom: 6px;">CrickNova Official Android App</h4>
+        <p style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 16px;">
+          Experience ultra-fast 1-click betting, live scorecard notifications, and smooth full-screen gameplay right on your Android mobile device.
+        </p>
+
+        <!-- Direct APK Download -->
+        <a href="/download/cricknova.apk" download="cricknova.apk" class="btn-deposit" style="display: flex; width: 100%; padding: 12px; justify-content: center; font-size: 13px; font-weight: 900; text-decoration: none; margin-bottom: 10px;">
+          📲 DIRECT DOWNLOAD APK (v1.0)
+        </a>
+
+        <!-- PWA Home Screen Install -->
+        <button id="btn-pwa-install" class="btn-header" style="width: 100%; padding: 10px; justify-content: center; font-size: 12px; font-weight: 800; background: #00b0ff; color: #000; border: none; margin-bottom: 12px;" onclick="triggerPwaInstall()">
+          ⭐ ADD TO ANDROID HOME SCREEN
+        </button>
+
+        <div style="text-align: left; background: var(--bg-darkest); padding: 10px; border-radius: 4px; border: 1px solid var(--border-dark); font-size: 10.5px; color: var(--text-dim);">
+          <strong style="color: var(--winbuzz-gold);">How to Install:</strong>
+          <ol style="margin-left: 16px; margin-top: 4px; line-height: 1.5;">
+            <li>Click <strong>Direct Download APK</strong> above.</li>
+            <li>Open the downloaded <code style="color: #fff;">cricknova.apk</code> file.</li>
+            <li>Allow <em>"Install Unknown Apps"</em> in Android Settings if prompted.</li>
+            <li>Launch CrickNova from your home screen and start playing!</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: WITHDRAWAL -->
   <div class="modal-overlay" id="withdraw-modal">
-    <div class="modal-box">
+    <div class="modal-box" style="max-width: 400px;">
       <div class="modal-header">
         <h3>⚡ INSTANT WITHDRAWAL</h3>
         <button class="modal-close" onclick="closeWithdrawModal()">✕</button>
       </div>
       <div class="modal-body">
-        <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">ENTER AMOUNT (₹)</label>
-        <input type="number" id="withdraw-amount-input" value="1000" style="width: 100%; margin-top: 4px; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 800; border-radius: var(--radius-xs);">
+        <label style="font-size: 10px; color: var(--text-muted); font-weight: 800;">ENTER AMOUNT (₹)</label>
+        <input type="number" id="withdraw-amount-input" value="1000" min="500" step="100"
+               style="width: 100%; margin-top: 4px; margin-bottom: 10px; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 800; border-radius: var(--radius-xs);">
+
+        <label style="font-size: 10px; color: var(--text-muted); font-weight: 800;">BANK ACCOUNT / UPI ID</label>
+        <input type="text" id="withdraw-dest-input" placeholder="e.g. user@okhdfcbank or Account Number"
+               style="width: 100%; margin-top: 4px; margin-bottom: 14px; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 12px; border-radius: var(--radius-xs);">
+
         <button class="btn-place-bet" style="width: 100%; padding: 10px; justify-content: center; font-size: 13px;" onclick="submitWithdraw()">
-          WITHDRAW TO BANK
+          WITHDRAW TO BANK NOW
         </button>
       </div>
     </div>
   </div>
 
+  <!-- SCRIPTS -->
   <script src="/static/js/app.js"></script>
   <script src="/static/js/live_odds.js"></script>
   <script src="/static/js/betting.js"></script>

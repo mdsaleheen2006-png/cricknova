@@ -354,6 +354,9 @@ class BettingEngine {
   updateWalletUI(newBalance, newExposure, deltaAmount = 0) {
     const balEl = document.getElementById('wallet-balance');
     const expEl = document.getElementById('wallet-exposure');
+    const mBalEl = document.getElementById('android-wallet-val');
+    const accBalEl = document.getElementById('account-bal-val');
+    const accExpEl = document.getElementById('account-exp-val');
 
     if (balEl) {
       balEl.dataset.raw = newBalance;
@@ -362,6 +365,18 @@ class BettingEngine {
 
     if (expEl) {
       expEl.innerText = `₹${Math.round(newExposure).toLocaleString('en-IN')}`;
+    }
+
+    if (mBalEl) {
+      mBalEl.innerText = Math.round(newBalance).toLocaleString('en-IN');
+    }
+
+    if (accBalEl) {
+      accBalEl.innerText = `₹${newBalance.toFixed(2)}`;
+    }
+
+    if (accExpEl) {
+      accExpEl.innerText = `₹${Math.round(newExposure).toLocaleString('en-IN')}`;
     }
 
     // Trigger Floating Toast Chip

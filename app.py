@@ -7,7 +7,7 @@ import urllib.error
 import re
 from typing import List, Dict, Any, Optional
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
@@ -381,10 +381,95 @@ class LiveSportsProviderSync:
 
 provider_engine = LiveSportsProviderSync()
 
+# ==================== MULTI-USER & WALLET DATA MANAGER ====================
+USER_DATA: Dict[str, Any] = {}
+OTP_STORE: Dict[str, Dict[str, Any]] = {}
+
+def load_all_user_data() -> Dict[str, Any]:
+    global USER_DATA
+    raw = load_json(USER_STATE_FILE, {})
+    if not raw or "users" not in raw:
+        default_user = raw.get("user", {
+            "mobile": "9876543210",
+            "name": "DEMO7890",
+            "tier": "VIP Platinum",
+            "balance": 100500.0,
+            "exposure": 0.0,
+            "total_winnings": 18450.0,
+            "kyc_status": "VERIFIED"
+        })
+        default_mobile = str(default_user.get("mobile", "9876543210")).replace(" ", "").replace("+91", "")
+        raw = {
+            "users": {
+                default_mobile: {
+                    **default_user,
+                    "mobile": default_mobile,
+                    "bets": raw.get("bets", []),
+                    "transactions": raw.get("transactions", [])
+                }
+            },
+            "deposit_requests": raw.get("deposit_requests", []),
+            "default_user_mobile": default_mobile
+        }
+        save_json(USER_STATE_FILE, raw)
+    USER_DATA = raw
+    return USER_DATA
+
+def save_all_user_data(data: Dict[str, Any] = None):
+    global USER_DATA
+    if data is not None:
+        USER_DATA = data
+    save_json(USER_STATE_FILE, USER_DATA)
+
+# Initial load
+USER_DATA = load_all_user_data()
+
+def get_active_user(request: Request) -> Dict[str, Any]:
+    all_data = load_all_user_data()
+    users = all_data.setdefault("users", {})
+    
+    # 1. Cookie
+    mobile = request.cookies.get("cricknova_user")
+    # 2. Header
+    if not mobile:
+        mobile = request.headers.get("X-User-Phone")
+    # 3. Query Param
+    if not mobile:
+        mobile = request.query_params.get("phone") or request.query_params.get("user_mobile")
+
+    if mobile:
+        clean_mobile = str(mobile).strip().replace(" ", "").replace("+91", "")
+        if clean_mobile in users:
+            return users[clean_mobile]
+
+    # Fallback to default user
+    default_mobile = all_data.get("default_user_mobile", "9876543210")
+    if default_mobile in users:
+        return users[default_mobile]
+    elif users:
+        return list(users.values())[0]
+    else:
+        new_u = {
+            "mobile": "9876543210",
+            "name": "DEMO7890",
+            "tier": "VIP Platinum",
+            "balance": 100500.0,
+            "exposure": 0.0,
+            "total_winnings": 18450.0,
+            "kyc_status": "VERIFIED",
+            "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "bets": [],
+            "transactions": []
+        }
+        users["9876543210"] = new_u
+        all_data["default_user_mobile"] = "9876543210"
+        save_all_user_data(all_data)
+        return new_u
+
 # ==================== RUNNER BOOK & HEDGING MATH ====================
-def calculate_runner_book(match_id: str, market_type: str = "match_odds") -> Dict[str, float]:
+def calculate_runner_book(match_id: str, market_type: str = "match_odds", user_bets: list = None) -> Dict[str, float]:
     """
-    Computes exact net exposure / P&L per runner for all open bets on this match & market.
+    Computes exact net exposure / P&L per runner for open bets on this match & market.
     Implements true betting exchange math ('Barabar Zero' when hedged).
     """
     match = LIVE_MATCHES.get(str(match_id))
@@ -398,7 +483,10 @@ def calculate_runner_book(match_id: str, market_type: str = "match_odds") -> Dic
         return {}
 
     book = {r: 0.0 for r in runners}
-    open_bets = [b for b in USER_STATE.get("bets", []) if b.get("match_id") == str(match_id) and b.get("market_type") == market_type and b.get("status") == "OPEN"]
+    if user_bets is None:
+        user_bets = []
+
+    open_bets = [b for b in user_bets if str(b.get("match_id")) == str(match_id) and b.get("market_type") == market_type and b.get("status") == "OPEN"]
 
     for bet in open_bets:
         bet_runner = bet.get("runner")
@@ -428,12 +516,12 @@ def calculate_runner_book(match_id: str, market_type: str = "match_odds") -> Dic
 
     return {r: round(v, 2) for r, v in book.items()}
 
-def recalculate_total_exposure():
+def recalculate_user_exposure(user: Dict[str, Any]):
     total_exp = 0.0
     grouped = {}
-    for bet in USER_STATE.get("bets", []):
+    for bet in user.get("bets", []):
         if bet.get("status") == "OPEN":
-            key = f"{bet.get('match_id')}_{bet.get('market_type')}"
+            key = f"{bet.get('match_id')}_{bet.get('market_type', 'match_odds')}"
             if key not in grouped:
                 grouped[key] = []
             grouped[key].append(bet)
@@ -442,14 +530,19 @@ def recalculate_total_exposure():
         parts = key.split("_", 1)
         m_id = parts[0]
         m_type = parts[1] if len(parts) > 1 else "match_odds"
-        book = calculate_runner_book(m_id, m_type)
+        book = calculate_runner_book(m_id, m_type, user.get("bets", []))
         if book:
             worst_case = min(book.values())
             if worst_case < 0:
                 total_exp += abs(worst_case)
 
-    USER_STATE["user"]["exposure"] = round(total_exp, 2)
-    save_json(USER_STATE_FILE, USER_STATE)
+    user["exposure"] = round(total_exp, 2)
+
+def recalculate_all_exposures():
+    all_data = load_all_user_data()
+    for user in all_data.get("users", {}).values():
+        recalculate_user_exposure(user)
+    save_all_user_data(all_data)
 
 # ==================== WEBSOCKET BROADCASTER ====================
 class OddsConnectionManager:
@@ -476,27 +569,21 @@ class OddsConnectionManager:
 
 manager = OddsConnectionManager()
 
-# Background Continuous Synchronization Task (Every 2.5s)
 async def provider_sync_background_loop():
     loop_count = 0
-    # Run initial sync immediately
     loop = asyncio.get_event_loop()
     await loop.run_in_executor(None, provider_engine.perform_sync)
     await loop.run_in_executor(None, provider_engine.fetch_upcoming_and_results)
 
     while True:
         try:
-            await asyncio.sleep(2.5) # 2500ms sync frequency
+            await asyncio.sleep(2.5)
             loop_count += 1
-
-            # Fetch fresh live odds from zplay1 & Cricbuzz
             await loop.run_in_executor(None, provider_engine.perform_sync)
 
-            # Periodically refresh upcoming schedule (every 30s)
             if loop_count % 12 == 0:
                 await loop.run_in_executor(None, provider_engine.fetch_upcoming_and_results)
 
-            # Broadcast genuine live data over WebSocket
             if manager.active_connections:
                 payload = {
                     "type": "ODDS_TICK",
@@ -508,7 +595,6 @@ async def provider_sync_background_loop():
                     "results": RESULTS_MATCHES
                 }
                 await manager.broadcast(payload)
-
         except Exception as e:
             await asyncio.sleep(2)
 
@@ -516,11 +602,13 @@ async def provider_sync_background_loop():
 async def startup_event():
     asyncio.create_task(provider_sync_background_loop())
 
-# ==================== WEBSOCKET ROUTE ====================
 @app.websocket("/ws/odds")
 async def websocket_odds_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
+        all_data = load_all_user_data()
+        default_mobile = all_data.get("default_user_mobile", "9876543210")
+        active_u = all_data.get("users", {}).get(default_mobile, {})
         await websocket.send_json({
             "type": "INITIAL_STATE",
             "feed_status": FEED_STATUS,
@@ -528,7 +616,7 @@ async def websocket_odds_endpoint(websocket: WebSocket):
             "matches": list(LIVE_MATCHES.values()),
             "upcoming": UPCOMING_MATCHES,
             "results": RESULTS_MATCHES,
-            "user": USER_STATE["user"]
+            "user": active_u
         })
         while True:
             data = await websocket.receive_text()
@@ -542,15 +630,15 @@ async def websocket_odds_endpoint(websocket: WebSocket):
 # ==================== HTML ROUTES ====================
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    global USER_STATE
-    USER_STATE = load_json(USER_STATE_FILE, USER_STATE)
-    recalculate_total_exposure()
+    user = get_active_user(request)
+    recalculate_user_exposure(user)
+    save_all_user_data()
 
-    # If LIVE_MATCHES is still initializing, trigger a quick synchronous sync
     if not LIVE_MATCHES:
         provider_engine.perform_sync()
         provider_engine.fetch_upcoming_and_results()
 
+    all_data = load_all_user_data()
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -560,17 +648,18 @@ async def read_root(request: Request):
             "results_matches": RESULTS_MATCHES,
             "feed_status": FEED_STATUS,
             "last_updated": LAST_SYNC_TIME_STR,
-            "user": USER_STATE["user"],
-            "open_bets": [b for b in USER_STATE.get("bets", []) if b.get("status") == "OPEN"],
-            "casino_games": CASINO_GAMES
+            "user": user,
+            "open_bets": [b for b in user.get("bets", []) if b.get("status") == "OPEN"],
+            "casino_games": CASINO_GAMES,
+            "all_users_count": len(all_data.get("users", {}))
         }
     )
 
 @app.get("/match/{match_id}", response_class=HTMLResponse)
 async def match_detail(request: Request, match_id: str):
-    global USER_STATE
-    USER_STATE = load_json(USER_STATE_FILE, USER_STATE)
-    recalculate_total_exposure()
+    user = get_active_user(request)
+    recalculate_user_exposure(user)
+    save_all_user_data()
 
     match = LIVE_MATCHES.get(str(match_id))
     if not match:
@@ -578,15 +667,14 @@ async def match_detail(request: Request, match_id: str):
     if not match:
         match = next((m for m in RESULTS_MATCHES if m["id"] == str(match_id)), None)
     if not match:
-        # Fallback to first available live match if requested ID doesn't exist
         if LIVE_MATCHES:
             match = list(LIVE_MATCHES.values())[0]
         else:
             raise HTTPException(status_code=404, detail="Live match not found")
 
-    book_match_odds = calculate_runner_book(match["id"], "match_odds")
-    book_bookmaker = calculate_runner_book(match["id"], "bookmaker")
-    match_open_bets = [b for b in USER_STATE.get("bets", []) if b.get("match_id") == str(match["id"]) and b.get("status") == "OPEN"]
+    book_match_odds = calculate_runner_book(match["id"], "match_odds", user.get("bets", []))
+    book_bookmaker = calculate_runner_book(match["id"], "bookmaker", user.get("bets", []))
+    match_open_bets = [b for b in user.get("bets", []) if str(b.get("match_id")) == str(match["id"]) and b.get("status") == "OPEN"]
 
     return templates.TemplateResponse(
         request=request,
@@ -595,89 +683,236 @@ async def match_detail(request: Request, match_id: str):
             "match": match,
             "feed_status": FEED_STATUS,
             "last_updated": LAST_SYNC_TIME_STR,
-            "user": USER_STATE["user"],
+            "user": user,
             "book_match_odds": book_match_odds,
             "book_bookmaker": book_bookmaker,
-            "open_bets": match_open_bets,
-            "all_matches": list(LIVE_MATCHES.values())
+            "open_bets": match_open_bets
         }
     )
 
 @app.get("/casino", response_class=HTMLResponse)
-async def casino_arena(request: Request):
+@app.get("/casino/{game_slug}", response_class=HTMLResponse)
+async def casino_arena(request: Request, game_slug: str = "aviator"):
+    user = get_active_user(request)
+    recalculate_user_exposure(user)
+    save_all_user_data()
+
+    game = CASINO_GAMES.get(game_slug, CASINO_GAMES.get("aviator", {}))
     return templates.TemplateResponse(
         request=request,
         name="casino_arena.html",
         context={
-            "user": USER_STATE["user"],
-            "casino_games": CASINO_GAMES
+            "game": game,
+            "all_games": CASINO_GAMES,
+            "user": user,
+            "feed_status": FEED_STATUS,
+            "last_updated": LAST_SYNC_TIME_STR
         }
     )
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_portal(request: Request):
-    recalculate_total_exposure()
+    all_data = load_all_user_data()
+    users_list = list(all_data.get("users", {}).values())
+    
+    total_turnover = 0.0
+    total_balances = 0.0
+    total_liabilities = 0.0
+    all_bets = []
+
+    for u in users_list:
+        recalculate_user_exposure(u)
+        total_balances += float(u.get("balance", 0.0))
+        total_liabilities += float(u.get("exposure", 0.0))
+        for b in u.get("bets", []):
+            total_turnover += float(b.get("stake", 0.0))
+            all_bets.append({**b, "user_mobile": u.get("mobile"), "user_name": u.get("name")})
+
+    all_bets.sort(key=lambda x: x.get("placed_at", ""), reverse=True)
+    deposit_requests = all_data.get("deposit_requests", [])
+
     return templates.TemplateResponse(
         request=request,
         name="admin.html",
         context={
             "matches": list(LIVE_MATCHES.values()),
-            "user": USER_STATE["user"],
-            "all_bets": USER_STATE.get("bets", []),
-            "transactions": USER_STATE.get("transactions", [])
+            "users": users_list,
+            "pending_deposits": [r for r in deposit_requests if r.get("status") == "PENDING"],
+            "all_deposits": deposit_requests,
+            "all_bets": all_bets,
+            "total_turnover": round(total_turnover, 2),
+            "total_customers": len(users_list),
+            "total_balances": round(total_balances, 2),
+            "total_liabilities": round(total_liabilities, 2),
+            "stats": {
+                "total_turnover": round(total_turnover, 2),
+                "total_users": len(users_list),
+                "total_balances": round(total_balances, 2),
+                "total_liabilities": round(total_liabilities, 2)
+            }
         }
     )
 
-# ==================== REST API ENDPOINTS ====================
-@app.get("/api/matches")
-async def get_matches():
+@app.get("/download/cricknova.apk")
+async def download_apk():
+    apk_file = os.path.join(BASE_DIR, "static", "cricknova.apk")
+    if os.path.exists(apk_file):
+        return FileResponse(
+            apk_file,
+            media_type="application/vnd.android.package-archive",
+            filename="CrickNova_v2.4.apk"
+        )
+    raise HTTPException(status_code=404, detail="CrickNova APK package not found")
+
+# ==================== AUTHENTICATION (PHONE & OTP) ====================
+@app.post("/api/auth/send-otp")
+async def send_otp(request: Request):
+    data = await request.json()
+    mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
+    if not mobile or len(mobile) != 10 or not mobile.isdigit():
+        raise HTTPException(status_code=400, detail="Please enter a valid 10-digit mobile number")
+
+    import random
+    otp = str(random.randint(100000, 999999))
+    OTP_STORE[mobile] = {
+        "otp": otp,
+        "created_at": time.time(),
+        "expires_at": time.time() + 600
+    }
+    print(f"[OTP SERVICE] Sent OTP {otp} to mobile +91 {mobile}")
     return JSONResponse(content={
         "status": "success",
-        "feed_status": FEED_STATUS,
-        "last_updated": LAST_SYNC_TIME_STR,
-        "provider": "zplay1.co / Cricbuzz Live",
-        "live": list(LIVE_MATCHES.values()),
-        "upcoming": UPCOMING_MATCHES,
-        "results": RESULTS_MATCHES
+        "message": f"OTP successfully sent to +91 {mobile}",
+        "mobile": mobile,
+        "test_otp": otp
     })
 
-@app.get("/api/match/{match_id}")
-async def get_single_match(match_id: str):
-    match = LIVE_MATCHES.get(str(match_id))
-    if not match:
-        match = next((m for m in UPCOMING_MATCHES if m["id"] == str(match_id)), None)
-    if not match:
-        raise HTTPException(status_code=404, detail="Match not found")
+@app.post("/api/auth/verify-otp")
+async def verify_otp(request: Request):
+    data = await request.json()
+    mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
+    otp = str(data.get("otp", "")).strip()
 
-    book_match_odds = calculate_runner_book(match_id, "match_odds")
-    book_bookmaker = calculate_runner_book(match_id, "bookmaker")
+    record = OTP_STORE.get(mobile)
+    is_valid = False
+    if otp == "123456":
+        is_valid = True
+    elif record and record.get("otp") == otp and time.time() < record.get("expires_at", 0):
+        is_valid = True
+
+    if not is_valid:
+        raise HTTPException(status_code=400, detail="Invalid OTP. Please check or use demo OTP 123456.")
+
+    all_data = load_all_user_data()
+    users = all_data.setdefault("users", {})
+    if mobile not in users:
+        users[mobile] = {
+            "mobile": mobile,
+            "name": f"User {mobile[-4:]}",
+            "tier": "VIP Gold",
+            "balance": 500.0,
+            "exposure": 0.0,
+            "total_winnings": 0.0,
+            "kyc_status": "VERIFIED",
+            "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "bets": [],
+            "transactions": [
+                {
+                    "id": f"BONUS-{time.time_ns() % 1000000}",
+                    "type": "BONUS",
+                    "method": "Welcome Sign-up Bonus",
+                    "amount": 500.0,
+                    "status": "COMPLETED",
+                    "date": time.strftime("%Y-%m-%d %H:%M:%S")
+                }
+            ]
+        }
+    all_data["default_user_mobile"] = mobile
+    save_all_user_data(all_data)
+
+    user = users[mobile]
+    response = JSONResponse(content={
+        "status": "success",
+        "message": f"Welcome back, {user['name']}! Login verified.",
+        "user": user,
+        "mobile": mobile
+    })
+    response.set_cookie("cricknova_user", mobile, max_age=86400 * 30, httponly=False)
+    return response
+
+@app.post("/api/auth/logout")
+async def user_logout():
+    response = JSONResponse(content={"status": "success", "message": "Logged out successfully"})
+    response.delete_cookie("cricknova_user")
+    return response
+
+@app.get("/api/auth/me")
+async def get_current_auth_user(request: Request):
+    user = get_active_user(request)
+    recalculate_user_exposure(user)
+    save_all_user_data()
+    cookie_user = request.cookies.get("cricknova_user")
+    is_authenticated = bool(cookie_user and cookie_user == user.get("mobile"))
     return JSONResponse(content={
-        "match": match,
-        "book_match_odds": book_match_odds,
-        "book_bookmaker": book_bookmaker
+        "status": "success",
+        "authenticated": is_authenticated,
+        "mobile": user.get("mobile"),
+        "user": user
     })
 
+# ==================== USER PROFILE & WALLET ====================
 @app.get("/api/user")
-async def get_user_state():
-    global USER_STATE
-    USER_STATE = load_json(USER_STATE_FILE, USER_STATE)
-    recalculate_total_exposure()
+async def get_user_state_api(request: Request):
+    user = get_active_user(request)
+    recalculate_user_exposure(user)
+    save_all_user_data()
     return JSONResponse(content={
         "status": "success",
-        "user": USER_STATE["user"],
-        "open_bets": [b for b in USER_STATE.get("bets", []) if b.get("status") == "OPEN"],
-        "all_bets": USER_STATE.get("bets", []),
-        "transactions": USER_STATE.get("transactions", [])
+        "user": user,
+        "open_bets": [b for b in user.get("bets", []) if b.get("status") == "OPEN"],
+        "all_bets": user.get("bets", []),
+        "transactions": user.get("transactions", [])
+    })
+
+@app.post("/api/user/deposit-request")
+async def submit_deposit_request(request: Request):
+    data = await request.json()
+    user = get_active_user(request)
+    amount = float(data.get("amount", 500.0))
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Invalid deposit amount")
+
+    all_data = load_all_user_data()
+    req_id = f"REQ-{time.time_ns() % 1000000}"
+    req = {
+        "id": req_id,
+        "mobile": user["mobile"],
+        "user_name": user.get("name", f"User {user['mobile'][-4:]}"),
+        "amount": amount,
+        "method": data.get("method", "UPI / PhonePe / GPay"),
+        "utr": data.get("utr", f"{time.time_ns() % 1000000000000}"),
+        "notes": data.get("notes", "Add money request"),
+        "status": "PENDING",
+        "created_at": time.strftime("%Y-%m-%d %H:%M:%S")
+    }
+    all_data.setdefault("deposit_requests", []).insert(0, req)
+    save_all_user_data(all_data)
+
+    return JSONResponse(content={
+        "status": "success",
+        "message": f"Deposit request of ₹{amount:,.2f} submitted! Admin will verify and credit your wallet shortly.",
+        "request": req
     })
 
 @app.post("/api/user/deposit")
 async def user_deposit(request: Request):
     data = await request.json()
+    user = get_active_user(request)
     amount = float(data.get("amount", 1000.0))
     if amount <= 0:
         raise HTTPException(status_code=400, detail="Invalid deposit amount")
 
-    USER_STATE["user"]["balance"] += amount
+    user["balance"] += amount
     tx = {
         "id": f"DEP-{time.time_ns() % 1000000}",
         "type": "DEPOSIT",
@@ -687,53 +922,53 @@ async def user_deposit(request: Request):
         "status": "COMPLETED",
         "date": time.strftime("%Y-%m-%d %H:%M:%S")
     }
-    USER_STATE["transactions"].insert(0, tx)
-    save_json(USER_STATE_FILE, USER_STATE)
+    user.setdefault("transactions", []).insert(0, tx)
+    save_all_user_data()
 
     return JSONResponse(content={
         "status": "success",
         "message": f"Successfully deposited ₹{amount:,.2f}",
-        "balance": USER_STATE["user"]["balance"],
+        "balance": user["balance"],
         "transaction": tx
     })
 
 @app.post("/api/user/withdraw")
 async def user_withdraw(request: Request):
     data = await request.json()
+    user = get_active_user(request)
     amount = float(data.get("amount", 1000.0))
     if amount <= 0:
         raise HTTPException(status_code=400, detail="Invalid withdrawal amount")
 
-    available_balance = USER_STATE["user"]["balance"] - USER_STATE["user"]["exposure"]
+    available_balance = user["balance"] - user["exposure"]
     if amount > available_balance:
         raise HTTPException(status_code=400, detail="Insufficient available balance after exposure")
 
-    USER_STATE["user"]["balance"] -= amount
+    user["balance"] -= amount
     tx = {
         "id": f"WTH-{time.time_ns() % 1000000}",
         "type": "WITHDRAWAL",
         "method": data.get("method", "Bank Transfer"),
-        "account": data.get("account", "HDFC Bank"),
+        "account": data.get("account", "Bank Payout"),
         "amount": amount,
         "status": "COMPLETED",
         "date": time.strftime("%Y-%m-%d %H:%M:%S")
     }
-    USER_STATE["transactions"].insert(0, tx)
-    save_json(USER_STATE_FILE, USER_STATE)
+    user.setdefault("transactions", []).insert(0, tx)
+    save_all_user_data()
 
     return JSONResponse(content={
         "status": "success",
-        "message": f"Successfully withdrawn ₹{amount:,.2f}",
-        "balance": USER_STATE["user"]["balance"],
+        "message": f"Withdrawal request of ₹{amount:,.2f} processed!",
+        "balance": user["balance"],
         "transaction": tx
     })
 
+# ==================== BET PLACEMENT & CASHOUT ====================
 @app.post("/api/bet/place")
 async def place_bet(request: Request):
-    """
-    Places bet with genuine market validation and instant liability deduction.
-    """
     data = await request.json()
+    user = get_active_user(request)
     match_id = str(data.get("match_id"))
     runner = data.get("runner")
     bet_type = data.get("type", "back").lower()
@@ -744,16 +979,13 @@ async def place_bet(request: Request):
     if stake < 50:
         raise HTTPException(status_code=400, detail="Minimum bet stake is ₹50")
 
-    # Validate Match Exists in Provider Feed
     match = LIVE_MATCHES.get(match_id)
     if not match:
         raise HTTPException(status_code=400, detail="Match is not currently in-play or available for betting.")
 
-    # Check Suspension Status
     if match.get("status") == "SUSPENDED":
         raise HTTPException(status_code=400, detail="Market is currently SUSPENDED by provider. Please wait.")
 
-    # Calculate liability
     if market_type == "bookmaker" and odds > 10:
         decimal_odds = 1.0 + (odds / 100.0)
     else:
@@ -762,17 +994,15 @@ async def place_bet(request: Request):
     if bet_type == "back":
         liability = stake
         potential_profit = stake * (decimal_odds - 1.0)
-    else: # lay
+    else:
         liability = stake * (decimal_odds - 1.0)
         potential_profit = stake
 
-    # Check balance
-    available_balance = USER_STATE["user"]["balance"]
+    available_balance = user["balance"]
     if liability > available_balance:
         raise HTTPException(status_code=400, detail=f"Insufficient balance. Required liability ₹{liability:,.2f}, Available: ₹{available_balance:,.2f}")
 
-    # Instant deduction
-    USER_STATE["user"]["balance"] -= liability
+    user["balance"] -= liability
 
     bet_id = f"BET-{int(time.time()*1000)}"
     new_bet = {
@@ -790,30 +1020,28 @@ async def place_bet(request: Request):
         "placed_at": time.strftime("%Y-%m-%d %H:%M:%S")
     }
 
-    USER_STATE["bets"].insert(0, new_bet)
-    recalculate_total_exposure()
-    save_json(USER_STATE_FILE, USER_STATE)
+    user.setdefault("bets", []).insert(0, new_bet)
+    recalculate_user_exposure(user)
+    save_all_user_data()
 
-    book = calculate_runner_book(match_id, market_type)
+    book = calculate_runner_book(match_id, market_type, user.get("bets", []))
 
     return JSONResponse(content={
         "status": "success",
         "message": f"Bet placed successfully on {runner}!",
         "bet": new_bet,
-        "balance": USER_STATE["user"]["balance"],
-        "exposure": USER_STATE["user"]["exposure"],
+        "balance": user["balance"],
+        "exposure": user["exposure"],
         "book": book
     })
 
 @app.post("/api/bet/cashout")
 async def turbo_cash_out(request: Request):
-    """
-    TURBO CASH-OUT using Provider's Current In-Play Lay Odds.
-    """
     data = await request.json()
+    user = get_active_user(request)
     bet_id = data.get("bet_id")
 
-    bet = next((b for b in USER_STATE.get("bets", []) if b.get("id") == bet_id and b.get("status") == "OPEN"), None)
+    bet = next((b for b in user.get("bets", []) if b.get("id") == bet_id and b.get("status") == "OPEN"), None)
     if not bet:
         raise HTTPException(status_code=404, detail="Active open bet not found")
 
@@ -821,7 +1049,6 @@ async def turbo_cash_out(request: Request):
     if not match:
         raise HTTPException(status_code=400, detail="Match is no longer active in-play for cashout.")
 
-    # Find current provider lay price
     current_lay_odds = 2.0
     for r in match.get("match_odds", []):
         if r["runner"] == bet["runner"]:
@@ -839,24 +1066,126 @@ async def turbo_cash_out(request: Request):
     bet["cashout_profit"] = net_profit
     bet["cashout_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
 
-    USER_STATE["user"]["balance"] += cashout_payout
+    user["balance"] += cashout_payout
     if net_profit > 0:
-        USER_STATE["user"]["total_winnings"] += net_profit
+        user["total_winnings"] += net_profit
 
-    recalculate_total_exposure()
-    save_json(USER_STATE_FILE, USER_STATE)
+    recalculate_user_exposure(user)
+    save_all_user_data()
 
-    book = calculate_runner_book(bet["match_id"], bet.get("market_type", "match_odds"))
+    book = calculate_runner_book(bet["match_id"], bet.get("market_type", "match_odds"), user.get("bets", []))
 
     return JSONResponse(content={
         "status": "success",
         "message": f"Turbo Cash-Out executed! Credited ₹{cashout_payout:,.2f} (Net: {'+' if net_profit >= 0 else ''}₹{net_profit:,.2f})",
         "cashout_payout": cashout_payout,
         "net_profit": net_profit,
-        "balance": USER_STATE["user"]["balance"],
-        "exposure": USER_STATE["user"]["exposure"],
+        "balance": user["balance"],
+        "exposure": user["exposure"],
         "book": book
     })
+
+# ==================== ADMIN CONTROL & MANAGEMENT ====================
+@app.get("/api/admin/users")
+async def admin_get_users():
+    all_data = load_all_user_data()
+    return JSONResponse(content={
+        "status": "success",
+        "users": list(all_data.get("users", {}).values()),
+        "deposit_requests": all_data.get("deposit_requests", [])
+    })
+
+@app.post("/api/admin/add-money")
+async def admin_add_money(request: Request):
+    data = await request.json()
+    mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
+    amount = float(data.get("amount", 0.0))
+    action = str(data.get("action", "CREDIT")).upper()
+    remark = str(data.get("remark", "Manual wallet adjustment by Admin"))
+
+    if not mobile or len(mobile) != 10:
+        raise HTTPException(status_code=400, detail="Please provide a valid 10-digit mobile number")
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be greater than zero")
+
+    all_data = load_all_user_data()
+    users = all_data.setdefault("users", {})
+
+    if mobile not in users:
+        users[mobile] = {
+            "mobile": mobile,
+            "name": f"User {mobile[-4:]}",
+            "tier": "VIP Gold",
+            "balance": 0.0,
+            "exposure": 0.0,
+            "total_winnings": 0.0,
+            "kyc_status": "VERIFIED",
+            "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "bets": [],
+            "transactions": []
+        }
+
+    target = users[mobile]
+    if action == "CREDIT":
+        target["balance"] += amount
+    else:
+        target["balance"] = max(0.0, target["balance"] - amount)
+
+    tx = {
+        "id": f"ADM-{time.time_ns() % 1000000}",
+        "type": f"ADMIN_{action}",
+        "method": "Admin Direct Add Money",
+        "amount": amount,
+        "remark": remark,
+        "status": "COMPLETED",
+        "date": time.strftime("%Y-%m-%d %H:%M:%S")
+    }
+    target.setdefault("transactions", []).insert(0, tx)
+    save_all_user_data(all_data)
+
+    return JSONResponse(content={
+        "status": "success",
+        "message": f"Successfully {action}ed ₹{amount:,.2f} for +91 {mobile}!",
+        "mobile": mobile,
+        "balance": target["balance"]
+    })
+
+@app.post("/api/admin/deposit/action")
+async def admin_deposit_action(request: Request):
+    data = await request.json()
+    req_id = data.get("request_id")
+    action = str(data.get("action", "APPROVE")).upper()
+
+    all_data = load_all_user_data()
+    reqs = all_data.get("deposit_requests", [])
+    target_req = next((r for r in reqs if r.get("id") == req_id), None)
+    if not target_req:
+        raise HTTPException(status_code=404, detail="Deposit request not found")
+
+    if action == "APPROVE":
+        target_req["status"] = "APPROVED"
+        target_req["approved_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        mobile = target_req["mobile"]
+        amt = float(target_req.get("amount", 0.0))
+        if mobile in all_data.get("users", {}):
+            all_data["users"][mobile]["balance"] += amt
+            all_data["users"][mobile].setdefault("transactions", []).insert(0, {
+                "id": f"DEP-{target_req['id']}",
+                "type": "DEPOSIT",
+                "method": target_req.get("method", "UPI"),
+                "utr": target_req.get("utr", ""),
+                "amount": amt,
+                "status": "COMPLETED",
+                "date": time.strftime("%Y-%m-%d %H:%M:%S")
+            })
+        msg = f"Approved deposit of ₹{amt:,.2f} for +91 {mobile}!"
+    else:
+        target_req["status"] = "REJECTED"
+        target_req["rejected_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        msg = f"Rejected deposit request {req_id}."
+
+    save_all_user_data(all_data)
+    return JSONResponse(content={"status": "success", "message": msg, "request": target_req})
 
 @app.post("/api/admin/settle")
 async def admin_settle_match(request: Request):
@@ -864,49 +1193,69 @@ async def admin_settle_match(request: Request):
     match_id = str(data.get("match_id"))
     winning_runner = data.get("winning_runner")
 
+    all_data = load_all_user_data()
     settled_count = 0
     total_credit = 0.0
 
-    for bet in USER_STATE.get("bets", []):
-        if bet.get("match_id") == match_id and bet.get("status") == "OPEN":
-            bet_runner = bet.get("runner")
-            bet_type = bet.get("type")
-            stake = float(bet.get("stake", 0.0))
-            odds = float(bet.get("odds", 1.0))
-            if bet.get("market_type") == "bookmaker" and odds > 10:
-                eff_odds = 1.0 + (odds / 100.0)
-            else:
-                eff_odds = odds
+    for user in all_data.get("users", {}).values():
+        for bet in user.get("bets", []):
+            if str(bet.get("match_id")) == match_id and bet.get("status") == "OPEN":
+                bet_runner = bet.get("runner")
+                bet_type = bet.get("type")
+                stake = float(bet.get("stake", 0.0))
+                odds = float(bet.get("odds", 1.0))
+                if bet.get("market_type") == "bookmaker" and odds > 10:
+                    eff_odds = 1.0 + (odds / 100.0)
+                else:
+                    eff_odds = odds
 
-            if (bet_type == "back" and bet_runner == winning_runner) or (bet_type == "lay" and bet_runner != winning_runner):
-                payout = stake * eff_odds if bet_type == "back" else stake + (stake * (eff_odds - 1.0))
-                profit = stake * (eff_odds - 1.0)
-                bet["status"] = "WON"
-                bet["payout"] = round(payout, 2)
-                USER_STATE["user"]["balance"] += payout
-                USER_STATE["user"]["total_winnings"] += profit
-                total_credit += payout
-            else:
-                bet["status"] = "LOST"
-                bet["payout"] = 0.0
+                if (bet_type == "back" and bet_runner == winning_runner) or (bet_type == "lay" and bet_runner != winning_runner):
+                    payout = stake * eff_odds if bet_type == "back" else stake + (stake * (eff_odds - 1.0))
+                    profit = stake * (eff_odds - 1.0)
+                    bet["status"] = "WON"
+                    bet["payout"] = round(payout, 2)
+                    user["balance"] += payout
+                    user["total_winnings"] += profit
+                    total_credit += payout
+                else:
+                    bet["status"] = "LOST"
+                    bet["payout"] = 0.0
 
-            settled_count += 1
+                settled_count += 1
+        recalculate_user_exposure(user)
 
-    recalculate_total_exposure()
-    save_json(USER_STATE_FILE, USER_STATE)
-
+    save_all_user_data(all_data)
     return JSONResponse(content={
         "status": "success",
-        "message": f"Settled {settled_count} bets for winner {winning_runner}. Credited ₹{total_credit:,.2f}",
-        "balance": USER_STATE["user"]["balance"],
-        "exposure": USER_STATE["user"]["exposure"]
+        "message": f"Settled {settled_count} bets for winner {winning_runner}. Credited ₹{total_credit:,.2f} across accounts."
+    })
+
+# ==================== DATA API ENDPOINTS ====================
+@app.get("/api/matches")
+async def get_matches():
+    return JSONResponse(content=list(LIVE_MATCHES.values()))
+
+@app.get("/api/match/{match_id}")
+async def get_single_match(request: Request, match_id: str):
+    user = get_active_user(request)
+    match = LIVE_MATCHES.get(str(match_id))
+    if not match:
+        match = next((m for m in UPCOMING_MATCHES if m["id"] == str(match_id)), None)
+    if not match:
+        match = next((m for m in RESULTS_MATCHES if m["id"] == str(match_id)), None)
+    if not match:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    book_match_odds = calculate_runner_book(match_id, "match_odds", user.get("bets", []))
+    book_bookmaker = calculate_runner_book(match_id, "bookmaker", user.get("bets", []))
+    return JSONResponse(content={
+        "match": match,
+        "book_match_odds": book_match_odds,
+        "book_bookmaker": book_bookmaker
     })
 
 @app.get("/health")
 async def health_check():
-    """
-    Production health check endpoint for Cloud Load Balancers (AWS, Render, Railway, Kubernetes)
-    """
     return JSONResponse(content={
         "status": "healthy",
         "feed_status": FEED_STATUS,
@@ -920,5 +1269,5 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
     host = os.environ.get("HOST", "0.0.0.0")
-    print(f"Starting Winbuzz Production Server on http://{host}:{port}")
+    print(f"Starting CrickNova Production Server on http://{host}:{port}")
     uvicorn.run("app:app", host=host, port=port, reload=False)
