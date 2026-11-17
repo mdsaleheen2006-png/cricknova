@@ -1856,22 +1856,17 @@ async def send_otp(request: Request):
     user_exists = mobile in users
     has_password = bool(users.get(mobile, {}).get("password_hash")) if user_exists else False
 
-    # Return response (with fallback_otp if gateway is pending approval or errored so user is never locked out)
-    res_data = {
+    # SECURE: NEVER return OTP or fallback codes in the response!
+    return JSONResponse(content={
         "status": "success",
-        "message": f"OTP sent to +91 {mobile} successfully!",
+        "message": f"Verification code request processed for +91 {mobile}",
         "mobile": mobile,
         "user_exists": user_exists,
         "has_password": has_password,
         "sms_provider": sms_res.get("provider", "fast2sms"),
         "sms_status": sms_res.get("status"),
         "gateway_message": sms_res.get("message", "")
-    }
-    if sms_res.get("status") != "sent":
-        res_data["fallback_otp"] = otp
-        res_data["is_fallback"] = True
-
-    return JSONResponse(content=res_data)
+    })
 
 @app.post("/api/auth/register")
 async def register_user(request: Request):
@@ -2626,6 +2621,28 @@ async def admin_get_users():
         "status": "success",
         "users": list(all_data.get("users", {}).values()),
         "deposit_requests": all_data.get("deposit_requests", [])
+    })
+
+@app.post("/api/admin/reset-password")
+async def admin_reset_password(request: Request):
+    data = await request.json()
+    mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
+    new_password = str(data.get("new_password", "")).strip()
+    if not mobile or len(mobile) != 10 or not mobile.isdigit():
+        raise HTTPException(status_code=400, detail="Please provide a valid 10-digit mobile number")
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters long")
+
+    all_data = load_all_user_data()
+    users = all_data.get("users", {})
+    if mobile not in users:
+        raise HTTPException(status_code=404, detail=f"User with mobile +91 {mobile} not found in database")
+
+    users[mobile]["password_hash"] = hash_password(new_password)
+    save_all_user_data(all_data)
+    return JSONResponse(content={
+        "status": "success",
+        "message": f"Password for {mobile} has been reset to '{new_password}' successfully! Share this password with the user on WhatsApp."
     })
 
 @app.post("/api/admin/add-money")

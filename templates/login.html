@@ -254,16 +254,13 @@
       <div class="login-subtitle">India's #1 Secure Betting Exchange & Live Sports</div>
     </div>
 
-    <!-- TABS: LOGIN vs REGISTER vs OTP -->
+    <!-- TABS: LOGIN vs REGISTER (WINBUZZ STANDARD) -->
     <div class="login-nav-tabs">
       <button class="login-nav-tab active" id="tab-login" onclick="showLoginTab('login')">
         🔑 LOGIN
       </button>
       <button class="login-nav-tab" id="tab-register" onclick="showLoginTab('register')">
-        ⚡ SIGN UP
-      </button>
-      <button class="login-nav-tab" id="tab-otp" onclick="showLoginTab('otp')">
-        📲 OTP LOGIN
+        ⚡ SIGN UP (GET ₹500 BONUS)
       </button>
     </div>
 
@@ -300,7 +297,7 @@
 
         <div class="login-helper-links">
           <a href="javascript:void(0)" onclick="showLoginTab('register')">New Customer? Sign Up →</a>
-          <a href="javascript:void(0)" onclick="showLoginTab('otp')" style="color: var(--text-muted);">Forgot Password?</a>
+          <a href="javascript:void(0)" onclick="showLoginTab('forgot')" style="color: var(--text-muted);">Forgot Password?</a>
         </div>
       </div>
 
@@ -351,51 +348,37 @@
         </div>
       </div>
 
-      <!-- ==================== 3. OTP LOGIN / RESET PASSWORD ==================== -->
-      <div id="panel-otp" class="login-panel">
-        <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
-          Login with single-use SMS OTP or reset your account password.
-        </p>
-
-        <div id="otp-phone-step">
-          <div class="form-group">
-            <label class="form-label">MOBILE NUMBER</label>
-            <div class="form-input-wrap">
-              <span class="input-prefix">+91</span>
-              <input type="tel" id="otp-phone" placeholder="9876543210" maxlength="10" class="form-input">
-            </div>
+      <!-- ==================== 3. FORGOT PASSWORD & SECURITY SUPPORT ==================== -->
+      <div id="panel-forgot" class="login-panel">
+        <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 6px; padding: 12px 14px; margin-bottom: 14px; color: #fff;">
+          <div style="font-weight: 900; font-size: 13px; color: #f87171; display: flex; align-items: center; gap: 6px;">
+            <span>🔒</span> Account Security & Funds Protection
           </div>
-          <button type="button" id="btn-otp-send" class="btn-submit-main" onclick="doSendOtpLogin()">
-            SEND OTP CODE 📲
-          </button>
+          <div style="font-size: 11.5px; color: #cbd5e1; margin-top: 6px; line-height: 1.5;">
+            Aapke wallet aur balance ki 100% suraksha ke liye automated password reset band hai taaki koi dusra vyakti aapka account login na kar sake.
+            <br><br>
+            <strong>Agar password yaad hai toh direct Password se Login hoga. Agar password bhool gaye hain, toh CrickNova Official Support Team se WhatsApp par baat karein.</strong>
+          </div>
         </div>
 
-        <div id="otp-verify-step" style="display: none;">
-          <div style="background: rgba(0, 230, 118, 0.1); border: 1px solid var(--color-green); border-radius: 4px; padding: 6px 10px; font-size: 10.5px; margin-bottom: 10px; color: #cbd5e1;">
-            ⚡ OTP sent! Check your WhatsApp for the 6-digit verification code.
+        <div style="background: #080f1e; border: 1px solid var(--border-light); border-radius: 6px; padding: 14px; margin-bottom: 12px;">
+          <label class="form-label" style="color: var(--winbuzz-gold);">APNA REGISTERED MOBILE NUMBER DALEIN</label>
+          <div class="form-input-wrap" style="margin-bottom: 12px;">
+            <span class="input-prefix">+91</span>
+            <input type="tel" id="forgot-phone" placeholder="Enter your 10-digit mobile" maxlength="10" class="form-input">
           </div>
 
-          <div class="form-group">
-            <label class="form-label">ENTER 6-DIGIT OTP</label>
-            <input type="text" id="otp-code" placeholder="Enter 6-digit OTP" maxlength="6" class="form-input" style="text-align: center; letter-spacing: 4px; font-size: 16px;">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">SET NEW PASSWORD (OPTIONAL)</label>
-            <input type="password" id="otp-new-pwd" placeholder="Enter new password" class="form-input">
-          </div>
-
-          <button type="button" id="btn-otp-finish" class="btn-submit-main" onclick="doCompleteOtpLogin()">
-            VERIFY OTP & LOG IN 🚀
+          <button type="button" class="btn-submit-main btn-register-green" onclick="doContactSupportForgot()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span>💬</span> CONTACT CRICKNOVA SUPPORT TEAM
           </button>
         </div>
 
         <div class="login-helper-links" style="justify-content: center; margin-top: 14px;">
-          <a href="javascript:void(0)" onclick="showLoginTab('login')">← Back to Password Login</a>
+          <a href="javascript:void(0)" onclick="showLoginTab('login')" style="color: var(--winbuzz-gold); font-weight: 800;">← Back to Login with Password</a>
         </div>
       </div>
 
-      <!-- WHATSAPP DIRECT AGENT ASSISTANCE -->
+      <!-- WHATSAPP DIRECT AGENT ASSISTANCE --><!-- WHATSAPP DIRECT AGENT ASSISTANCE -->
       <a href="https://wa.me/919693554087?text=Hi%20CrickNova,%20I%20need%20help%20with%20Login%20or%20Add%20Money" target="_blank" class="whatsapp-badge-card">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 18px;">💬</span>
@@ -419,11 +402,39 @@
   </div>
 
   <script>
-    function showLoginTab(tab) {
-      document.querySelectorAll('.login-nav-tab').forEach(t => t.classList.remove('active'));
+        function showLoginTab(tab) {
+      document.querySelectorAll('.login-nav-tab').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.login-panel').forEach(p => p.classList.remove('active'));
 
-      const tabEl = document.getElementById(`tab-${tab}`);
+      if (tab === 'login') {
+        const tabEl = document.getElementById('tab-login');
+        if (tabEl) tabEl.classList.add('active');
+        document.getElementById('panel-login').classList.add('active');
+      } else if (tab === 'register') {
+        const tabEl = document.getElementById('tab-register');
+        if (tabEl) tabEl.classList.add('active');
+        document.getElementById('panel-register').classList.add('active');
+      } else if (tab === 'forgot') {
+        // Show forgot / support panel
+        const panelForgot = document.getElementById('panel-forgot');
+        if (panelForgot) panelForgot.classList.add('active');
+        // prefill phone if entered in login
+        const loginPhone = document.getElementById('login-phone').value.trim();
+        if (loginPhone) {
+          document.getElementById('forgot-phone').value = loginPhone;
+        }
+      }
+    }
+
+    function doContactSupportForgot() {
+      const phone = document.getElementById('forgot-phone').value.trim();
+      let text = 'Hi CrickNova Support, I forgot my account password. Please help me recover my account.';
+      if (phone && phone.length === 10) {
+        text = `Hi CrickNova Support, I forgot my account password for registered mobile +91 ${phone}. Please help me reset my password.`;
+      }
+      const url = `https://wa.me/919693554087?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
+    }`);
       const panelEl = document.getElementById(`panel-${tab}`);
       if (tabEl) tabEl.classList.add('active');
       if (panelEl) panelEl.classList.add('active');
@@ -556,173 +567,6 @@
       } finally {
         btn.disabled = false;
         btn.innerText = '⚡ CREATE ACCOUNT & PLAY (₹500 BONUS) 🚀';
-      }
-    }
-
-    // Fallback: Register Send OTP (if needed)
-    async function doRegisterSendOtp() {
-      const mobile = document.getElementById('reg-phone').value.trim();
-      if (!mobile || mobile.length !== 10) {
-        alert('Please enter a valid 10-digit mobile number');
-        return;
-      }
-
-      const btn = document.getElementById('btn-reg-send-otp');
-      btn.disabled = true;
-      btn.innerText = 'SENDING OTP...';
-
-      try {
-        const res = await fetch('/api/auth/send-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile: mobile, purpose: 'REGISTER' })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          if (data.user_exists && data.has_password) {
-            alert('ℹ️ This mobile number is already registered! Please login with your password.');
-            showLoginTab('login');
-            document.getElementById('login-phone').value = mobile;
-            document.getElementById('login-pwd').focus();
-            return;
-          }
-          document.getElementById('reg-phone-step').style.display = 'none';
-          document.getElementById('reg-verify-step').style.display = 'block';
-          const msgEl = document.getElementById('reg-otp-msg');
-          document.getElementById('reg-otp').value = '';
-          document.getElementById('reg-otp').placeholder = 'Enter 6-digit OTP';
-          document.getElementById('reg-otp').focus();
-
-          if (data.sms_status === 'error') {
-            if (msgEl) {
-              msgEl.style.border = '1px solid #f59e0b';
-              msgEl.style.background = 'rgba(245, 158, 11, 0.15)';
-              msgEl.innerHTML = `⚠️ <strong>Fast2SMS Gateway Notice:</strong> ${data.gateway_message || 'Please check Fast2SMS balance/template'}.<br><span style="font-size: 10px; color: #fcd34d;">Enter the 6-digit OTP received on WhatsApp:</span>`;
-            }
-          } else {
-            if (msgEl) {
-              msgEl.style.border = '1px solid var(--color-green)';
-              msgEl.style.background = 'rgba(0, 230, 118, 0.12)';
-              msgEl.innerHTML = `📲 <strong>WhatsApp OTP Sent!</strong> A 6-digit code has been delivered to your WhatsApp <strong>+91 ${mobile}</strong>. Check your WhatsApp!`;
-            }
-          }
-          document.getElementById('reg-pwd').focus();
-        } else {
-          alert('❌ ' + (data.detail || 'Failed to send OTP'));
-        }
-      } catch (e) {
-        alert('Network error sending OTP: ' + e.message);
-      } finally {
-        btn.disabled = false;
-        btn.innerText = 'SEND WHATSAPP OTP 📲';
-      }
-    }
-
-    // 4. Complete Registration
-    async function doCompleteRegister() {
-      const mobile = document.getElementById('reg-phone').value.trim();
-      const otp = document.getElementById('reg-otp').value.trim();
-      const pwd = document.getElementById('reg-pwd').value.trim();
-      const pwdConfirm = document.getElementById('reg-pwd-confirm').value.trim();
-
-      if (!otp) { alert('Please enter the OTP code'); return; }
-      if (!pwd || pwd.length < 6) { alert('Password must be at least 6 characters long'); return; }
-      if (pwd !== pwdConfirm) { alert('Passwords do not match! Please check again.'); return; }
-
-      const btn = document.getElementById('btn-reg-finish');
-      btn.disabled = true;
-      btn.innerText = 'CREATING ACCOUNT...';
-
-      try {
-        const res = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile: mobile, otp: otp, password: pwd })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          alert(`🎉 Welcome to CrickNova!\n₹500 welcome bonus has been credited to your wallet.`);
-          window.location.href = '/';
-        } else {
-          alert('❌ ' + (data.detail || 'Registration failed'));
-        }
-      } catch (e) {
-        alert('Network error creating account: ' + e.message);
-      } finally {
-        btn.disabled = false;
-        btn.innerText = '✓ COMPLETE REGISTRATION & START PLAYING';
-      }
-    }
-
-    // 5. OTP Login
-    async function doSendOtpLogin() {
-      const mobile = document.getElementById('otp-phone').value.trim();
-      if (!mobile || mobile.length !== 10) { alert('Please enter a 10-digit mobile number'); return; }
-
-      const btn = document.getElementById('btn-otp-send');
-      btn.disabled = true;
-      btn.innerText = 'SENDING OTP...';
-
-      try {
-        const res = await fetch('/api/auth/send-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile: mobile, purpose: 'LOGIN' })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          document.getElementById('otp-phone-step').style.display = 'none';
-          document.getElementById('otp-verify-step').style.display = 'block';
-          document.getElementById('otp-code').value = '';
-          document.getElementById('otp-code').placeholder = 'Enter 6-digit OTP';
-          document.getElementById('otp-code').focus();
-          if (data.fallback_otp) {
-            document.getElementById('otp-code').value = data.fallback_otp;
-            alert(`🔑 Verification Code: ${data.fallback_otp}\n(Auto-filled for quick login)`);
-          } else if (data.sms_status === 'error') {
-            alert(`⚠️ Notice: ${data.gateway_message || 'Please check Fast2SMS settings in Admin panel'}.`);
-          } else {
-            alert(`📲 WhatsApp OTP Sent! A 6-digit code has been delivered to your WhatsApp (+91 ${mobile}).`);
-          }
-        } else {
-          alert('❌ ' + (data.detail || 'Failed to send OTP'));
-        }
-      } catch (e) {
-        alert('Network error sending OTP: ' + e.message);
-      } finally {
-        btn.disabled = false;
-        btn.innerText = 'SEND WHATSAPP OTP 📲';
-      }
-    }
-
-    async function doCompleteOtpLogin() {
-      const mobile = document.getElementById('otp-phone').value.trim();
-      const otp = document.getElementById('otp-code').value.trim();
-      const newPwd = document.getElementById('otp-new-pwd').value.trim();
-
-      if (!otp) { alert('Please enter the OTP code'); return; }
-
-      const btn = document.getElementById('btn-otp-finish');
-      btn.disabled = true;
-      btn.innerText = 'VERIFYING...';
-
-      try {
-        const res = await fetch('/api/auth/verify-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile: mobile, otp: otp, new_password: newPwd || undefined })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          window.location.href = '/';
-        } else {
-          alert('❌ ' + (data.detail || 'Verification failed'));
-        }
-      } catch (e) {
-        alert('Network error: ' + e.message);
-      } finally {
-        btn.disabled = false;
-        btn.innerText = 'VERIFY OTP & LOG IN 🚀';
       }
     }
 

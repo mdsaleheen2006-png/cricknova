@@ -493,9 +493,14 @@
               <td>{{ u.bets|length }} bets</td>
               <td style="font-size: 10px; color: var(--text-dim);">{{ u.created_at }}</td>
               <td>
-                <button class="btn-quick-credit" onclick="quickCreditUser('{{ u.mobile }}')">
-                  + Add Money
-                </button>
+                <div style="display: flex; gap: 4px;">
+                  <button class="btn-quick-credit" onclick="quickCreditUser('{{ u.mobile }}')">
+                    + Add Money
+                  </button>
+                  <button class="btn-quick-credit" style="background: #f59e0b; color: #000;" onclick="adminResetPassword('{{ u.mobile }}')">
+                    🔑 Reset Pwd
+                  </button>
+                </div>
               </td>
             </tr>
             {% else %}
@@ -603,6 +608,30 @@
       document.getElementById('adm-mobile').value = mobile;
       document.getElementById('adm-amount').focus();
       window.scrollTo({ top: 120, behavior: 'smooth' });
+    }
+
+    async function adminResetPassword(mobile) {
+      const newPwd = prompt(`Enter new password for player +91 ${mobile} (minimum 6 characters):`, 'cricknova123');
+      if (newPwd === null) return;
+      if (!newPwd || newPwd.trim().length < 6) {
+        alert('Password must be at least 6 characters long.');
+        return;
+      }
+      try {
+        const res = await fetch('/api/admin/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile: mobile, new_password: newPwd.trim() })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert(`✅ Success!\n${data.message}`);
+        } else {
+          alert(`❌ Error: ${data.detail || 'Failed to reset password'}`);
+        }
+      } catch (err) {
+        alert('Network error: ' + err.message);
+      }
     }
 
     async function executeAddMoney(e) {
