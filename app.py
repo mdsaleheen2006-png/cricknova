@@ -65,7 +65,20 @@ USER_STATE = load_json(USER_STATE_FILE, {
     "bets": [],
     "transactions": []
 })
-CASINO_GAMES = load_json(CASINO_FILE, [])
+
+def get_casino_games_list() -> List[Dict[str, Any]]:
+    games = load_json(CASINO_FILE, [])
+    if isinstance(games, list):
+        return games
+    elif isinstance(games, dict):
+        return list(games.values())
+    return []
+
+def get_casino_games_dict() -> Dict[str, Dict[str, Any]]:
+    games = get_casino_games_list()
+    return {g.get("id"): g for g in games if isinstance(g, dict) and g.get("id")}
+
+CASINO_GAMES = get_casino_games_list()
 
 # In-Memory Real-time State
 LIVE_MATCHES: Dict[str, Any] = {}
@@ -642,7 +655,7 @@ async def read_root(request: Request):
             "last_updated": LAST_SYNC_TIME_STR,
             "user": user,
             "open_bets": [b for b in user.get("bets", []) if b.get("status") == "OPEN"],
-            "casino_games": CASINO_GAMES,
+            "casino_games": get_casino_games_list(),
             "all_users_count": len(all_data.get("users", {})),
             "payment_config": all_data.get("payment_config", {
                 "upi_id": "cricknova@upi",
@@ -711,18 +724,106 @@ async def casino_arena(request: Request, game_slug: str = "aviator"):
     recalculate_user_exposure(user)
     save_all_user_data()
 
-    game = CASINO_GAMES.get(game_slug, CASINO_GAMES.get("aviator", {}))
+    games_list = get_casino_games_list()
+    games_dict = get_casino_games_dict()
+
+    game = games_dict.get(game_slug)
+    if not game:
+        game = games_dict.get("aviator", games_list[0] if games_list else {})
+
+    all_data = load_all_user_data()
+    payment_config = all_data.get("payment_config", {
+        "upi_id": "cricknova@upi",
+        "upi_name": "CrickNova Exchange",
+        "whatsapp_number": "919876543210"
+    })
+
     return templates.TemplateResponse(
         request=request,
         name="casino_arena.html",
         context={
             "game": game,
-            "all_games": CASINO_GAMES,
+            "active_slug": game_slug,
+            "all_games": games_list,
+            "games_dict": games_dict,
             "user": user,
+            "payment_config": payment_config,
             "feed_status": FEED_STATUS,
             "last_updated": LAST_SYNC_TIME_STR
         }
     )
+
+@app.get("/api/casino/games")
+async def get_casino_games_api():
+    return JSONResponse(content={"status": "success", "games": get_casino_games_list()})
+
+@app.post("/api/casino/bet")
+async def place_casino_bet(request: Request):
+    user = get_active_user(request)
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login first to play live casino games.")
+
+    data = await request.json()
+    game_id = data.get("game_id", "aviator")
+    stake = float(data.get("stake", 0.0))
+    bet_type = str(data.get("bet_type", "bet"))
+
+    if stake <= 0:
+        raise HTTPException(status_code=400, detail="Invalid stake amount")
+
+    recalculate_user_exposure(user)
+    if user.get("balance", 0.0) < stake:
+        raise HTTPException(status_code=400, detail=f"Insufficient balance. Your balance is ₹{user.get('balance', 0.0):,.2f}")
+
+    user["balance"] = round(user.get("balance", 0.0) - stake, 2)
+    user.setdefault("transactions", []).insert(0, {
+        "id": f"CAS-{random.randint(100000, 999999)}",
+        "type": "CASINO_BET",
+        "method": f"{game_id.upper()} ({bet_type})",
+        "amount": stake,
+        "status": "COMPLETED",
+        "date": time.strftime("%Y-%m-%d %H:%M:%S")
+    })
+
+    save_all_user_data()
+    return JSONResponse(content={
+        "status": "success",
+        "message": f"Bet of ₹{stake:,.2f} placed on {game_id}!",
+        "new_balance": user["balance"],
+        "stake": stake
+    })
+
+@app.post("/api/casino/settle")
+async def settle_casino_bet(request: Request):
+    user = get_active_user(request)
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login first.")
+
+    data = await request.json()
+    game_id = data.get("game_id", "aviator")
+    outcome = data.get("outcome", "LOSS")
+    stake = float(data.get("stake", 0.0))
+    payout = float(data.get("payout", 0.0))
+
+    if outcome == "WIN" and payout > 0:
+        user["balance"] = round(user.get("balance", 0.0) + payout, 2)
+        user["total_winnings"] = round(user.get("total_winnings", 0.0) + payout - stake, 2)
+        user.setdefault("transactions", []).insert(0, {
+            "id": f"WIN-{random.randint(100000, 999999)}",
+            "type": "CASINO_WIN",
+            "method": f"{game_id.upper()} Payout",
+            "amount": payout,
+            "status": "COMPLETED",
+            "date": time.strftime("%Y-%m-%d %H:%M:%S")
+        })
+        save_all_user_data()
+
+    return JSONResponse(content={
+        "status": "success",
+        "outcome": outcome,
+        "payout": payout,
+        "new_balance": user.get("balance", 0.0)
+    })
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_portal(request: Request):

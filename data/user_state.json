@@ -4,13 +4,29 @@
       "mobile": "9876543210",
       "name": "DEMO7890",
       "tier": "VIP Platinum",
-      "balance": 100500.0,
+      "balance": 100790.0,
       "exposure": 0.0,
-      "total_winnings": 18450.0,
+      "total_winnings": 18740.0,
       "kyc_status": "VERIFIED",
       "created_at": "2026-11-17 12:00:00",
       "bets": [],
       "transactions": [
+        {
+          "id": "WIN-536117",
+          "type": "CASINO_WIN",
+          "method": "AVIATOR Payout",
+          "amount": 490.0,
+          "status": "COMPLETED",
+          "date": "2026-11-17 22:32:56"
+        },
+        {
+          "id": "CAS-191629",
+          "type": "CASINO_BET",
+          "method": "AVIATOR (bet)",
+          "amount": 200.0,
+          "status": "COMPLETED",
+          "date": "2026-11-17 22:32:56"
+        },
         {
           "id": "DEP-375700",
           "type": "DEPOSIT",

@@ -323,34 +323,33 @@
       <!-- SCREEN 3: CASINO & AVIATOR -->
       <section id="android-screen-casino" class="android-screen">
         <div class="android-section-header">
-          <span>🎰 LIVE CASINO & CRASH GAMES</span>
-          <span class="badge-count">HOT</span>
+          <span>🎰 WINBUZZ LIVE CASINO (24+ TABLES)</span>
+          <span class="badge-count">LIVE HD</span>
         </div>
-        <div class="android-casino-grid">
-          <div class="android-casino-card" onclick="window.location.href='/casino'">
-            <div class="casino-card-badge">HOT 99% RTP</div>
-            <div class="casino-icon">✈️</div>
-            <div class="casino-name">Spribe Aviator</div>
-            <div class="casino-provider">Spribe Official</div>
+
+        <!-- Category Scroll Bar -->
+        <div class="android-cat-bar" style="margin-bottom: 10px;">
+          <button class="android-cat-btn active" onclick="filterMobileCasino('all', this)">⚡ All (24)</button>
+          <button class="android-cat-btn" onclick="filterMobileCasino('cards', this)">🎴 Indian Cards</button>
+          <button class="android-cat-btn" onclick="filterMobileCasino('crash', this)">✈️ Aviator & Crash</button>
+          <button class="android-cat-btn" onclick="filterMobileCasino('roulette', this)">🎡 Roulette</button>
+          <button class="android-cat-btn" onclick="filterMobileCasino('baccarat', this)">🃏 Baccarat</button>
+          <button class="android-cat-btn" onclick="filterMobileCasino('slots', this)">🎰 Slots</button>
+        </div>
+
+        <!-- 24+ Live Casino Games Grid -->
+        <div class="android-casino-grid" id="mobile-casino-grid">
+          {% for g in casino_games %}
+          <div class="android-casino-card" data-cat="{{ g.category }}" onclick="window.location.href='/casino/{{ g.id }}'" style="background: {{ g.gradient|default('var(--bg-card)') }};">
+            <div class="casino-card-badge">{{ g.badge }}</div>
+            <div class="casino-icon">{{ g.icon }}</div>
+            <div class="casino-name">{{ g.name }}</div>
+            <div class="casino-provider">{{ g.provider }}</div>
+            <div style="font-size: 8.5px; color: var(--color-green); font-weight: 800; margin-top: 4px;">
+              ● LIVE • 👥 {{ g.players_online }}
+            </div>
           </div>
-          <div class="android-casino-card" onclick="window.location.href='/casino'">
-            <div class="casino-card-badge">LIVE HD</div>
-            <div class="casino-icon">🎴</div>
-            <div class="casino-name">Teen Patti 20-20</div>
-            <div class="casino-provider">Evolution Live</div>
-          </div>
-          <div class="android-casino-card" onclick="window.location.href='/casino'">
-            <div class="casino-card-badge">POPULAR</div>
-            <div class="casino-icon">🃏</div>
-            <div class="casino-name">Super Andar Bahar</div>
-            <div class="casino-provider">Ezugi VIP</div>
-          </div>
-          <div class="android-casino-card" onclick="window.location.href='/casino'">
-            <div class="casino-card-badge">VIP</div>
-            <div class="casino-icon">🎡</div>
-            <div class="casino-name">Lightning Roulette</div>
-            <div class="casino-provider">Evolution Live</div>
-          </div>
+          {% endfor %}
         </div>
       </section>
 
@@ -598,22 +597,29 @@
         <span class="count-badge">{{ results_matches|length }}</span>
       </a>
 
-      <div class="sidebar-title" style="margin-top: 6px;">Casino & Crash</div>
-      <a href="/casino" class="sidebar-link">
+      <div class="sidebar-title" style="margin-top: 6px;">Live Casino & Crash</div>
+      <a href="/casino/aviator" class="sidebar-link">
         <span>✈️ Aviator (Spribe)</span>
         <span style="color: #ef4444; font-size: 9px; font-weight: 900;">HOT</span>
       </a>
-      <a href="/casino" class="sidebar-link">
+      <a href="/casino/teen-patti-2020" class="sidebar-link">
         <span>🎴 Teen Patti 20-20</span>
         <span style="color: var(--winbuzz-gold); font-size: 9px; font-weight: 900;">LIVE</span>
       </a>
-      <a href="/casino" class="sidebar-link">
+      <a href="/casino/super-andar-bahar" class="sidebar-link">
         <span>🃏 Super Andar Bahar</span>
-        <span class="count-badge">HD</span>
+        <span class="count-badge">EZUGI</span>
       </a>
-      <a href="/casino" class="sidebar-link">
-        <span>🎡 Live Roulette</span>
-        <span class="count-badge">VIP</span>
+      <a href="/casino/lightning-roulette" class="sidebar-link">
+        <span>⚡ Lightning Roulette</span>
+        <span class="count-badge">500x</span>
+      </a>
+      <a href="/casino/dragon-tiger" class="sidebar-link">
+        <span>🐉 Dragon Tiger Live</span>
+        <span class="count-badge">LIVE</span>
+      </a>
+      <a href="/casino" class="sidebar-link" style="color: var(--winbuzz-gold); font-weight: 800;">
+        <span>🎰 All 24+ Live Tables →</span>
       </a>
 
       <div class="sidebar-title" style="margin-top: 6px;">Admin & Android</div>
@@ -794,6 +800,32 @@
               {% endif %}
 
             </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- DESKTOP WINBUZZ LIVE CASINO SHOWCASE -->
+        <div class="exchange-card" style="margin-top: 14px;">
+          <div class="exchange-header" style="background: #080f1e; padding: 10px 14px; border-bottom: 1px solid var(--border-dark); display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 13px; font-weight: 900; color: #fff;">🎰 WINBUZZ LIVE CASINO & AVIATOR CRASH</span>
+              <span style="background: #dc2626; color: #fff; font-size: 8.5px; font-weight: 900; padding: 2px 6px; border-radius: 3px;">24+ TABLES LIVE</span>
+            </div>
+            <a href="/casino" style="color: var(--winbuzz-gold); font-size: 11px; font-weight: 800; text-decoration: none;">
+              Open Full Casino Lobby (24+ Games) →
+            </a>
+          </div>
+          <div style="padding: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;">
+            {% for g in casino_games[:8] %}
+            <a href="/casino/{{ g.id }}" class="android-casino-card" style="background: {{ g.gradient|default('var(--bg-card)') }}; text-decoration: none; padding: 12px 10px;">
+              <div class="casino-card-badge">{{ g.badge }}</div>
+              <div class="casino-icon" style="font-size: 36px;">{{ g.icon }}</div>
+              <div class="casino-name" style="font-size: 12.5px;">{{ g.name }}</div>
+              <div class="casino-provider">{{ g.provider }}</div>
+              <div style="font-size: 9px; color: var(--color-green); font-weight: 800; margin-top: 5px;">
+                ● LIVE • 👥 {{ g.players_online }}
+              </div>
+            </a>
             {% endfor %}
           </div>
         </div>

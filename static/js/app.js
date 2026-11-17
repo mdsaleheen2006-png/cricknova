@@ -97,6 +97,21 @@ function filterAndroidCat(cat, btnElement) {
   });
 }
 
+function filterMobileCasino(cat, btnElement) {
+  if (btnElement && btnElement.parentElement) {
+    btnElement.parentElement.querySelectorAll('.android-cat-btn').forEach(b => b.classList.remove('active'));
+    btnElement.classList.add('active');
+  }
+  const cards = document.querySelectorAll('#mobile-casino-grid .android-casino-card');
+  cards.forEach(card => {
+    if (cat === 'all' || card.dataset.cat === cat) {
+      card.style.display = 'block';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
 // ==================== 3. LIVE IST CLOCK ====================
 function startLiveClock() {
   const clockEl = document.getElementById('live-ist-clock');
