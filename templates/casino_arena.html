@@ -29,10 +29,21 @@
     /* ========================================================== */
     /* WINBUZZ AUTHENTIC LIVE CASINO & ARENA STYLING              */
     /* ========================================================== */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      overflow-x: hidden;
+      width: 100%;
+    }
+
     .casino-arena-container {
+      width: 100%;
       max-width: 1240px;
       margin: 0 auto;
       padding: 12px 14px 80px;
+      box-sizing: border-box;
     }
 
     .arena-header-box {
@@ -46,6 +57,7 @@
       margin-bottom: 12px;
       flex-wrap: wrap;
       gap: 10px;
+      width: 100%;
     }
 
     .arena-game-meta {
@@ -97,6 +109,7 @@
       flex-direction: column;
       justify-content: space-between;
       padding: 12px;
+      border-radius: 12px 12px 0 0;
     }
 
     .dealer-badge {
@@ -145,6 +158,7 @@
       padding: 16px 14px;
       text-align: center;
       border-top: 1px solid rgba(255,255,255,0.1);
+      width: 100%;
     }
 
     .cards-row {
@@ -193,43 +207,48 @@
       transform: translateY(-2px);
     }
 
-    /* CHIP SELECTOR BAR */
+    /* POKER CHIP SELECTOR BAR */
     .chip-selector-bar {
       display: flex;
       justify-content: center;
-      gap: 10px;
-      margin: 14px 0 6px;
+      gap: 8px;
+      margin: 12px 0 6px;
       flex-wrap: wrap;
     }
 
     .poker-chip {
-      width: 44px;
-      height: 44px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       border: 2px dashed #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 900;
       cursor: pointer;
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
       transition: all 0.15s;
+      user-select: none;
     }
 
     .poker-chip:hover, .poker-chip.active {
       transform: scale(1.15);
       border-style: solid;
-      box-shadow: 0 0 15px var(--winbuzz-gold);
+      box-shadow: 0 0 14px var(--winbuzz-gold);
     }
 
+    .chip-10  { background: #0284c7; color: #fff; }
+    .chip-50  { background: #e11d48; color: #fff; }
     .chip-100 { background: #2563eb; color: #fff; }
     .chip-500 { background: #dc2626; color: #fff; }
     .chip-1k  { background: #16a34a; color: #fff; }
     .chip-5k  { background: #9333ea; color: #fff; }
     .chip-10k { background: #d97706; color: #fff; }
 
-    /* ==================== 1. CRASH ENGINE STYLING ==================== */
+    /* ========================================================== */
+    /* 1. DITTO SPRIBE AVIATOR STYLING (100% RESPONSIVE)         */
+    /* ========================================================== */
     .aviator-hud {
       display: grid;
       grid-template-columns: 240px 1fr;
@@ -240,24 +259,14 @@
       overflow: hidden;
       padding: 12px;
       margin-bottom: 20px;
+      width: 100%;
     }
 
-    .aviator-players-stream {
-      background: #060a12;
-      border: 1px solid var(--border-dark);
-      border-radius: 8px;
-      padding: 8px 10px;
-      font-size: 11px;
-      max-height: 440px;
-      overflow-y: auto;
-    }
-
-    .player-bet-row {
+    .aviator-main-area {
       display: flex;
-      justify-content: space-between;
-      padding: 4px 0;
-      border-bottom: 1px solid #131d31;
-      font-size: 10.5px;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
     }
 
     .aviator-stage {
@@ -265,8 +274,9 @@
       background: radial-gradient(circle at 10% 90%, #1e1b4b 0%, #030712 70%);
       border: 1px solid #1e293b;
       border-radius: 8px;
-      min-height: 280px;
+      min-height: 240px;
       overflow: hidden;
+      width: 100%;
     }
 
     .aviator-history-ribbon {
@@ -279,6 +289,7 @@
       overflow-x: auto;
       z-index: 10;
       padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
     }
 
     .mult-pill {
@@ -294,7 +305,7 @@
 
     .aviator-canvas {
       width: 100%;
-      height: 280px;
+      height: 240px;
       display: block;
     }
 
@@ -303,19 +314,21 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 58px;
+      font-size: 52px;
       font-weight: 900;
       color: #fff;
       text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
       letter-spacing: 1px;
       z-index: 5;
+      text-align: center;
+      pointer-events: none;
     }
 
     .aviator-control-deck {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-top: 10px;
+      width: 100%;
     }
 
     .aviator-bet-box {
@@ -326,6 +339,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+      width: 100%;
     }
 
     .chip-btn-deck {
@@ -369,76 +383,54 @@
       animation: pulse 1s infinite;
     }
 
-    /* ==================== 2. MINES ENGINE STYLING ==================== */
-    .mines-hud {
-      background: #090e18;
-      border: 1px solid var(--border-light);
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 20px;
-    }
-
-    .mines-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
-      max-width: 380px;
-      margin: 14px auto;
-    }
-
-    .mine-tile {
-      aspect-ratio: 1;
-      background: #111d33;
-      border: 2px solid #1e293b;
+    .aviator-players-stream {
+      background: #060a12;
+      border: 1px solid var(--border-dark);
       border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 11px;
+      max-height: 380px;
+      overflow-y: auto;
+      width: 100%;
+    }
+
+    .player-bet-row {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 26px;
-      cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-      transition: all 0.15s;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-bottom: 1px solid #131d31;
+      font-size: 10.5px;
     }
 
-    .mine-tile:hover {
-      background: #1e3a8a;
-      transform: scale(1.04);
-    }
-
-    .mine-tile.revealed-gem {
-      background: radial-gradient(circle, #065f46 0%, #022c22 100%);
-      border-color: #10b981;
-      animation: gemPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .mine-tile.revealed-bomb {
-      background: radial-gradient(circle, #991b1b 0%, #450a0a 100%);
-      border-color: #ef4444;
-      animation: bombShake 0.4s;
-    }
-
-    @keyframes gemPop { 0% { transform: scale(0.5); } 100% { transform: scale(1); } }
-    @keyframes bombShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
-
-    /* ==================== 3. ROULETTE & GAME SHOWS ==================== */
-    .roulette-arena {
+    /* ========================================================== */
+    /* 2. DITTO EVOLUTION LIGHTNING ROULETTE TABLE MAT STYLING    */
+    /* ========================================================== */
+    .roulette-arena-box {
       background: #090e18;
       border: 1px solid var(--border-light);
       border-radius: 12px;
-      padding: 18px 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
+      overflow: hidden;
       margin-bottom: 20px;
+      width: 100%;
+    }
+
+    .roulette-stage-split {
+      display: grid;
+      grid-template-columns: 200px 1fr 140px;
+      gap: 12px;
+      align-items: center;
+      background: radial-gradient(circle at 50% 30%, #1e1b4b 0%, #030712 90%);
+      border-bottom: 2px solid var(--winbuzz-gold);
+      padding: 12px 16px;
     }
 
     .roulette-wheel-box {
-      width: 200px;
-      height: 200px;
+      width: 130px;
+      height: 130px;
       border-radius: 50%;
-      border: 6px solid var(--winbuzz-gold);
+      border: 5px solid var(--winbuzz-gold);
       position: relative;
+      margin: 0 auto;
       background: conic-gradient(
         #dc2626 0deg 9.7deg, #0f172a 9.7deg 19.4deg, #dc2626 19.4deg 29.1deg, #0f172a 29.1deg 38.8deg,
         #dc2626 38.8deg 48.5deg, #0f172a 48.5deg 58.2deg, #dc2626 58.2deg 68deg, #0f172a 68deg 77.7deg,
@@ -451,7 +443,7 @@
         #0f172a 311.7deg 321.4deg, #dc2626 321.4deg 331.1deg, #0f172a 331.1deg 341deg, #dc2626 341deg 350.7deg,
         #0f172a 350.7deg 360deg
       );
-      box-shadow: 0 0 35px rgba(245, 166, 35, 0.4);
+      box-shadow: 0 0 25px rgba(245, 166, 35, 0.4);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -467,72 +459,329 @@
     }
 
     .roulette-center-pin {
-      width: 60px;
-      height: 60px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: #060a12;
-      border: 3px solid var(--winbuzz-gold);
+      border: 2px solid var(--winbuzz-gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .lightning-pillars {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .lightning-card-pill {
+      background: rgba(0, 0, 0, 0.7);
+      border: 2px solid var(--winbuzz-gold);
+      border-radius: 6px;
+      padding: 6px 10px;
+      text-align: center;
+      box-shadow: 0 0 12px rgba(245, 166, 35, 0.5);
+      animation: pulse 1s infinite;
+    }
+
+    .lightning-card-pill .num {
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .lightning-card-pill .mult {
+      font-size: 11px;
+      font-weight: 900;
+      color: var(--winbuzz-gold);
+    }
+
+    /* FULL EUROPEAN ROULETTE BOARD TABLE */
+    .roulette-board-wrap {
+      background: radial-gradient(ellipse at 50% 50%, #064e3b 0%, #022c22 85%, #01140e 100%);
+      padding: 14px 12px;
+      width: 100%;
+    }
+
+    .r-stats-ribbon {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .roulette-scroll-container {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 8px;
+    }
+
+    .roulette-grid-table {
+      min-width: 620px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      user-select: none;
+      margin: 0 auto;
+    }
+
+    .r-main-board {
+      display: flex;
+      gap: 3px;
+    }
+
+    .r-zero-cell {
+      width: 48px;
+      background: #16a34a;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 20px;
       font-weight: 900;
       color: #fff;
+      cursor: pointer;
+      position: relative;
     }
+    .r-zero-cell:hover { background: #22c55e; }
 
-    /* ==================== 4. SLOTS ENGINE STYLING ==================== */
-    .slot-machine-box {
-      background: radial-gradient(circle at 50% 30%, #1e1b4b 0%, #060a14 80%);
-      border: 2px solid var(--winbuzz-gold);
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-
-    .slot-reels-grid {
+    .r-num-matrix {
+      flex: 1;
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 6px;
-      max-width: 480px;
-      margin: 14px auto;
-      background: #020617;
-      border: 2px solid #334155;
-      padding: 10px;
-      border-radius: 8px;
+      grid-template-rows: repeat(3, 38px);
+      grid-template-columns: repeat(12, 1fr);
+      gap: 3px;
     }
 
-    .slot-cell {
-      background: #0f172a;
-      border: 1px solid #1e293b;
-      border-radius: 6px;
-      aspect-ratio: 1;
+    .r-num-cell {
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 3px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px;
-      box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
-      transition: all 0.2s;
+      font-size: 13px;
+      font-weight: 900;
+      color: #fff;
+      cursor: pointer;
+      position: relative;
+      transition: filter 0.15s;
+    }
+    .r-num-cell:hover { filter: brightness(1.25); }
+    .r-num-cell.red { background: #dc2626; }
+    .r-num-cell.black { background: #0f172a; }
+
+    .r-col-cells {
+      width: 44px;
+      display: grid;
+      grid-template-rows: repeat(3, 38px);
+      gap: 3px;
+    }
+    .r-col-box {
+      background: #022c22;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+      color: var(--winbuzz-gold);
+      cursor: pointer;
+      position: relative;
+    }
+    .r-col-box:hover { background: #044e3f; }
+
+    .r-dozens-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3px;
+      margin-left: 51px;
+      margin-right: 47px;
+    }
+    .r-dozen-box {
+      background: #022c22;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 3px;
+      padding: 7px 0;
+      text-align: center;
+      font-size: 11.5px;
+      font-weight: 900;
+      color: #fff;
+      cursor: pointer;
+      position: relative;
+    }
+    .r-dozen-box:hover { background: #044e3f; }
+
+    .r-outside-row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 3px;
+      margin-left: 51px;
+      margin-right: 47px;
+    }
+    .r-out-box {
+      background: #022c22;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 3px;
+      padding: 8px 0;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 900;
+      color: #fff;
+      cursor: pointer;
+      position: relative;
+    }
+    .r-out-box:hover { background: #044e3f; }
+    .r-out-box.red-bg { background: #b91c1c; }
+    .r-out-box.black-bg { background: #020617; }
+
+    .r-chip-placed {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--winbuzz-gold);
+      color: #000;
+      border: 1.5px solid #fff;
+      font-size: 8.5px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.8);
+      pointer-events: none;
+      z-index: 5;
     }
 
-    .slot-cell.spinning {
-      filter: blur(2px);
-      transform: translateY(4px);
+    .roulette-action-bar {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
     }
 
-    .slot-cell.winner {
-      border-color: var(--winbuzz-gold);
-      background: rgba(245, 166, 35, 0.2);
-      animation: pulse 0.5s infinite;
+    .btn-r-action {
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-r-clear { background: #334155; color: #fff; }
+    .btn-r-double { background: #2563eb; color: #fff; }
+    .btn-r-spin {
+      background: linear-gradient(180deg, #f5a623 0%, #d97706 100%);
+      color: #000;
+      box-shadow: 0 4px 14px rgba(245, 166, 35, 0.4);
     }
 
-    /* ==================== 5. 24-GAMES LOBBY GRID ==================== */
+    /* ========================================================== */
+    /* 3. STRICT MOBILE RESPONSIVE MEDIA QUERIES (<= 768px)      */
+    /* ========================================================== */
+    @media (max-width: 768px) {
+      .casino-arena-container {
+        padding: 4px 6px 84px !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+      }
+
+      .arena-header-box {
+        margin: 4px 0 8px !important;
+        border-radius: 8px !important;
+        padding: 8px 10px !important;
+      }
+
+      .aviator-hud {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 6px !important;
+        margin: 0 0 14px 0 !important;
+        gap: 8px !important;
+        border-radius: 8px !important;
+        border-left: none !important;
+        border-right: none !important;
+      }
+
+      .aviator-main-area {
+        width: 100% !important;
+      }
+
+      .aviator-stage {
+        width: 100% !important;
+        min-height: 220px !important;
+        border-radius: 6px !important;
+      }
+
+      .aviator-canvas {
+        width: 100% !important;
+        height: 220px !important;
+      }
+
+      .aviator-center-mult {
+        font-size: 42px !important;
+      }
+
+      .aviator-control-deck {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        width: 100% !important;
+      }
+
+      .aviator-players-stream {
+        order: 10 !important;
+        width: 100% !important;
+        max-height: 200px !important;
+      }
+
+      .roulette-arena-box {
+        border-radius: 8px !important;
+        border-left: none !important;
+        border-right: none !important;
+        margin-bottom: 14px !important;
+      }
+
+      .roulette-stage-split {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+        padding: 10px 8px !important;
+        text-align: center;
+      }
+
+      .dealer-video-frame {
+        height: 190px !important;
+        padding: 8px 10px !important;
+      }
+
+      .table-felt {
+        padding: 10px 6px !important;
+      }
+    }
+
+    /* 4. 24-GAMES LOBBY GRID */
     .casino-filter-bar {
       display: flex;
       gap: 8px;
       overflow-x: auto;
       padding-bottom: 8px;
       margin-bottom: 14px;
+      -webkit-overflow-scrolling: touch;
     }
 
     .casino-filter-chip {
@@ -556,7 +805,7 @@
 
     .casino-games-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
       gap: 12px;
     }
 
@@ -661,6 +910,69 @@
       font-weight: 900;
       cursor: pointer;
     }
+
+    /* MINES & SLOTS */
+    .mines-hud {
+      background: #090e18;
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+    .mines-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      max-width: 360px;
+      margin: 14px auto;
+    }
+    .mine-tile {
+      aspect-ratio: 1;
+      background: #111d33;
+      border: 2px solid #1e293b;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    }
+    .mine-tile.revealed-gem { background: radial-gradient(circle, #065f46 0%, #022c22 100%); border-color: #10b981; }
+    .mine-tile.revealed-bomb { background: radial-gradient(circle, #991b1b 0%, #450a0a 100%); border-color: #ef4444; }
+
+    .slot-machine-box {
+      background: radial-gradient(circle at 50% 30%, #1e1b4b 0%, #060a14 80%);
+      border: 2px solid var(--winbuzz-gold);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      text-align: center;
+      width: 100%;
+    }
+    .slot-reels-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      max-width: 440px;
+      margin: 14px auto;
+      background: #020617;
+      border: 2px solid #334155;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .slot-cell {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+    }
+    .slot-cell.spinning { filter: blur(2px); transform: translateY(4px); }
   </style>
 </head>
 <body>
@@ -707,7 +1019,7 @@
       <div id="live-ist-clock" class="live-clock-badge">--:--:-- IST</div>
 
       <span id="provider-feed-badge" class="provider-feed-badge" style="color: #00e676;">
-        🟢 CASINO FEED: LIVE (Evolution / Ezugi)
+        🟢 CASINO FEED: LIVE (Evolution / Ezugi / Spribe)
       </span>
 
       <div class="header-right">
@@ -739,11 +1051,10 @@
       <div class="sports-nav-inner">
         <a href="/" class="nav-item">← 🏏 CRICKET & SPORTS EXCHANGE</a>
         <a href="/casino/aviator" class="nav-item {% if active_slug == 'aviator' %}active{% endif %}" style="color: var(--winbuzz-gold);">✈️ AVIATOR</a>
+        <a href="/casino/lightning-roulette" class="nav-item {% if active_slug == 'lightning-roulette' %}active{% endif %}">⚡ LIGHTNING ROULETTE</a>
         <a href="/casino/teen-patti-2020" class="nav-item {% if active_slug == 'teen-patti-2020' %}active{% endif %}">🎴 TEEN PATTI</a>
         <a href="/casino/super-andar-bahar" class="nav-item {% if active_slug == 'super-andar-bahar' %}active{% endif %}">🃏 ANDAR BAHAR</a>
-        <a href="/casino/lightning-roulette" class="nav-item {% if active_slug == 'lightning-roulette' %}active{% endif %}">⚡ ROULETTE</a>
         <a href="/casino/dragon-tiger" class="nav-item {% if active_slug == 'dragon-tiger' %}active{% endif %}">🐉 DRAGON TIGER</a>
-        <a href="/casino/crazy-time" class="nav-item {% if active_slug == 'crazy-time' %}active{% endif %}">🎡 CRAZY TIME</a>
         <a href="/casino/gates-of-olympus" class="nav-item {% if active_slug == 'gates-of-olympus' %}active{% endif %}">🎰 SLOTS</a>
         <a href="/admin" class="nav-item" style="margin-left: auto; color: var(--winbuzz-gold);">⚙️ ADMIN PORTAL</a>
       </div>
@@ -782,29 +1093,15 @@
 
 
     <!-- ======================================================== -->
-    <!-- DEDICATED LIVE CASINO ARENA ENGINES (ALL 24 GAMES)       -->
+    <!-- DEDICATED LIVE CASINO ARENA ENGINES                      -->
     <!-- ======================================================== -->
 
     {% if game.category == 'crash' and game.id in ['aviator', 'jetx', 'spaceman'] %}
-    <!-- ==================== 1. CRASH FLIGHT ENGINE ==================== -->
+    <!-- ==================== 1. SPRIBE AVIATOR COCKPIT ==================== -->
     <div class="aviator-hud">
-      <!-- Live Players Bets Stream -->
-      <div class="aviator-players-stream">
-        <div style="font-weight: 900; color: var(--winbuzz-gold); margin-bottom: 6px; border-bottom: 1px solid var(--border-dark); padding-bottom: 4px;">
-          👥 LIVE BETS ({{ game.players_online }})
-        </div>
-        <div id="aviator-live-stream-list">
-          <div class="player-bet-row"><span>📱 9876****10</span><span style="color:#4ade80;">₹1,000 @ 2.45x</span></div>
-          <div class="player-bet-row"><span>📱 9123****54</span><span>₹500 (In-Flight)</span></div>
-          <div class="player-bet-row"><span>📱 9988****22</span><span style="color:#4ade80;">₹2,500 @ 1.85x</span></div>
-          <div class="player-bet-row"><span>📱 9345****88</span><span>₹200 (In-Flight)</span></div>
-          <div class="player-bet-row"><span>📱 9711****90</span><span style="color:#4ade80;">₹5,000 @ 3.20x</span></div>
-          <div class="player-bet-row"><span>📱 9456****33</span><span>₹1,500 (In-Flight)</span></div>
-        </div>
-      </div>
-
-      <!-- Canvas Flight Stage -->
-      <div>
+      <!-- Main Flight Area -->
+      <div class="aviator-main-area">
+        <!-- Stage Runway -->
         <div class="aviator-stage">
           <div class="aviator-history-ribbon" id="aviator-history-ribbon">
             <span class="mult-pill mid">2.45x</span>
@@ -815,7 +1112,7 @@
             <span class="mult-pill low">1.92x</span>
             <span class="mult-pill high">28.50x</span>
           </div>
-          <canvas id="aviator-canvas" class="aviator-canvas" width="800" height="280"></canvas>
+          <canvas id="aviator-canvas" class="aviator-canvas"></canvas>
           <div class="aviator-center-mult" id="aviator-mult-display">1.00x</div>
         </div>
 
@@ -827,8 +1124,12 @@
               <span>BET PANEL 1 (₹)</span>
               <span style="color: var(--winbuzz-gold);">Min ₹50 • Max ₹50k</span>
             </div>
-            <input type="number" id="aviator-stake-input" value="200" min="50" step="50"
-                   style="width: 100%; padding: 8px; background: #060a14; border: 1px solid var(--border-light); color: #fff; font-size: 15px; font-weight: 900; border-radius: 4px;">
+            <div style="display: flex; gap: 6px;">
+              <button class="chip-btn" style="width: 36px;" onclick="adjustAviatorStake(-50)">-</button>
+              <input type="number" id="aviator-stake-input" value="200" min="50" step="50"
+                     style="flex: 1; padding: 8px; background: #060a14; border: 1px solid var(--border-light); color: #fff; font-size: 15px; font-weight: 900; border-radius: 4px; text-align: center;">
+              <button class="chip-btn" style="width: 36px;" onclick="adjustAviatorStake(50)">+</button>
+            </div>
             <div class="chip-btn-deck">
               <button class="chip-btn" onclick="setAviatorStake(100)">+100</button>
               <button class="chip-btn" onclick="setAviatorStake(200)">+200</button>
@@ -843,14 +1144,14 @@
           <!-- Bet Deck 2 (Auto Cashout Deck) -->
           <div class="aviator-bet-box">
             <div style="font-size: 10.5px; font-weight: 800; color: var(--text-dim); display: flex; justify-content: space-between;">
-              <span>AUTO CASHOUT DECK (₹)</span>
+              <span>AUTO CASHOUT PANEL (₹)</span>
               <span style="color: #4ade80;">Auto Payout</span>
             </div>
             <div style="display: flex; gap: 6px;">
               <input type="number" id="aviator-stake-2" value="500" min="50" step="50"
-                     style="flex: 1; padding: 8px; background: #060a14; border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 900; border-radius: 4px;">
+                     style="flex: 1; padding: 8px; background: #060a14; border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 900; border-radius: 4px; text-align: center;">
               <input type="number" id="aviator-auto-mult-input" value="2.00" min="1.1" step="0.1" title="Target Multiplier"
-                     style="width: 80px; padding: 8px; background: #060a14; border: 1px solid var(--border-light); color: var(--winbuzz-gold); font-size: 14px; font-weight: 900; border-radius: 4px;">
+                     style="width: 80px; padding: 8px; background: #060a14; border: 1px solid var(--border-light); color: var(--winbuzz-gold); font-size: 14px; font-weight: 900; border-radius: 4px; text-align: center;">
             </div>
             <div class="chip-btn-deck">
               <button class="chip-btn" onclick="document.getElementById('aviator-auto-mult-input').value='1.50'">1.50x</button>
@@ -864,62 +1165,174 @@
           </div>
         </div>
       </div>
+
+      <!-- Live Players Bets Stream -->
+      <div class="aviator-players-stream">
+        <div style="font-weight: 900; color: var(--winbuzz-gold); margin-bottom: 6px; border-bottom: 1px solid var(--border-dark); padding-bottom: 4px; display: flex; justify-content: space-between;">
+          <span>👥 LIVE BETS ({{ game.players_online }})</span>
+          <span style="color: var(--color-green);">ACTIVE</span>
+        </div>
+        <div id="aviator-live-stream-list">
+          <div class="player-bet-row"><span>📱 9876****10</span><span style="color:#4ade80;">₹1,000 @ 2.45x</span></div>
+          <div class="player-bet-row"><span>📱 9123****54</span><span>₹500 (In-Flight)</span></div>
+          <div class="player-bet-row"><span>📱 9988****22</span><span style="color:#4ade80;">₹2,500 @ 1.85x</span></div>
+          <div class="player-bet-row"><span>📱 9345****88</span><span>₹200 (In-Flight)</span></div>
+          <div class="player-bet-row"><span>📱 9711****90</span><span style="color:#4ade80;">₹5,000 @ 3.20x</span></div>
+          <div class="player-bet-row"><span>📱 9456****33</span><span>₹1,500 (In-Flight)</span></div>
+        </div>
+      </div>
     </div>
 
 
-    {% elif game.id == 'mines' %}
-    <!-- ==================== 2. SPRIBE MINES ENGINE ==================== -->
-    <div class="mines-hud">
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-dark); padding-bottom: 8px;">
+    {% elif game.category == 'roulette' %}
+    <!-- ==================== 2. EVOLUTION LIGHTNING ROULETTE ==================== -->
+    <div class="roulette-arena-box">
+      <!-- Top Video Studio Stage -->
+      <div class="roulette-stage-split">
+        <!-- 3D Roulette Wheel -->
         <div>
-          <span style="font-size: 14px; font-weight: 900; color: #fff;">💎 SPRIBE MINES (5x5 GRID)</span>
-          <div style="font-size: 11px; color: var(--winbuzz-gold);">Find gems, avoid the 3 hidden bombs! Multiplier increases with every pick.</div>
+          <div class="roulette-wheel-box" id="roulette-wheel">
+            <div class="roulette-center-pin" id="roulette-center-num">17</div>
+          </div>
         </div>
-        <div style="text-align: right;">
-          <span style="font-size: 11px; color: var(--text-dim);">NEXT MULTIPLIER</span>
-          <div id="mines-next-mult" style="font-size: 18px; font-weight: 900; color: #4ade80;">1.18x</div>
+
+        <!-- Center Round Status & Lightning Lucky Numbers -->
+        <div style="text-align: center;">
+          <div style="font-size: 11px; font-weight: 900; color: var(--winbuzz-gold); letter-spacing: 1px; margin-bottom: 4px;">
+            ⚡ EVOLUTION LIGHTNING MULTIPLIERS
+          </div>
+          <div class="lightning-pillars" id="lightning-numbers-row">
+            <div class="lightning-card-pill"><span class="num">7</span><br><span class="mult">⚡ 100x</span></div>
+            <div class="lightning-card-pill"><span class="num">17</span><br><span class="mult">⚡ 500x</span></div>
+            <div class="lightning-card-pill"><span class="num">29</span><br><span class="mult">⚡ 200x</span></div>
+          </div>
+          <div id="roulette-status-msg" style="margin-top: 8px; font-size: 12px; font-weight: 800; color: #fff;">
+            ⏳ BETTING OPEN • PLACE YOUR CHIPS ON THE BOARD
+          </div>
+        </div>
+
+        <!-- Live Dealer Box -->
+        <div style="text-align: center;">
+          <div class="dealer-anim-glow" style="width: 52px; height: 52px; font-size: 26px; line-height: 48px; border-color: var(--winbuzz-gold); margin: 0 auto;">
+            👩‍💼
+          </div>
+          <div style="font-size: 10px; font-weight: 900; color: #fff; margin-top: 4px;">Ananya Sen</div>
+          <div style="font-size: 8.5px; color: var(--color-green);">Evolution Riga Studio</div>
         </div>
       </div>
 
-      <div class="mines-grid" id="mines-grid">
-        {% for i in range(25) %}
-        <div class="mine-tile" data-idx="{{ i }}" onclick="pickMineTile({{ i }})">❓</div>
-        {% endfor %}
-      </div>
+      <!-- European Roulette Betting Mat -->
+      <div class="roulette-board-wrap">
+        <div class="r-stats-ribbon">
+          <div>TOTAL STAKE: <strong id="r-total-stake" style="color: var(--winbuzz-gold);">₹0</strong></div>
+          <div id="r-last-win">LAST WIN: <strong style="color: #4ade80;">₹0</strong></div>
+        </div>
 
-      <div style="display: flex; gap: 10px; max-width: 440px; margin: 0 auto;">
-        <input type="number" id="mines-stake-input" value="200" min="50" step="50"
-               style="width: 120px; padding: 10px; background: #060a12; border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 900; border-radius: 6px;">
-        <button class="btn-aviator-main btn-aviator-bet" id="btn-mines-start" onclick="startMinesGame()">
-          START GAME (₹200)
-        </button>
-        <button class="btn-aviator-main btn-aviator-cashout" id="btn-mines-cashout" style="display: none;" onclick="cashoutMinesGame()">
-          CASHOUT (₹0)
-        </button>
-      </div>
-      <div id="mines-status-msg" style="text-align: center; margin-top: 10px; font-size: 12px; font-weight: 800; color: #fff;"></div>
-    </div>
+        <!-- Horizontally Scrollable Table on Mobile (Guarantees zero squashing) -->
+        <div class="roulette-scroll-container">
+          <div class="roulette-grid-table">
+            <div class="r-main-board">
+              <!-- 0 Cell -->
+              <div class="r-zero-cell" onclick="handleRouletteBetClick('0')">
+                <span>0</span>
+                <div class="r-chip-placed" id="r-chip-0" style="display: none;"></div>
+              </div>
 
+              <!-- 36 Numbers Matrix -->
+              <div class="r-num-matrix">
+                <!-- Row 1: 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36 -->
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('3')">3<div class="r-chip-placed" id="r-chip-3" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('6')">6<div class="r-chip-placed" id="r-chip-6" style="display:none;"></div></div>
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('9')">9<div class="r-chip-placed" id="r-chip-9" style="display:none;"></div></div>
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('12')">12<div class="r-chip-placed" id="r-chip-12" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('15')">15<div class="r-chip-placed" id="r-chip-15" style="display:none;"></div></div>
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('18')">18<div class="r-chip-placed" id="r-chip-18" style="display:none;"></div></div>
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('21')">21<div class="r-chip-placed" id="r-chip-21" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('24')">24<div class="r-chip-placed" id="r-chip-24" style="display:none;"></div></div>
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('27')">27<div class="r-chip-placed" id="r-chip-27" style="display:none;"></div></div>
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('30')">30<div class="r-chip-placed" id="r-chip-30" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('33')">33<div class="r-chip-placed" id="r-chip-33" style="display:none;"></div></div>
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('36')">36<div class="r-chip-placed" id="r-chip-36" style="display:none;"></div></div>
 
-    {% elif game.id == 'plinko' %}
-    <!-- ==================== 3. SPRIBE PLINKO ENGINE ==================== -->
-    <div class="mines-hud" style="text-align: center;">
-      <div style="font-size: 14px; font-weight: 900; color: #fff; margin-bottom: 6px;">🎯 SPRIBE PLINKO LIVE PYRAMID</div>
-      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">Watch the lucky chip bounce through the pegs into multiplier pockets!</div>
-      <canvas id="plinko-canvas" width="400" height="260" style="background: #060a14; border: 1px solid #1e293b; border-radius: 8px; max-width: 100%;"></canvas>
-      <div style="display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap;">
-        <button class="chip-btn" style="padding: 8px 16px;" onclick="dropPlinkoBall(100)">DROP BALL (₹100)</button>
-        <button class="chip-btn" style="padding: 8px 16px;" onclick="dropPlinkoBall(200)">DROP BALL (₹200)</button>
-        <button class="chip-btn" style="padding: 8px 16px; background: #2563eb; color: #fff;" onclick="dropPlinkoBall(500)">DROP BALL (₹500)</button>
+                <!-- Row 2: 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35 -->
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('2')">2<div class="r-chip-placed" id="r-chip-2" style="display:none;"></div></div>
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('5')">5<div class="r-chip-placed" id="r-chip-5" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('8')">8<div class="r-chip-placed" id="r-chip-8" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('11')">11<div class="r-chip-placed" id="r-chip-11" style="display:none;"></div></div>
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('14')">14<div class="r-chip-placed" id="r-chip-14" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('17')">17<div class="r-chip-placed" id="r-chip-17" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('20')">20<div class="r-chip-placed" id="r-chip-20" style="display:none;"></div></div>
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('23')">23<div class="r-chip-placed" id="r-chip-23" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('26')">26<div class="r-chip-placed" id="r-chip-26" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('29')">29<div class="r-chip-placed" id="r-chip-29" style="display:none;"></div></div>
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('32')">32<div class="r-chip-placed" id="r-chip-32" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('35')">35<div class="r-chip-placed" id="r-chip-35" style="display:none;"></div></div>
+
+                <!-- Row 3: 1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34 -->
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('1')">1<div class="r-chip-placed" id="r-chip-1" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('4')">4<div class="r-chip-placed" id="r-chip-4" style="display:none;"></div></div>
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('7')">7<div class="r-chip-placed" id="r-chip-7" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('10')">10<div class="r-chip-placed" id="r-chip-10" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('13')">13<div class="r-chip-placed" id="r-chip-13" style="display:none;"></div></div>
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('16')">16<div class="r-chip-placed" id="r-chip-16" style="display:none;"></div></div>
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('19')">19<div class="r-chip-placed" id="r-chip-19" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('22')">22<div class="r-chip-placed" id="r-chip-22" style="display:none;"></div></div>
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('25')">25<div class="r-chip-placed" id="r-chip-25" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('28')">28<div class="r-chip-placed" id="r-chip-28" style="display:none;"></div></div>
+                <div class="r-num-cell black" onclick="handleRouletteBetClick('31')">31<div class="r-chip-placed" id="r-chip-31" style="display:none;"></div></div>
+                <div class="r-num-cell red" onclick="handleRouletteBetClick('34')">34<div class="r-chip-placed" id="r-chip-34" style="display:none;"></div></div>
+              </div>
+
+              <!-- Column Bets -->
+              <div class="r-col-cells">
+                <div class="r-col-box" onclick="handleRouletteBetClick('COL_1')">2:1<div class="r-chip-placed" id="r-chip-COL_1" style="display:none;"></div></div>
+                <div class="r-col-box" onclick="handleRouletteBetClick('COL_2')">2:1<div class="r-chip-placed" id="r-chip-COL_2" style="display:none;"></div></div>
+                <div class="r-col-box" onclick="handleRouletteBetClick('COL_3')">2:1<div class="r-chip-placed" id="r-chip-COL_3" style="display:none;"></div></div>
+              </div>
+            </div>
+
+            <!-- Dozen Bets (1-12, 13-24, 25-36) -->
+            <div class="r-dozens-row">
+              <div class="r-dozen-box" onclick="handleRouletteBetClick('DOZ_1')">1st 12 (3x)<div class="r-chip-placed" id="r-chip-DOZ_1" style="display:none;"></div></div>
+              <div class="r-dozen-box" onclick="handleRouletteBetClick('DOZ_2')">2nd 12 (3x)<div class="r-chip-placed" id="r-chip-DOZ_2" style="display:none;"></div></div>
+              <div class="r-dozen-box" onclick="handleRouletteBetClick('DOZ_3')">3rd 12 (3x)<div class="r-chip-placed" id="r-chip-DOZ_3" style="display:none;"></div></div>
+            </div>
+
+            <!-- Outside Bets (1-18, EVEN, RED, BLACK, ODD, 19-36) -->
+            <div class="r-outside-row">
+              <div class="r-out-box" onclick="handleRouletteBetClick('LOW')">1-18 (2x)<div class="r-chip-placed" id="r-chip-LOW" style="display:none;"></div></div>
+              <div class="r-out-box" onclick="handleRouletteBetClick('EVEN')">EVEN (2x)<div class="r-chip-placed" id="r-chip-EVEN" style="display:none;"></div></div>
+              <div class="r-out-box red-bg" onclick="handleRouletteBetClick('RED')">◆ RED (2x)<div class="r-chip-placed" id="r-chip-RED" style="display:none;"></div></div>
+              <div class="r-out-box black-bg" onclick="handleRouletteBetClick('BLACK')">◆ BLACK (2x)<div class="r-chip-placed" id="r-chip-BLACK" style="display:none;"></div></div>
+              <div class="r-out-box" onclick="handleRouletteBetClick('ODD')">ODD (2x)<div class="r-chip-placed" id="r-chip-ODD" style="display:none;"></div></div>
+              <div class="r-out-box" onclick="handleRouletteBetClick('HIGH')">19-36 (2x)<div class="r-chip-placed" id="r-chip-HIGH" style="display:none;"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chips Selector -->
+        <div class="chip-selector-bar">
+          <div class="poker-chip chip-10" onclick="selectPokerChip(10, this)">₹10</div>
+          <div class="poker-chip chip-50" onclick="selectPokerChip(50, this)">₹50</div>
+          <div class="poker-chip chip-100 active" onclick="selectPokerChip(100, this)">₹100</div>
+          <div class="poker-chip chip-500" onclick="selectPokerChip(500, this)">₹500</div>
+          <div class="poker-chip chip-1k" onclick="selectPokerChip(1000, this)">₹1k</div>
+          <div class="poker-chip chip-5k" onclick="selectPokerChip(5000, this)">₹5k</div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="roulette-action-bar">
+          <button class="btn-r-action btn-r-clear" onclick="clearRouletteBets()">✕ CLEAR</button>
+          <button class="btn-r-action btn-r-double" onclick="doubleRouletteBets()">2X DOUBLE</button>
+          <button class="btn-r-action btn-r-spin" id="btn-spin-roulette" onclick="spinRouletteWheel()">⚡ SPIN WHEEL</button>
+        </div>
       </div>
-      <div id="plinko-status-msg" style="margin-top: 10px; font-size: 12px; font-weight: 800; color: #fff;"></div>
     </div>
 
 
     {% elif game.category == 'cards' %}
-    <!-- ==================== 4. LIVE INDIAN CARD TABLES ==================== -->
-    <div style="background: #090e18; border: 1px solid var(--border-light); border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
-      <!-- Dealer Video Feed Frame -->
+    <!-- ==================== 3. LIVE INDIAN CARD TABLES ==================== -->
+    <div style="background: #090e18; border: 1px solid var(--border-light); border-radius: 12px; overflow: hidden; margin-bottom: 20px; width: 100%;">
       <div class="dealer-video-frame">
         <div class="dealer-badge">
           <span style="background: rgba(220, 38, 38, 0.9); color: #fff; font-size: 9px; font-weight: 900; padding: 2px 7px; border-radius: 3px;">
@@ -935,23 +1348,21 @@
           <div style="font-size: 9px; color: var(--color-green);">Dealing from Evolution Studio Mumbai</div>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; z-index: 10;">
-          <span class="table-timer-badge" id="card-table-timer">⏳ BETS CLOSING IN: <strong>8s</strong></span>
+          <span class="table-timer-badge">⏳ BETS CLOSING IN: <strong>8s</strong></span>
           <span style="font-size: 10px; color: var(--winbuzz-gold); font-weight: 800;">🔊 AUDIO ON</span>
         </div>
       </div>
 
-      <!-- Table Felt Arena -->
       <div class="table-felt">
-
         {% if 'teen-patti' in game.id %}
         <!-- TEEN PATTI (PLAYER A vs PLAYER B) -->
         <div style="font-size: 12px; font-weight: 900; color: var(--winbuzz-gold); letter-spacing: 1px;">
           🎴 EVOLUTION LIVE • TEEN PATTI 20-20
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
           <div style="background: rgba(0, 0, 0, 0.4); padding: 12px; border-radius: 8px; border: 1px solid #3b82f6;">
             <div style="font-size: 13px; font-weight: 900; color: #60a5fa;">PLAYER A</div>
-            <div class="cards-row" id="cards-row-a">
+            <div class="cards-row">
               <div class="p-card red"><span>A</span><span>♥</span></div>
               <div class="p-card"><span>K</span><span>♠</span></div>
               <div class="p-card red"><span>Q</span><span>♦</span></div>
@@ -964,7 +1375,7 @@
 
           <div style="background: rgba(0, 0, 0, 0.4); padding: 12px; border-radius: 8px; border: 1px solid #a855f7;">
             <div style="font-size: 13px; font-weight: 900; color: #c084fc;">PLAYER B</div>
-            <div class="cards-row" id="cards-row-b">
+            <div class="cards-row">
               <div class="p-card"><span>10</span><span>♣</span></div>
               <div class="p-card red"><span>J</span><span>♥</span></div>
               <div class="p-card"><span>9</span><span>♠</span></div>
@@ -987,7 +1398,7 @@
             <div class="p-card red" style="transform: scale(1.15);"><span>K</span><span>♦</span></div>
           </div>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
           <div style="background: rgba(0, 0, 0, 0.4); padding: 12px; border-radius: 8px; border: 1px solid #0284c7;">
             <div style="font-size: 13px; font-weight: 900; color: #38bdf8;">ANDAR</div>
             <div style="font-size: 10.5px; color: var(--text-dim); margin-bottom: 6px;">Cards: 8, 4, J, K</div>
@@ -1007,25 +1418,25 @@
         </div>
 
         {% elif game.id == 'lucky-7' %}
-        <!-- LUCKY 7 (7 UP 7 DOWN) -->
+        <!-- LUCKY 7 -->
         <div style="font-size: 12px; font-weight: 900; color: var(--winbuzz-gold); letter-spacing: 1px;">
           🎰 LUCKY 7 (7 UP / 7 DOWN / EXACT 7)
         </div>
         <div class="cards-row"><div class="p-card red" style="transform: scale(1.15);"><span>7</span><span>♥</span></div></div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 12px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px;">
           <button class="btn-table-bet" style="background: #dc2626; color: #fff;" onclick="playTableGame('{{ game.id }}', '7_down', getSelectedChip(), 2.0)">
-            7 DOWN (A - 6) • 2x
+            7 DOWN (A-6) • 2x
           </button>
           <button class="btn-table-bet" style="background: #d97706; color: #fff;" onclick="playTableGame('{{ game.id }}', 'exact_7', getSelectedChip(), 12.0)">
             EXACT 7 • 12x
           </button>
           <button class="btn-table-bet" style="background: #16a34a; color: #fff;" onclick="playTableGame('{{ game.id }}', '7_up', getSelectedChip(), 2.0)">
-            7 UP (8 - K) • 2x
+            7 UP (8-K) • 2x
           </button>
         </div>
 
         {% else %}
-        <!-- DRAGON TIGER & OTHER CARDS -->
+        <!-- DRAGON TIGER -->
         <div style="font-size: 12px; font-weight: 900; color: #ef4444; letter-spacing: 1px;">
           🐉 EVOLUTION LIVE • DRAGON vs TIGER
         </div>
@@ -1063,7 +1474,6 @@
           <div class="poker-chip chip-500" onclick="selectPokerChip(500, this)">₹500</div>
           <div class="poker-chip chip-1k" onclick="selectPokerChip(1000, this)">₹1k</div>
           <div class="poker-chip chip-5k" onclick="selectPokerChip(5000, this)">₹5k</div>
-          <div class="poker-chip chip-10k" onclick="selectPokerChip(10000, this)">₹10k</div>
         </div>
 
         <div id="table-status-msg" style="margin-top: 10px; font-size: 12px; font-weight: 800; color: #fff;">
@@ -1073,46 +1483,42 @@
     </div>
 
 
-    {% elif game.category == 'roulette' %}
-    <!-- ==================== 5. ROULETTE & GAME SHOWS ==================== -->
-    <div class="roulette-arena">
-      <div class="roulette-wheel-box" id="roulette-wheel">
-        <div class="roulette-center-pin" id="roulette-center-num">17</div>
-      </div>
-
-      <div style="text-align: center;">
-        <div style="font-size: 13px; font-weight: 900; color: var(--winbuzz-gold); margin-bottom: 4px;">
-          ⚡ LIGHTNING STRIKE MULTIPLIERS ACTIVE
+    {% elif game.id == 'mines' %}
+    <!-- ==================== 4. SPRIBE MINES ==================== -->
+    <div class="mines-hud">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-dark); padding-bottom: 8px;">
+        <div>
+          <span style="font-size: 14px; font-weight: 900; color: #fff;">💎 SPRIBE MINES (5x5 GRID)</span>
+          <div style="font-size: 11px; color: var(--winbuzz-gold);">Find gems, avoid the 3 hidden bombs!</div>
         </div>
-        <div style="display: flex; gap: 8px; justify-content: center;">
-          <span class="mult-pill high">7 (100x)</span>
-          <span class="mult-pill high">17 (500x)</span>
-          <span class="mult-pill high">29 (200x)</span>
+        <div style="text-align: right;">
+          <span style="font-size: 11px; color: var(--text-dim);">NEXT MULTIPLIER</span>
+          <div id="mines-next-mult" style="font-size: 18px; font-weight: 900; color: #4ade80;">1.18x</div>
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; max-width: 500px;">
-        <button class="btn-table-bet" style="background: #dc2626; color: #fff;" onclick="playRoulette('RED')">RED (2x)</button>
-        <button class="btn-table-bet" style="background: #0f172a; border: 1px solid #475569; color: #fff;" onclick="playRoulette('BLACK')">BLACK (2x)</button>
-        <button class="btn-table-bet" style="background: #2563eb; color: #fff;" onclick="playRoulette('EVEN')">EVEN (2x)</button>
-        <button class="btn-table-bet" style="background: #7c3aed; color: #fff;" onclick="playRoulette('ODD')">ODD (2x)</button>
+      <div class="mines-grid" id="mines-grid">
+        {% for i in range(25) %}
+        <div class="mine-tile" data-idx="{{ i }}" onclick="pickMineTile({{ i }})">❓</div>
+        {% endfor %}
       </div>
 
-      <div class="chip-selector-bar">
-        <div class="poker-chip chip-100 active" onclick="selectPokerChip(100, this)">₹100</div>
-        <div class="poker-chip chip-500" onclick="selectPokerChip(500, this)">₹500</div>
-        <div class="poker-chip chip-1k" onclick="selectPokerChip(1000, this)">₹1k</div>
-        <div class="poker-chip chip-5k" onclick="selectPokerChip(5000, this)">₹5k</div>
+      <div style="display: flex; gap: 10px; max-width: 440px; margin: 0 auto;">
+        <input type="number" id="mines-stake-input" value="200" min="50" step="50"
+               style="width: 120px; padding: 10px; background: #060a12; border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 900; border-radius: 6px;">
+        <button class="btn-aviator-main btn-aviator-bet" id="btn-mines-start" onclick="startMinesGame()">
+          START GAME (₹200)
+        </button>
+        <button class="btn-aviator-main btn-aviator-cashout" id="btn-mines-cashout" style="display: none;" onclick="cashoutMinesGame()">
+          CASHOUT (₹0)
+        </button>
       </div>
-
-      <div id="roulette-status-msg" style="font-size: 12px; font-weight: 800; color: #fff;">
-        Select chips and choose Red, Black, Even, or Odd!
-      </div>
+      <div id="mines-status-msg" style="text-align: center; margin-top: 10px; font-size: 12px; font-weight: 800; color: #fff;"></div>
     </div>
 
 
     {% elif game.category == 'slots' %}
-    <!-- ==================== 6. TOP SLOTS ENGINE ==================== -->
+    <!-- ==================== 5. TOP SLOTS ==================== -->
     <div class="slot-machine-box">
       <div style="font-size: 15px; font-weight: 900; color: var(--winbuzz-gold); letter-spacing: 1px;">
         🎰 PRAGMATIC PLAY • {{ game.name|upper }}
@@ -1128,11 +1534,8 @@
       </div>
 
       <div style="display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 14px; flex-wrap: wrap;">
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 11px; color: var(--text-dim); font-weight: 800;">BET:</span>
-          <input type="number" id="slot-stake-input" value="100" min="20" step="20"
-                 style="width: 90px; padding: 8px; background: #060a12; border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 900; border-radius: 4px;">
-        </div>
+        <input type="number" id="slot-stake-input" value="100" min="20" step="20"
+               style="width: 90px; padding: 8px; background: #060a12; border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 900; border-radius: 4px;">
         <button class="btn-aviator-main btn-aviator-bet" id="btn-spin-slot" style="max-width: 200px;" onclick="spinSlotReels()">
           ⚡ SPIN REELS
         </button>
@@ -1142,8 +1545,8 @@
 
 
     {% else %}
-    <!-- ==================== 7. BACCARAT & BLACKJACK ==================== -->
-    <div style="background: #090e18; border: 1px solid var(--border-light); border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
+    <!-- ==================== 6. BACCARAT / OTHER TABLES ==================== -->
+    <div style="background: #090e18; border: 1px solid var(--border-light); border-radius: 12px; overflow: hidden; margin-bottom: 20px; width: 100%;">
       <div class="dealer-video-frame">
         <div class="dealer-badge">
           <span style="background: rgba(220, 38, 38, 0.9); color: #fff; font-size: 9px; font-weight: 900; padding: 2px 7px; border-radius: 3px;">
@@ -1157,10 +1560,6 @@
           <div class="dealer-anim-glow" style="border-color: #38bdf8;">🤵‍♂️</div>
           <div style="font-size: 11px; font-weight: 900; color: #fff; margin-top: 4px;">Alexandre (Live Studio)</div>
           <div style="font-size: 9px; color: #38bdf8;">Dealing from Evolution Macau Studio</div>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; z-index: 10;">
-          <span class="table-timer-badge">⏳ BETS OPEN</span>
-          <span style="font-size: 10px; color: var(--winbuzz-gold); font-weight: 800;">🔊 AUDIO ON</span>
         </div>
       </div>
 
@@ -1184,7 +1583,6 @@
           <div class="poker-chip chip-500" onclick="selectPokerChip(500, this)">₹500</div>
           <div class="poker-chip chip-1k" onclick="selectPokerChip(1000, this)">₹1k</div>
         </div>
-        <div id="generic-table-msg" style="margin-top: 10px; font-size: 12px; font-weight: 800; color: #fff;"></div>
       </div>
     </div>
     {% endif %}
@@ -1332,7 +1730,7 @@
     }
     function getSelectedChip() { return activePokerChip; }
 
-    // Web Audio Synthesizer (Zero External MP3 dependencies)
+    // Web Audio Synthesizer (Realistic Casino Sounds)
     let audioCtx = null;
     function getAudioCtx() {
       if (!audioCtx) {
@@ -1378,14 +1776,32 @@
       return false;
     }
 
-    // ==================== 1. CRASH FLIGHT ENGINE ====================
-    let aviatorState = 'IDLE'; // WAITING, IN_FLIGHT, CRASHED
+    const currentGameSlug = '{{ game.id }}';
+
+    // ==================== 1. SPRIBE AVIATOR ENGINE ====================
+    let aviatorState = 'IDLE';
     let aviatorMult = 1.00;
     let aviatorCrashPoint = 2.00;
     let aviatorActiveBet = null;
     let aviatorCanvas = document.getElementById('aviator-canvas');
     let aviatorCtx = aviatorCanvas ? aviatorCanvas.getContext('2d') : null;
-    const currentGameSlug = '{{ game.id }}';
+
+    function resizeAviatorCanvas() {
+      if (aviatorCanvas && aviatorCanvas.parentElement) {
+        aviatorCanvas.width = aviatorCanvas.parentElement.clientWidth || 360;
+        aviatorCanvas.height = 240;
+      }
+    }
+    window.addEventListener('resize', resizeAviatorCanvas);
+
+    function adjustAviatorStake(delta) {
+      const input = document.getElementById('aviator-stake-input');
+      let val = (parseFloat(input.value) || 200) + delta;
+      if (val < 50) val = 50;
+      input.value = val;
+      const btn = document.getElementById('btn-aviator-action');
+      if (btn && aviatorState !== 'IN_FLIGHT') btn.innerText = `BET ₹${val}`;
+    }
 
     function setAviatorStake(amt) {
       const input = document.getElementById('aviator-stake-input');
@@ -1443,13 +1859,15 @@
     function handleAviatorAction2() {
       const stake = parseFloat(document.getElementById('aviator-stake-2')?.value) || 500;
       const targetMult = parseFloat(document.getElementById('aviator-auto-mult-input')?.value) || 2.0;
-      alert(`⚡ Auto-Bet Configured!\nStake: ₹${stake}\nAuto-Cashout at: ${targetMult}x\nWill automatically credit wallet when multiplier reaches ${targetMult}x!`);
+      alert(`⚡ Auto-Bet Active!\nStake: ₹${stake}\nAuto-Cashout: ${targetMult}x\nWill auto-cashout when plane reaches ${targetMult}x!`);
     }
 
     function initAviatorFlightLoop() {
+      resizeAviatorCanvas();
       if (!aviatorCanvas || !aviatorCtx) return;
 
       function startRound() {
+        resizeAviatorCanvas();
         aviatorState = 'WAITING';
         aviatorMult = 1.00;
         let count = 3;
@@ -1468,7 +1886,6 @@
 
       function launchFlight() {
         aviatorState = 'IN_FLIGHT';
-        // Winbuzz realistic distribution: 1.1x to 18x
         const r = Math.random();
         if (r < 0.25) aviatorCrashPoint = 1.1 + Math.random() * 0.4;
         else if (r < 0.70) aviatorCrashPoint = 1.5 + Math.random() * 2.5;
@@ -1503,10 +1920,10 @@
 
       function handleCrash() {
         aviatorState = 'CRASHED';
-        playBeep(180, 0.4); // Crash buzz
+        playBeep(180, 0.4);
         const multEl = document.getElementById('aviator-mult-display');
         if (multEl) {
-          multEl.innerHTML = `<span style="color: #ef4444;">FLEW AWAY!</span><br><span style="font-size: 26px;">${aviatorCrashPoint.toFixed(2)}x</span>`;
+          multEl.innerHTML = `<span style="color: #ef4444;">FLEW AWAY!</span><br><span style="font-size: 24px;">${aviatorCrashPoint.toFixed(2)}x</span>`;
         }
 
         if (aviatorActiveBet) {
@@ -1524,7 +1941,6 @@
           btn.innerText = `BET ₹${document.getElementById('aviator-stake-input')?.value || 200}`;
         }
 
-        // Add history pill
         const ribbon = document.getElementById('aviator-history-ribbon');
         if (ribbon) {
           const pill = document.createElement('span');
@@ -1553,39 +1969,41 @@
       // Grid
       aviatorCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
       aviatorCtx.lineWidth = 1;
-      for (let x = 0; x < w; x += 50) { aviatorCtx.beginPath(); aviatorCtx.moveTo(x, 0); aviatorCtx.lineTo(x, h); aviatorCtx.stroke(); }
-      for (let y = 0; y < h; y += 40) { aviatorCtx.beginPath(); aviatorCtx.moveTo(0, y); aviatorCtx.lineTo(w, y); aviatorCtx.stroke(); }
+      for (let x = 0; x < w; x += 45) { aviatorCtx.beginPath(); aviatorCtx.moveTo(x, 0); aviatorCtx.lineTo(x, h); aviatorCtx.stroke(); }
+      for (let y = 0; y < h; y += 35) { aviatorCtx.beginPath(); aviatorCtx.moveTo(0, y); aviatorCtx.lineTo(w, y); aviatorCtx.stroke(); }
 
-      // Flight curve
       const maxT = 6.0;
       const progress = Math.min(1.0, t / maxT);
-      const endX = 40 + progress * (w - 120);
-      const endY = (h - 40) - Math.pow(progress, 1.8) * (h - 80);
+      const endX = 30 + progress * (w - 70);
+      const endY = (h - 30) - Math.pow(progress, 1.8) * (h - 60);
 
-      // Gradient curve fill
+      // Parabolic fill
       const grad = aviatorCtx.createLinearGradient(0, h, endX, endY);
-      grad.addColorStop(0, 'rgba(239, 68, 68, 0.05)');
+      grad.addColorStop(0, 'rgba(239, 68, 68, 0.02)');
       grad.addColorStop(1, 'rgba(239, 68, 68, 0.35)');
 
       aviatorCtx.beginPath();
-      aviatorCtx.moveTo(40, h - 30);
-      aviatorCtx.quadraticCurveTo(endX * 0.4, h - 30, endX, endY);
-      aviatorCtx.lineTo(endX, h - 30);
+      aviatorCtx.moveTo(30, h - 25);
+      aviatorCtx.quadraticCurveTo(endX * 0.4, h - 25, endX, endY);
+      aviatorCtx.lineTo(endX, h - 25);
       aviatorCtx.closePath();
       aviatorCtx.fillStyle = grad;
       aviatorCtx.fill();
 
-      // Red trajectory line
+      // Trajectory curve
       aviatorCtx.beginPath();
-      aviatorCtx.moveTo(40, h - 30);
-      aviatorCtx.quadraticCurveTo(endX * 0.4, h - 30, endX, endY);
+      aviatorCtx.moveTo(30, h - 25);
+      aviatorCtx.quadraticCurveTo(endX * 0.4, h - 25, endX, endY);
       aviatorCtx.strokeStyle = '#ef4444';
-      aviatorCtx.lineWidth = 4;
+      aviatorCtx.lineWidth = 3.5;
       aviatorCtx.stroke();
 
-      // Aircraft / Rocket icon
-      aviatorCtx.font = '28px sans-serif';
-      aviatorCtx.fillText(currentGameSlug === 'spaceman' ? '👨‍🚀' : (currentGameSlug === 'jetx' ? '🚀' : '✈️'), endX - 10, endY + 8);
+      // Airplane sprite
+      aviatorCtx.save();
+      aviatorCtx.translate(endX, endY);
+      aviatorCtx.font = '26px sans-serif';
+      aviatorCtx.fillText(currentGameSlug === 'spaceman' ? '👨‍🚀' : (currentGameSlug === 'jetx' ? '🚀' : '✈️'), -12, 6);
+      aviatorCtx.restore();
     }
 
     function drawCrashedCanvas() {
@@ -1595,14 +2013,236 @@
     }
 
 
-    // ==================== 2. SPRIBE MINES ENGINE ====================
+    // ==================== 2. EVOLUTION LIGHTNING ROULETTE ENGINE ====================
+    let rouletteBets = {}; // spot -> amount
+    let isRouletteSpinning = false;
+
+    function handleRouletteBetClick(spot) {
+      if (isRouletteSpinning) return;
+      const chip = getSelectedChip();
+      rouletteBets[spot] = (rouletteBets[spot] || 0) + chip;
+      playBeep(600, 0.08);
+
+      // Update chip badge
+      const badge = document.getElementById(`r-chip-${spot}`);
+      if (badge) {
+        badge.style.display = 'flex';
+        badge.innerText = rouletteBets[spot] >= 1000 ? `${Math.round(rouletteBets[spot]/1000)}k` : rouletteBets[spot];
+      }
+      updateRouletteTotal();
+    }
+
+    function clearRouletteBets() {
+      if (isRouletteSpinning) return;
+      rouletteBets = {};
+      document.querySelectorAll('.r-chip-placed').forEach(b => b.style.display = 'none');
+      updateRouletteTotal();
+      playBeep(300, 0.1);
+    }
+
+    function doubleRouletteBets() {
+      if (isRouletteSpinning) return;
+      for (const spot in rouletteBets) {
+        rouletteBets[spot] = rouletteBets[spot] * 2;
+        const badge = document.getElementById(`r-chip-${spot}`);
+        if (badge) {
+          badge.innerText = rouletteBets[spot] >= 1000 ? `${Math.round(rouletteBets[spot]/1000)}k` : rouletteBets[spot];
+        }
+      }
+      updateRouletteTotal();
+      playBeep(660, 0.1);
+    }
+
+    function updateRouletteTotal() {
+      let total = 0;
+      for (const s in rouletteBets) { total += rouletteBets[s]; }
+      const el = document.getElementById('r-total-stake');
+      if (el) el.innerText = `₹${total.toLocaleString('en-IN')}`;
+    }
+
+    async function spinRouletteWheel() {
+      if (isRouletteSpinning) return;
+      let totalStake = 0;
+      for (const s in rouletteBets) { totalStake += rouletteBets[s]; }
+
+      if (totalStake <= 0) {
+        alert('Please place chips on the roulette board first!');
+        return;
+      }
+
+      const btn = document.getElementById('btn-spin-roulette');
+      const wheel = document.getElementById('roulette-wheel');
+      const centerNum = document.getElementById('roulette-center-num');
+      const statusMsg = document.getElementById('roulette-status-msg');
+
+      try {
+        const betRes = await fetch('/api/casino/bet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ game_id: 'lightning-roulette', stake: totalStake, bet_type: 'multi_board' })
+        });
+        if (betResIs401(betRes)) return;
+        const betData = await betRes.json();
+        if (!betRes.ok) {
+          alert('❌ ' + (betData.detail || 'Insufficient balance'));
+          return;
+        }
+        updateBalanceDisplays(betData.new_balance);
+
+        isRouletteSpinning = true;
+        btn.disabled = true;
+
+        // Generate 1-3 Lightning Lucky Multipliers
+        const luckyNumbers = [
+          { num: Math.floor(Math.random() * 37), mult: [50, 100, 200, 500][Math.floor(Math.random() * 4)] },
+          { num: Math.floor(Math.random() * 37), mult: [50, 100, 200][Math.floor(Math.random() * 3)] }
+        ];
+
+        const row = document.getElementById('lightning-numbers-row');
+        if (row) {
+          row.innerHTML = luckyNumbers.map(l => `<div class="lightning-card-pill"><span class="num">${l.num}</span><br><span class="mult">⚡ ${l.mult}x</span></div>`).join('');
+        }
+
+        // Spin wheel
+        if (wheel) {
+          wheel.classList.remove('roulette-spinning');
+          void wheel.offsetWidth;
+          wheel.classList.add('roulette-spinning');
+        }
+        playBeep(523, 0.25);
+        if (statusMsg) statusMsg.innerHTML = '⚡ <strong>LIGHTNING STRUCK! WHEEL SPINNING...</strong>';
+
+        setTimeout(async () => {
+          const numbers = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+          const drawn = numbers[Math.floor(Math.random() * numbers.length)];
+          if (centerNum) centerNum.innerText = drawn;
+
+          const redNumbers = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+          const isRed = redNumbers.includes(drawn);
+          const isEven = drawn !== 0 && drawn % 2 === 0;
+          const isLow = drawn >= 1 && drawn <= 18;
+          const isDoz1 = drawn >= 1 && drawn <= 12;
+          const isDoz2 = drawn >= 13 && drawn <= 24;
+          const isDoz3 = drawn >= 25 && drawn <= 36;
+          const isCol1 = drawn > 0 && drawn % 3 === 0;
+          const isCol2 = drawn > 0 && drawn % 3 === 2;
+          const isCol3 = drawn > 0 && drawn % 3 === 1;
+
+          let totalPayout = 0;
+
+          // Straight up number
+          if (rouletteBets[String(drawn)]) {
+            const lMatch = luckyNumbers.find(l => l.num === drawn);
+            const odds = lMatch ? lMatch.mult : 36;
+            totalPayout += rouletteBets[String(drawn)] * odds;
+          }
+
+          // Outside bets
+          if (rouletteBets['RED'] && isRed) totalPayout += rouletteBets['RED'] * 2;
+          if (rouletteBets['BLACK'] && !isRed && drawn !== 0) totalPayout += rouletteBets['BLACK'] * 2;
+          if (rouletteBets['EVEN'] && isEven) totalPayout += rouletteBets['EVEN'] * 2;
+          if (rouletteBets['ODD'] && !isEven && drawn !== 0) totalPayout += rouletteBets['ODD'] * 2;
+          if (rouletteBets['LOW'] && isLow) totalPayout += rouletteBets['LOW'] * 2;
+          if (rouletteBets['HIGH'] && !isLow && drawn !== 0) totalPayout += rouletteBets['HIGH'] * 2;
+
+          // Dozen bets
+          if (rouletteBets['DOZ_1'] && isDoz1) totalPayout += rouletteBets['DOZ_1'] * 3;
+          if (rouletteBets['DOZ_2'] && isDoz2) totalPayout += rouletteBets['DOZ_2'] * 3;
+          if (rouletteBets['DOZ_3'] && isDoz3) totalPayout += rouletteBets['DOZ_3'] * 3;
+
+          // Column bets
+          if (rouletteBets['COL_1'] && isCol1) totalPayout += rouletteBets['COL_1'] * 3;
+          if (rouletteBets['COL_2'] && isCol2) totalPayout += rouletteBets['COL_2'] * 3;
+          if (rouletteBets['COL_3'] && isCol3) totalPayout += rouletteBets['COL_3'] * 3;
+
+          if (totalPayout > 0) {
+            playBeep(880, 0.4);
+            const settleRes = await fetch('/api/casino/settle', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ game_id: 'lightning-roulette', outcome: 'WIN', stake: totalStake, payout: totalPayout })
+            });
+            const settleData = await settleRes.json();
+            updateBalanceDisplays(settleData.new_balance);
+            document.getElementById('r-last-win').innerHTML = `LAST WIN: <strong style="color: #4ade80;">₹${totalPayout.toLocaleString('en-IN')}</strong>`;
+            if (statusMsg) statusMsg.innerHTML = `🎉 <strong style="color: #4ade80;">WINNER! Number ${drawn} (${drawn === 0 ? 'ZERO' : (isRed ? 'RED' : 'BLACK')}). Won ₹${totalPayout.toLocaleString('en-IN')}!</strong>`;
+          } else {
+            playBeep(200, 0.3);
+            await fetch('/api/casino/settle', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ game_id: 'lightning-roulette', outcome: 'LOSS', stake: totalStake, payout: 0 })
+            });
+            if (statusMsg) statusMsg.innerHTML = `❌ <strong style="color: #ef4444;">Number was ${drawn} (${drawn === 0 ? 'ZERO' : (isRed ? 'RED' : 'BLACK')}). Better luck next spin!</strong>`;
+          }
+
+          isRouletteSpinning = false;
+          btn.disabled = false;
+        }, 2500);
+
+      } catch(e) {
+        alert('Network error playing roulette');
+        isRouletteSpinning = false;
+        btn.disabled = false;
+      }
+    }
+
+
+    // ==================== 3. LIVE CARD TABLES ====================
+    async function playTableGame(gameId, pick, stake, odds) {
+      const statusMsg = document.getElementById('table-status-msg');
+      try {
+        const betRes = await fetch('/api/casino/bet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ game_id: gameId, stake: stake, bet_type: pick })
+        });
+        if (betResIs401(betRes)) return;
+        const betData = await betRes.json();
+        if (!betRes.ok) {
+          alert('❌ ' + (betData.detail || 'Insufficient balance'));
+          return;
+        }
+        updateBalanceDisplays(betData.new_balance);
+        playBeep(440, 0.15);
+        if (statusMsg) statusMsg.innerHTML = `⚡ Bet of ₹${stake} placed on <strong>${pick.toUpperCase()}</strong>! Dealing cards...`;
+
+        setTimeout(async () => {
+          const won = Math.random() < (1.0 / odds) * 0.96;
+          if (won) {
+            const winPayout = stake * odds;
+            playBeep(880, 0.3);
+            const settleRes = await fetch('/api/casino/settle', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ game_id: gameId, outcome: 'WIN', stake: stake, payout: winPayout })
+            });
+            const settleData = await settleRes.json();
+            updateBalanceDisplays(settleData.new_balance);
+            if (statusMsg) statusMsg.innerHTML = `🎉 <strong style="color: var(--color-green);">WINNER! Won ₹${winPayout.toLocaleString('en-IN')}!</strong> on ${pick.toUpperCase()}`;
+          } else {
+            playBeep(220, 0.3);
+            await fetch('/api/casino/settle', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ game_id: gameId, outcome: 'LOSS', stake: stake, payout: 0 })
+            });
+            if (statusMsg) statusMsg.innerHTML = `❌ <strong style="color: var(--color-red);">Round Lost (₹${stake}).</strong> Other hand won.`;
+          }
+        }, 1500);
+
+      } catch(e) {
+        alert('Network error placing table bet');
+      }
+    }
+
+
+    // ==================== 4. MINES GAME ====================
     let minesState = { active: false, bombs: [], uncovered: 0, mult: 1.0, stake: 200 };
     const mineMults = [1.18, 1.45, 1.82, 2.35, 3.10, 4.20, 5.90, 8.60, 13.0, 20.0];
 
     function startMinesGame() {
-      const stakeInput = document.getElementById('mines-stake-input');
-      const stake = parseFloat(stakeInput?.value) || 200;
-
+      const stake = parseFloat(document.getElementById('mines-stake-input')?.value) || 200;
       fetch('/api/casino/bet', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1611,15 +2251,13 @@
         if (betResIs401(r)) return null;
         return r.json().then(data => ({ ok: r.ok, data }));
       }).then(res => {
-        if (!res) return;
-        if (!res.ok) {
-          alert('❌ ' + (res.data.detail || 'Insufficient balance'));
+        if (!res || !res.ok) {
+          alert('❌ Insufficient balance');
           return;
         }
         updateBalanceDisplays(res.data.new_balance);
         playBeep(520, 0.1);
 
-        // Randomly place 3 bombs in 25 cells
         const bombs = [];
         while (bombs.length < 3) {
           const idx = Math.floor(Math.random() * 25);
@@ -1646,16 +2284,14 @@
       if (!tile || tile.classList.contains('revealed-gem')) return;
 
       if (minesState.bombs.includes(idx)) {
-        // HIT BOMB!
         playBeep(180, 0.4);
         tile.className = 'mine-tile revealed-bomb';
         tile.innerText = '💣';
         minesState.active = false;
         document.getElementById('btn-mines-start').style.display = 'block';
         document.getElementById('btn-mines-cashout').style.display = 'none';
-        document.getElementById('mines-status-msg').innerHTML = '💥 <strong style="color: #ef4444;">BOOM! You hit a bomb. Better luck next time!</strong>';
+        document.getElementById('mines-status-msg').innerHTML = '💥 <strong style="color: #ef4444;">BOOM! You hit a bomb.</strong>';
 
-        // Reveal remaining bombs
         minesState.bombs.forEach(b => {
           const bt = document.querySelector(`.mine-tile[data-idx="${b}"]`);
           if (bt) { bt.className = 'mine-tile revealed-bomb'; bt.innerText = '💣'; }
@@ -1667,18 +2303,16 @@
           body: JSON.stringify({ game_id: 'mines', outcome: 'LOSS', stake: minesState.stake, payout: 0 })
         });
       } else {
-        // FOUND GEM!
         playBeep(780, 0.15);
         tile.className = 'mine-tile revealed-gem';
         tile.innerText = '💎';
         minesState.uncovered++;
         const nextMult = mineMults[Math.min(minesState.uncovered - 1, mineMults.length - 1)];
         minesState.mult = nextMult;
-
         const payout = minesState.stake * minesState.mult;
         document.getElementById('btn-mines-cashout').innerText = `CASHOUT (₹${payout.toFixed(0)})`;
         document.getElementById('mines-next-mult').innerText = `${nextMult.toFixed(2)}x`;
-        document.getElementById('mines-status-msg').innerHTML = `✨ Gem Uncovered! Current Payout: <strong style="color: #4ade80;">₹${payout.toFixed(2)} (${nextMult}x)</strong>`;
+        document.getElementById('mines-status-msg').innerHTML = `✨ Gem Uncovered! Payout: <strong style="color: #4ade80;">₹${payout.toFixed(2)}</strong>`;
       }
     }
 
@@ -1697,213 +2331,14 @@
         alert(`🎉 MINES CASHOUT!\nWon ₹${payout.toFixed(2)} at ${minesState.mult}x multiplier!`);
         document.getElementById('btn-mines-start').style.display = 'block';
         document.getElementById('btn-mines-cashout').style.display = 'none';
-        document.getElementById('mines-status-msg').innerText = `Banked ₹${payout.toFixed(2)}! Ready for next round.`;
+        document.getElementById('mines-status-msg').innerText = `Banked ₹${payout.toFixed(2)}!`;
       });
     }
 
 
-    // ==================== 3. SPRIBE PLINKO ====================
-    function dropPlinkoBall(stake) {
-      fetch('/api/casino/bet', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ game_id: 'plinko', stake: stake, bet_type: 'plinko_drop' })
-      }).then(r => {
-        if (betResIs401(r)) return null;
-        return r.json().then(data => ({ ok: r.ok, data }));
-      }).then(res => {
-        if (!res || !res.ok) {
-          alert('❌ Insufficient balance');
-          return;
-        }
-        updateBalanceDisplays(res.data.new_balance);
-        playBeep(660, 0.15);
-
-        const canvas = document.getElementById('plinko-canvas');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        const mults = [10.0, 3.0, 1.5, 0.5, 0.2, 0.5, 1.5, 3.0, 10.0];
-        let x = canvas.width / 2;
-        let y = 20;
-
-        const anim = setInterval(() => {
-          ctx.fillStyle = '#060a14';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-          // Draw pegs
-          ctx.fillStyle = '#fff';
-          for (let row = 0; row < 7; row++) {
-            const count = row + 3;
-            const startX = (canvas.width - count * 28) / 2;
-            for (let col = 0; col < count; col++) {
-              ctx.beginPath();
-              ctx.arc(startX + col * 28, 40 + row * 28, 3, 0, Math.PI * 2);
-              ctx.fill();
-            }
-          }
-
-          // Move ball
-          y += 5;
-          x += (Math.random() - 0.5) * 8;
-          ctx.fillStyle = '#ef4444';
-          ctx.beginPath();
-          ctx.arc(x, y, 7, 0, Math.PI * 2);
-          ctx.fill();
-
-          if (y > 230) {
-            clearInterval(anim);
-            const slot = Math.floor(Math.random() * mults.length);
-            const wonMult = mults[slot];
-            const payout = stake * wonMult;
-            playBeep(wonMult >= 1.5 ? 880 : 300, 0.25);
-
-            fetch('/api/casino/settle', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ game_id: 'plinko', outcome: wonMult >= 1.0 ? 'WIN' : 'LOSS', stake: stake, payout: payout })
-            }).then(r => r.json()).then(data => {
-              updateBalanceDisplays(data.new_balance);
-              document.getElementById('plinko-status-msg').innerHTML = `Ball landed in <strong>${wonMult}x pocket!</strong> Payout: ₹${payout.toFixed(2)}`;
-            });
-          }
-        }, 30);
-      });
-    }
-
-
-    // ==================== 4. LIVE CARD TABLES ENGINE ====================
-    async function playTableGame(gameId, pick, stake, odds) {
-      const statusMsg = document.getElementById('table-status-msg') || document.getElementById('generic-table-msg');
-      try {
-        const betRes = await fetch('/api/casino/bet', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ game_id: gameId, stake: stake, bet_type: pick })
-        });
-        if (betResIs401(betRes)) return;
-        const betData = await betRes.json();
-        if (!betRes.ok) {
-          alert('❌ ' + (betData.detail || 'Insufficient balance'));
-          return;
-        }
-        updateBalanceDisplays(betData.new_balance);
-        playBeep(440, 0.15);
-        if (statusMsg) statusMsg.innerHTML = `⚡ Bet of ₹${stake} placed on <strong>${pick.toUpperCase()}</strong>! Dealing cards...`;
-
-        // Dealing animation delay
-        setTimeout(async () => {
-          const won = Math.random() < (1.0 / odds) * 0.96;
-          if (won) {
-            const winPayout = stake * odds;
-            playBeep(880, 0.3);
-            const settleRes = await fetch('/api/casino/settle', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ game_id: gameId, outcome: 'WIN', stake: stake, payout: winPayout })
-            });
-            const settleData = await settleRes.json();
-            updateBalanceDisplays(settleData.new_balance);
-            if (statusMsg) {
-              statusMsg.innerHTML = `🎉 <strong style="color: var(--color-green);">WINNER! Won ₹${winPayout.toLocaleString('en-IN')}!</strong> on ${pick.toUpperCase()}`;
-            }
-          } else {
-            playBeep(220, 0.3);
-            await fetch('/api/casino/settle', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ game_id: gameId, outcome: 'LOSS', stake: stake, payout: 0 })
-            });
-            if (statusMsg) {
-              statusMsg.innerHTML = `❌ <strong style="color: var(--color-red);">Round Lost (₹${stake}).</strong> Other hand won.`;
-            }
-          }
-        }, 1500);
-
-      } catch(e) {
-        alert('Network error placing table bet');
-      }
-    }
-
-
-    // ==================== 5. ROULETTE WHEEL SPIN ====================
-    async function playRoulette(betOption) {
-      const wheel = document.getElementById('roulette-wheel');
-      const centerNum = document.getElementById('roulette-center-num');
-      const statusMsg = document.getElementById('roulette-status-msg');
-      const stake = getSelectedChip();
-
-      try {
-        const betRes = await fetch('/api/casino/bet', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ game_id: 'lightning-roulette', stake: stake, bet_type: betOption })
-        });
-        if (betResIs401(betRes)) return;
-        const betData = await betRes.json();
-        if (!betRes.ok) {
-          alert('❌ ' + (betData.detail || 'Insufficient balance'));
-          return;
-        }
-        updateBalanceDisplays(betData.new_balance);
-
-        if (wheel) {
-          wheel.classList.remove('roulette-spinning');
-          void wheel.offsetWidth;
-          wheel.classList.add('roulette-spinning');
-        }
-        playBeep(523, 0.2);
-        if (statusMsg) statusMsg.innerText = `Spinning wheel for ${betOption}...`;
-
-        setTimeout(async () => {
-          const numbers = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
-          const drawn = numbers[Math.floor(Math.random() * numbers.length)];
-          if (centerNum) centerNum.innerText = drawn;
-
-          const isRed = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36].includes(drawn);
-          const isEven = drawn !== 0 && drawn % 2 === 0;
-
-          let won = false;
-          if (betOption === 'RED' && isRed) won = true;
-          if (betOption === 'BLACK' && !isRed && drawn !== 0) won = true;
-          if (betOption === 'EVEN' && isEven) won = true;
-          if (betOption === 'ODD' && !isEven && drawn !== 0) won = true;
-
-          if (won) {
-            const winPayout = stake * 2;
-            playBeep(784, 0.3);
-            const settleRes = await fetch('/api/casino/settle', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ game_id: 'lightning-roulette', outcome: 'WIN', stake: stake, payout: winPayout })
-            });
-            const settleData = await settleRes.json();
-            updateBalanceDisplays(settleData.new_balance);
-            if (statusMsg) {
-              statusMsg.innerHTML = `🎉 <strong style="color: var(--color-green);">WINNER! Number was ${drawn} (${isRed ? 'RED' : 'BLACK'}). You won ₹${winPayout}!</strong>`;
-            }
-          } else {
-            playBeep(196, 0.3);
-            await fetch('/api/casino/settle', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ game_id: 'lightning-roulette', outcome: 'LOSS', stake: stake, payout: 0 })
-            });
-            if (statusMsg) {
-              statusMsg.innerHTML = `❌ <strong style="color: var(--color-red);">Number was ${drawn} (${drawn === 0 ? 'ZERO' : (isRed ? 'RED' : 'BLACK')}). Better luck next spin!</strong>`;
-            }
-          }
-        }, 2500);
-
-      } catch(e) {
-        alert('Network error playing roulette');
-      }
-    }
-
-
-    // ==================== 6. SLOTS REELS SPIN ====================
+    // ==================== 5. SLOTS SPIN ====================
     async function spinSlotReels() {
-      const stakeInput = document.getElementById('slot-stake-input');
-      const stake = parseFloat(stakeInput?.value) || 100;
+      const stake = parseFloat(document.getElementById('slot-stake-input')?.value) || 100;
       const statusMsg = document.getElementById('slot-status-msg');
       const symbols = ['👑', '💎', '⚡', '💍', '🍇', '🍉', '🍓', '🔔', '7️⃣'];
 
@@ -1931,7 +2366,7 @@
             c.innerText = symbols[Math.floor(Math.random() * symbols.length)];
           });
 
-          const won = Math.random() < 0.45; // 45% hit rate
+          const won = Math.random() < 0.45;
           if (won) {
             const mult = (Math.random() < 0.1 ? 15.0 : (Math.random() < 0.3 ? 5.0 : 2.5));
             const payout = stake * mult;
@@ -1943,9 +2378,7 @@
             });
             const settleData = await settleRes.json();
             updateBalanceDisplays(settleData.new_balance);
-            if (statusMsg) {
-              statusMsg.innerHTML = `🎉 <strong style="color: var(--winbuzz-gold);">BIG WIN! ${mult}x Multiplier! Payout: ₹${payout.toLocaleString('en-IN')}</strong>`;
-            }
+            if (statusMsg) statusMsg.innerHTML = `🎉 <strong style="color: var(--winbuzz-gold);">BIG WIN! ${mult}x Multiplier! Won ₹${payout.toLocaleString('en-IN')}</strong>`;
           } else {
             playBeep(200, 0.2);
             await fetch('/api/casino/settle', {
@@ -1953,14 +2386,12 @@
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ game_id: currentGameSlug, outcome: 'LOSS', stake: stake, payout: 0 })
             });
-            if (statusMsg) {
-              statusMsg.innerHTML = `Spin finished. Match 8+ symbols for tumble cascade!`;
-            }
+            if (statusMsg) statusMsg.innerHTML = `Spin finished. Match 8+ symbols for tumble cascade!`;
           }
         }, 1200);
 
       } catch(e) {
-        alert('Network error spinning slot reels');
+        alert('Network error spinning slots');
       }
     }
 
