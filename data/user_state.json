@@ -4,13 +4,32 @@
       "mobile": "9876543210",
       "name": "DEMO7890",
       "tier": "VIP Platinum",
-      "balance": 100790.0,
+      "balance": 101790.0,
       "exposure": 0.0,
       "total_winnings": 18740.0,
       "kyc_status": "VERIFIED",
       "created_at": "2026-11-17 12:00:00",
       "bets": [],
       "transactions": [
+        {
+          "id": "WTH-20261118-14921",
+          "type": "WITHDRAWAL",
+          "method": "Bank Payout (HDFC Bank)",
+          "account": "••••••••••4892",
+          "utr": "IMPS202611189912",
+          "amount": 500.0,
+          "status": "COMPLETED",
+          "date": "2026-11-18 02:08:58"
+        },
+        {
+          "id": "DEP-20261118-81835",
+          "type": "DEPOSIT",
+          "method": "BharatPe Static QR",
+          "utr": "402918239999",
+          "amount": 1500.0,
+          "status": "COMPLETED",
+          "date": "2026-11-18 02:08:58"
+        },
         {
           "id": "WIN-536117",
           "type": "CASINO_WIN",
@@ -55,7 +74,72 @@
           "date": "2026-11-17 12:00:00"
         }
       ],
-      "password_hash": "efb8c57310dbee911a86a8104e4e37277132f9f81500785ca693bf5e1488b3f5"
+      "password_hash": "efb8c57310dbee911a86a8104e4e37277132f9f81500785ca693bf5e1488b3f5",
+      "balance_paise": 10179000,
+      "ledger": [
+        {
+          "ledger_id": "LDG-20261118-52073",
+          "user_mobile": "9876543210",
+          "type": "WITHDRAWAL_SETTLE",
+          "amount_paise": 50000,
+          "balance_before_paise": 10229000,
+          "balance_after_paise": 10179000,
+          "reference_id": "WTH-20261118-14921",
+          "actor": "admin_master",
+          "notes": "Withdrawal paid via Bank UTR: IMPS202611189912",
+          "timestamp": "2026-11-18 02:08:58",
+          "created_timestamp": 1794947938
+        },
+        {
+          "ledger_id": "LDG-20261118-12508",
+          "user_mobile": "9876543210",
+          "type": "AUDIT_ACCOUNT_REVEAL",
+          "amount_paise": 0,
+          "balance_before_paise": 0,
+          "balance_after_paise": 0,
+          "reference_id": "WTH-20261118-14921",
+          "actor": "admin_master",
+          "notes": "Admin revealed full bank account for withdrawal WTH-20261118-14921",
+          "timestamp": "2026-11-18 02:08:58",
+          "created_timestamp": 1794947938
+        },
+        {
+          "ledger_id": "LDG-20261118-74200",
+          "user_mobile": "9876543210",
+          "type": "WITHDRAWAL_RESERVE",
+          "amount_paise": 50000,
+          "balance_before_paise": 10229000,
+          "balance_after_paise": 10229000,
+          "reference_id": "WTH-20261118-14921",
+          "actor": "customer",
+          "notes": "Withdrawal request reserved to ••••••••••4892",
+          "timestamp": "2026-11-18 02:08:58",
+          "created_timestamp": 1794947938
+        },
+        {
+          "ledger_id": "LDG-20261118-42649",
+          "user_mobile": "9876543210",
+          "type": "DEPOSIT_CREDIT",
+          "amount_paise": 150000,
+          "balance_before_paise": 10079000,
+          "balance_after_paise": 10229000,
+          "reference_id": "DEP-20261118-81835",
+          "actor": "admin_master",
+          "notes": "Deposit verified on BharatPe. UTR: 402918239999",
+          "timestamp": "2026-11-18 02:08:58",
+          "created_timestamp": 1794947938
+        }
+      ],
+      "bank_account": {
+        "holder_name": "Md Saleheen",
+        "account_encrypted": "egdEbbSTwa9QMInEQ9K3z3GvxXa0g9tYTjKCexOfpnmU8cNhMWUKCWak",
+        "account_masked": "••••••••••4892",
+        "ifsc": "HDFC0001234",
+        "bank_name": "HDFC Bank",
+        "bound_at": "2026-11-18 02:08:58"
+      },
+      "reserved_withdrawal_paise": 0,
+      "exposure_paise": 0
     },
     "9123456789": {
       "mobile": "9123456789",
@@ -121,6 +205,27 @@
   },
   "deposit_requests": [
     {
+      "id": "DEP-20261118-81835",
+      "user_mobile": "9876543210",
+      "mobile": "9876543210",
+      "user_name": "DEMO7890",
+      "amount": 1500.0,
+      "amount_paise": 150000,
+      "method": "BharatPe Static QR",
+      "utr": "402918239999",
+      "screenshot_url": "",
+      "notes": "Customer deposit claim",
+      "status": "APPROVED",
+      "created_at": "2026-11-18 02:08:58",
+      "created_timestamp": 1794947938,
+      "approved_at": "2026-11-18 02:08:58",
+      "approved_by": "admin_master",
+      "declined_at": null,
+      "declined_by": null,
+      "decline_reason": null,
+      "idempotency_key": "DEP-20261118-81835-APPROVE"
+    },
+    {
       "id": "REQ-48800",
       "mobile": "9123456789",
       "user_name": "User 6789",
@@ -153,5 +258,90 @@
     "whatsapp_message_id": "45194",
     "smart_otp_id": "",
     "updated_at": "2026-11-18 01:00:00"
-  }
+  },
+  "payment_config": {
+    "upi_id": "BHARATPE2S0W0C6I4D04292@unitype",
+    "upi_name": "MDSALEHEEN (BharatPe)",
+    "whatsapp_number": "919693554087",
+    "qr_image": "/static/images/BharatPe-QR.jpeg",
+    "updated_at": "2026-11-18 01:50:00"
+  },
+  "ledger": [
+    {
+      "ledger_id": "LDG-20261118-52073",
+      "user_mobile": "9876543210",
+      "type": "WITHDRAWAL_SETTLE",
+      "amount_paise": 50000,
+      "balance_before_paise": 10229000,
+      "balance_after_paise": 10179000,
+      "reference_id": "WTH-20261118-14921",
+      "actor": "admin_master",
+      "notes": "Withdrawal paid via Bank UTR: IMPS202611189912",
+      "timestamp": "2026-11-18 02:08:58",
+      "created_timestamp": 1794947938
+    },
+    {
+      "ledger_id": "LDG-20261118-12508",
+      "user_mobile": "9876543210",
+      "type": "AUDIT_ACCOUNT_REVEAL",
+      "amount_paise": 0,
+      "balance_before_paise": 0,
+      "balance_after_paise": 0,
+      "reference_id": "WTH-20261118-14921",
+      "actor": "admin_master",
+      "notes": "Admin revealed full bank account for withdrawal WTH-20261118-14921",
+      "timestamp": "2026-11-18 02:08:58",
+      "created_timestamp": 1794947938
+    },
+    {
+      "ledger_id": "LDG-20261118-74200",
+      "user_mobile": "9876543210",
+      "type": "WITHDRAWAL_RESERVE",
+      "amount_paise": 50000,
+      "balance_before_paise": 10229000,
+      "balance_after_paise": 10229000,
+      "reference_id": "WTH-20261118-14921",
+      "actor": "customer",
+      "notes": "Withdrawal request reserved to ••••••••••4892",
+      "timestamp": "2026-11-18 02:08:58",
+      "created_timestamp": 1794947938
+    },
+    {
+      "ledger_id": "LDG-20261118-42649",
+      "user_mobile": "9876543210",
+      "type": "DEPOSIT_CREDIT",
+      "amount_paise": 150000,
+      "balance_before_paise": 10079000,
+      "balance_after_paise": 10229000,
+      "reference_id": "DEP-20261118-81835",
+      "actor": "admin_master",
+      "notes": "Deposit verified on BharatPe. UTR: 402918239999",
+      "timestamp": "2026-11-18 02:08:58",
+      "created_timestamp": 1794947938
+    }
+  ],
+  "withdrawal_requests": [
+    {
+      "id": "WTH-20261118-14921",
+      "user_mobile": "9876543210",
+      "mobile": "9876543210",
+      "user_name": "DEMO7890",
+      "amount": 500.0,
+      "amount_paise": 50000,
+      "status": "PAID",
+      "bank_account_encrypted": "egdEbbSTwa9QMInEQ9K3z3GvxXa0g9tYTjKCexOfpnmU8cNhMWUKCWak",
+      "bank_account_masked": "••••••••••4892",
+      "bank_holder_name": "Md Saleheen",
+      "bank_ifsc": "HDFC0001234",
+      "bank_name": "HDFC Bank",
+      "created_at": "2026-11-18 02:08:58",
+      "created_timestamp": 1794947938,
+      "paid_at": "2026-11-18 02:08:58",
+      "paid_by": "admin_master",
+      "payout_bank_utr": "IMPS202611189912",
+      "declined_at": null,
+      "declined_by": null,
+      "decline_reason": null
+    }
+  ]
 }

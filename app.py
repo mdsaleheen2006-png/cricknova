@@ -7,12 +7,26 @@ import urllib.error
 import re
 import hashlib
 import random
+import base64
+import shutil
 from typing import List, Dict, Any, Optional
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPException, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
+
+try:
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    HAS_CRYPTOGRAPHY = True
+except ImportError:
+    HAS_CRYPTOGRAPHY = False
+
+try:
+    import pywebpush
+    HAS_PYWEBPUSH = True
+except ImportError:
+    HAS_PYWEBPUSH = False
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -50,6 +64,136 @@ def save_json(filepath: str, data: Any):
             json.dump(data, f, indent=2, ensure_ascii=False)
     except Exception as e:
         print(f"Error saving {filepath}: {e}")
+
+# ==================== FINANCIAL LEDGER, VAPID & ENCRYPTION INFRASTRUCTURE ====================
+VAPID_FILE = os.path.join(DATA_DIR, "vapid_keys.json")
+PUSH_SUBSCRIPTIONS_FILE = os.path.join(DATA_DIR, "admin_push_subscriptions.json")
+SECRET_BANK_KEY = os.getenv("BANK_ENCRYPTION_KEY", "cricknova_bank_master_secret_aes_key_32_bytes!!").encode()[:32].ljust(32, b"0")
+ADMIN_WEBSOCKETS: List[WebSocket] = []
+
+def encrypt_sensitive(plain_text: str) -> str:
+    if not HAS_CRYPTOGRAPHY or not plain_text:
+        return plain_text
+    try:
+        aesgcm = AESGCM(SECRET_BANK_KEY)
+        nonce = os.urandom(12)
+        encrypted = aesgcm.encrypt(nonce, plain_text.encode("utf-8"), None)
+        return base64.b64encode(nonce + encrypted).decode("utf-8")
+    except Exception as e:
+        print(f"Encryption error: {e}")
+        return plain_text
+
+def decrypt_sensitive(cipher_text_b64: str) -> str:
+    if not HAS_CRYPTOGRAPHY or not cipher_text_b64:
+        return cipher_text_b64
+    try:
+        raw = base64.b64decode(cipher_text_b64.encode("utf-8"))
+        nonce, encrypted = raw[:12], raw[12:]
+        aesgcm = AESGCM(SECRET_BANK_KEY)
+        return aesgcm.decrypt(nonce, encrypted, None).decode("utf-8")
+    except Exception:
+        return cipher_text_b64
+
+def mask_account(acc: str) -> str:
+    clean = re.sub(r'\s+', '', str(acc or ''))
+    if not clean or len(clean) < 4:
+        return "••••"
+    return "•" * (len(clean) - 4) + clean[-4:]
+
+def to_paise(amount_inr: float) -> int:
+    try:
+        return int(round(float(amount_inr) * 100))
+    except Exception:
+        return 0
+
+def from_paise(paise: int) -> float:
+    try:
+        return round(float(paise) / 100.0, 2)
+    except Exception:
+        return 0.0
+
+def record_ledger_entry(
+    all_data: Dict[str, Any],
+    user_mobile: str,
+    entry_type: str,
+    amount_paise: int,
+    balance_before_paise: int,
+    balance_after_paise: int,
+    ref_id: str,
+    actor: str = "admin_master",
+    notes: str = ""
+) -> Dict[str, Any]:
+    ledger_id = f"LDG-{time.strftime('%Y%m%d')}-{random.randint(10000, 99999)}"
+    entry = {
+        "ledger_id": ledger_id,
+        "user_mobile": user_mobile,
+        "type": entry_type,
+        "amount_paise": amount_paise,
+        "balance_before_paise": balance_before_paise,
+        "balance_after_paise": balance_after_paise,
+        "reference_id": ref_id,
+        "actor": actor,
+        "notes": notes,
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "created_timestamp": int(time.time())
+    }
+    all_data.setdefault("ledger", []).insert(0, entry)
+    user = all_data.get("users", {}).get(user_mobile)
+    if user:
+        user.setdefault("ledger", []).insert(0, entry)
+    return entry
+
+def send_admin_push_notification(title: str, body: str, url: str = "/admin/mobile"):
+    vapid_info = load_json(VAPID_FILE, {})
+    if not vapid_info or not HAS_PYWEBPUSH:
+        print(f"[Admin Push Alert]: {title} - {body}")
+        return
+
+    subscriptions = load_json(PUSH_SUBSCRIPTIONS_FILE, [])
+    payload = json.dumps({
+        "title": title,
+        "body": body,
+        "url": url,
+        "timestamp": time.time()
+    })
+
+    remaining = []
+    for sub in subscriptions:
+        try:
+            pywebpush.webpush(
+                subscription_info=sub,
+                data=payload,
+                vapid_private_key=vapid_info["private_key"],
+                vapid_claims={"sub": vapid_info.get("admin_email", "mailto:admin@cricknova.buzz")},
+                ttl=86400
+            )
+            remaining.append(sub)
+        except pywebpush.WebPushException as ex:
+            print(f"[WebPush Service Notice]: {ex}")
+            if hasattr(ex, "response") and ex.response and getattr(ex.response, "status_code", None) in [404, 410]:
+                continue
+            remaining.append(sub)
+        except Exception as e:
+            print(f"[Push Exception]: {e}")
+            remaining.append(sub)
+
+    save_json(PUSH_SUBSCRIPTIONS_FILE, remaining)
+
+async def broadcast_admin_alert(alert_type: str, data: Dict[str, Any]):
+    payload = json.dumps({"type": alert_type, "data": data, "timestamp": time.time()})
+    for ws in list(ADMIN_WEBSOCKETS):
+        try:
+            await ws.send_text(payload)
+        except Exception:
+            if ws in ADMIN_WEBSOCKETS:
+                ADMIN_WEBSOCKETS.remove(ws)
+
+    # Generic lock-screen push notification (Never put UTRs or amounts on lock-screen)
+    send_admin_push_notification(
+        title="New deposit request",
+        body="New customer deposit waiting for verification. Sign in to review.",
+        url="/admin/mobile"
+    )
 
 USER_STATE = load_json(USER_STATE_FILE, {
     "user": {
@@ -1337,94 +1481,305 @@ async def get_user_state_api(request: Request):
 
 @app.post("/api/user/deposit-request")
 async def submit_deposit_request(request: Request):
-    data = await request.json()
     user = get_active_user(request)
     if user.get("is_guest") or not user.get("mobile"):
         raise HTTPException(status_code=401, detail="Please login to your account to submit a deposit request.")
-    amount = float(data.get("amount", 500.0))
-    if amount <= 0:
-        raise HTTPException(status_code=400, detail="Invalid deposit amount")
+
+    content_type = request.headers.get("content-type", "")
+    amount = 500.0
+    utr = ""
+    method = "BharatPe Static QR"
+    notes = "Customer deposit claim"
+    screenshot_url = ""
+
+    if "multipart/form-data" in content_type:
+        form = await request.form()
+        try:
+            amount = float(form.get("amount", 500.0))
+        except (ValueError, TypeError):
+            amount = 500.0
+        utr = str(form.get("utr", "")).strip()
+        method = str(form.get("method", "BharatPe Static QR")).strip()
+        notes = str(form.get("notes", "Customer deposit claim")).strip()
+
+        proof_file = form.get("proof_image")
+        if proof_file and hasattr(proof_file, "filename") and proof_file.filename:
+            upload_dir = os.path.join(BASE_DIR, "static", "uploads", "deposits")
+            os.makedirs(upload_dir, exist_ok=True)
+            ext = os.path.splitext(proof_file.filename)[1].lower() or ".jpg"
+            clean_token = re.sub(r'[^0-9A-Za-z]', '', utr)[-6:] if utr else str(random.randint(1000, 9999))
+            filename = f"proof_{time.strftime('%Y%m%d%H%M%S')}_{clean_token}{ext}"
+            filepath = os.path.join(upload_dir, filename)
+            file_bytes = await proof_file.read()
+            with open(filepath, "wb") as f:
+                f.write(file_bytes)
+            screenshot_url = f"/static/uploads/deposits/{filename}"
+    else:
+        data = await request.json()
+        try:
+            amount = float(data.get("amount", 500.0))
+        except (ValueError, TypeError):
+            amount = 500.0
+        utr = str(data.get("utr", "")).strip()
+        method = str(data.get("method", "BharatPe Static QR")).strip()
+        notes = str(data.get("notes", "Customer deposit claim")).strip()
+        screenshot_url = str(data.get("screenshot_url", "")).strip()
+
+    if amount < 100.0 or amount > 100000.0:
+        raise HTTPException(status_code=400, detail="Deposit amount must be between ₹100 and ₹1,00,000")
+
+    clean_utr = re.sub(r'[^0-9A-Za-z]', '', utr).upper()
+    if len(clean_utr) < 6:
+        raise HTTPException(status_code=400, detail="Please enter a valid 12-digit UPI / UTR reference number from your receipt.")
 
     all_data = load_all_user_data()
-    req_id = f"REQ-{time.time_ns() % 1000000}"
+    existing_requests = all_data.get("deposit_requests", [])
+
+    # Strict Duplicate UTR check across all active/approved requests
+    for r in existing_requests:
+        if r.get("utr") == clean_utr and r.get("status") in ["PENDING", "APPROVED"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"This UTR / Transaction Reference ({clean_utr}) has already been submitted or credited."
+            )
+
+    req_id = f"DEP-{time.strftime('%Y%m%d')}-{random.randint(10000, 99999)}"
     req = {
         "id": req_id,
+        "user_mobile": user["mobile"],
         "mobile": user["mobile"],
-        "user_name": user.get("name", f"User {user['mobile'][-4:]}"),
+        "user_name": user.get("name", f"Player {user['mobile'][-4:]}"),
         "amount": amount,
-        "method": data.get("method", "UPI / PhonePe / GPay"),
-        "utr": data.get("utr", f"{time.time_ns() % 1000000000000}"),
-        "notes": data.get("notes", "Add money request"),
+        "amount_paise": to_paise(amount),
+        "method": method,
+        "utr": clean_utr,
+        "screenshot_url": screenshot_url,
+        "notes": notes,
         "status": "PENDING",
-        "created_at": time.strftime("%Y-%m-%d %H:%M:%S")
+        "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "created_timestamp": int(time.time()),
+        "approved_at": None,
+        "approved_by": None,
+        "declined_at": None,
+        "declined_by": None,
+        "decline_reason": None,
+        "idempotency_key": f"{req_id}-APPROVE"
     }
+
     all_data.setdefault("deposit_requests", []).insert(0, req)
+    save_all_user_data(all_data)
+
+    # Generic lock-screen push notification to admin phone (NO financial details on lock screen)
+    asyncio.create_task(broadcast_admin_alert("NEW_DEPOSIT", {"request_id": req_id, "amount": amount}))
+
+    return JSONResponse(content={
+        "status": "success",
+        "message": f"Deposit claim of ₹{amount:,.2f} submitted! Admin will verify against BharatPe merchant account and credit your wallet.",
+        "request": req
+    })
+
+@app.get("/api/user/deposit-history")
+async def get_user_deposit_history(request: Request):
+    user = get_active_user(request)
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login.")
+    all_data = load_all_user_data()
+    reqs = [r for r in all_data.get("deposit_requests", []) if r.get("user_mobile") == user["mobile"] or r.get("mobile") == user["mobile"]]
+    return JSONResponse(content={"status": "success", "deposits": reqs})
+
+@app.post("/api/ocr/extract-utr")
+async def extract_utr_api(request: Request):
+    try:
+        form = await request.form()
+        receipt = form.get("receipt")
+        if not receipt:
+            return JSONResponse(content={"status": "error", "message": "No receipt file provided", "extracted_utr": ""})
+
+        content = await receipt.read()
+        extracted_utr = ""
+
+        try:
+            raw_text = content.decode("utf-8", errors="ignore")
+            m = re.findall(r'(?:UTR|UPI Ref|Ref No|Txn ID|Transaction ID)[:\s]*([0-9]{12})', raw_text, re.IGNORECASE)
+            if m:
+                extracted_utr = m[0]
+            else:
+                m2 = re.findall(r'\b([0-9]{12})\b', raw_text)
+                if m2:
+                    extracted_utr = m2[0]
+        except Exception:
+            pass
+
+        return JSONResponse(content={"status": "success", "extracted_utr": extracted_utr})
+    except Exception as e:
+        return JSONResponse(content={"status": "error", "message": str(e), "extracted_utr": ""})
+
+# ==================== BANK ACCOUNT BINDING & WITHDRAWAL QUEUE ====================
+@app.post("/api/user/bank-account/bind")
+async def bind_bank_account(request: Request):
+    data = await request.json()
+    user = get_active_user(request)
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login to bind bank account.")
+
+    holder_name = str(data.get("holder_name", "")).strip()
+    account_number = str(data.get("account_number", "")).strip().replace(" ", "")
+    ifsc = str(data.get("ifsc", "")).strip().upper()
+    bank_name = str(data.get("bank_name", "")).strip()
+
+    if not holder_name or len(holder_name) < 3:
+        raise HTTPException(status_code=400, detail="Please enter valid account holder name.")
+    if not account_number or len(account_number) < 8 or not account_number.isdigit():
+        raise HTTPException(status_code=400, detail="Please enter valid 8-18 digit bank account number.")
+    if not ifsc or len(ifsc) != 11:
+        raise HTTPException(status_code=400, detail="Please enter valid 11-character IFSC code (e.g. HDFC0001234).")
+
+    # Encrypt account number at rest using AES-256-GCM
+    encrypted_acc = encrypt_sensitive(account_number)
+    masked_acc = mask_account(account_number)
+
+    all_data = load_all_user_data()
+    mobile = user["mobile"]
+    all_data.setdefault("users", {}).setdefault(mobile, {})["bank_account"] = {
+        "holder_name": holder_name,
+        "account_encrypted": encrypted_acc,
+        "account_masked": masked_acc,
+        "ifsc": ifsc,
+        "bank_name": bank_name or "Bank Account",
+        "bound_at": time.strftime("%Y-%m-%d %H:%M:%S")
+    }
     save_all_user_data(all_data)
 
     return JSONResponse(content={
         "status": "success",
-        "message": f"Deposit request of ₹{amount:,.2f} submitted! Admin will verify and credit your wallet shortly.",
-        "request": req
+        "message": f"Bank account ending in {account_number[-4:]} bound securely!",
+        "account_masked": masked_acc,
+        "holder_name": holder_name,
+        "ifsc": ifsc,
+        "bank_name": bank_name
     })
 
-@app.post("/api/user/deposit")
-async def user_deposit(request: Request):
-    data = await request.json()
+@app.get("/api/user/bank-account")
+async def get_user_bank_account(request: Request):
     user = get_active_user(request)
-    amount = float(data.get("amount", 1000.0))
-    if amount <= 0:
-        raise HTTPException(status_code=400, detail="Invalid deposit amount")
-
-    user["balance"] += amount
-    tx = {
-        "id": f"DEP-{time.time_ns() % 1000000}",
-        "type": "DEPOSIT",
-        "method": data.get("method", "UPI Instant"),
-        "utr": f"{time.time_ns() % 1000000000000}",
-        "amount": amount,
-        "status": "COMPLETED",
-        "date": time.strftime("%Y-%m-%d %H:%M:%S")
-    }
-    user.setdefault("transactions", []).insert(0, tx)
-    save_all_user_data()
-
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login.")
+    all_data = load_all_user_data()
+    u = all_data.get("users", {}).get(user["mobile"], {})
+    bank = u.get("bank_account")
+    if not bank:
+        return JSONResponse(content={"status": "none", "bank_account": None})
     return JSONResponse(content={
         "status": "success",
-        "message": f"Successfully deposited ₹{amount:,.2f}",
-        "balance": user["balance"],
-        "transaction": tx
+        "bank_account": {
+            "holder_name": bank.get("holder_name"),
+            "account_masked": bank.get("account_masked"),
+            "ifsc": bank.get("ifsc"),
+            "bank_name": bank.get("bank_name"),
+            "bound_at": bank.get("bound_at")
+        }
     })
 
+@app.post("/api/user/withdraw-request")
 @app.post("/api/user/withdraw")
-async def user_withdraw(request: Request):
+async def submit_withdrawal_request(request: Request):
     data = await request.json()
     user = get_active_user(request)
-    amount = float(data.get("amount", 1000.0))
-    if amount <= 0:
-        raise HTTPException(status_code=400, detail="Invalid withdrawal amount")
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login to submit a withdrawal request.")
 
-    available_balance = user["balance"] - user["exposure"]
-    if amount > available_balance:
-        raise HTTPException(status_code=400, detail="Insufficient available balance after exposure")
+    all_data = load_all_user_data()
+    mobile = user["mobile"]
+    user_rec = all_data.get("users", {}).get(mobile)
+    if not user_rec:
+        raise HTTPException(status_code=404, detail="User account not found.")
 
-    user["balance"] -= amount
-    tx = {
-        "id": f"WTH-{time.time_ns() % 1000000}",
-        "type": "WITHDRAWAL",
-        "method": data.get("method", "Bank Transfer"),
-        "account": data.get("account", "Bank Payout"),
+    bank_acc = user_rec.get("bank_account")
+    if not bank_acc:
+        # Check if user provided destination in request
+        dest = str(data.get("destination") or data.get("account") or "").strip()
+        if not dest:
+            raise HTTPException(status_code=400, detail="Please bind your bank account first before requesting withdrawal.")
+        bank_acc = {
+            "holder_name": user_rec.get("name", "Customer"),
+            "account_encrypted": encrypt_sensitive(dest),
+            "account_masked": mask_account(dest),
+            "ifsc": "DEFAULT",
+            "bank_name": "Bank / UPI Payout",
+            "bound_at": time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        user_rec["bank_account"] = bank_acc
+
+    try:
+        amount = float(data.get("amount", 0.0))
+    except (ValueError, TypeError):
+        amount = 0.0
+
+    if amount < 500.0:
+        raise HTTPException(status_code=400, detail="Minimum withdrawal amount is ₹500.00")
+
+    amt_paise = to_paise(amount)
+    user_rec["balance_paise"] = user_rec.get("balance_paise", to_paise(user_rec.get("balance", 0.0)))
+    user_rec["reserved_withdrawal_paise"] = user_rec.get("reserved_withdrawal_paise", 0)
+    user_rec["exposure_paise"] = user_rec.get("exposure_paise", to_paise(user_rec.get("exposure", 0.0)))
+
+    available_paise = user_rec["balance_paise"] - user_rec["reserved_withdrawal_paise"] - user_rec["exposure_paise"]
+    if amt_paise > available_paise:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient available balance. Available: ₹{from_paise(available_paise):,.2f} (Active bets/reserved withdrawals excluded)"
+        )
+
+    # Immediately RESERVE amount so it cannot be spent or double-withdrawn
+    user_rec["reserved_withdrawal_paise"] += amt_paise
+    req_id = f"WTH-{time.strftime('%Y%m%d')}-{random.randint(10000, 99999)}"
+
+    wth_req = {
+        "id": req_id,
+        "user_mobile": mobile,
+        "mobile": mobile,
+        "user_name": user_rec.get("name", f"Player {mobile[-4:]}"),
         "amount": amount,
-        "status": "COMPLETED",
-        "date": time.strftime("%Y-%m-%d %H:%M:%S")
+        "amount_paise": amt_paise,
+        "status": "PENDING",
+        "bank_account_encrypted": bank_acc["account_encrypted"],
+        "bank_account_masked": bank_acc["account_masked"],
+        "bank_holder_name": bank_acc["holder_name"],
+        "bank_ifsc": bank_acc["ifsc"],
+        "bank_name": bank_acc.get("bank_name", "Bank"),
+        "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "created_timestamp": int(time.time()),
+        "paid_at": None,
+        "paid_by": None,
+        "payout_bank_utr": None,
+        "declined_at": None,
+        "declined_by": None,
+        "decline_reason": None
     }
-    user.setdefault("transactions", []).insert(0, tx)
-    save_all_user_data()
+
+    all_data.setdefault("withdrawal_requests", []).insert(0, wth_req)
+
+    # Immutable ledger entry for funds reservation
+    record_ledger_entry(
+        all_data=all_data,
+        user_mobile=mobile,
+        entry_type="WITHDRAWAL_RESERVE",
+        amount_paise=amt_paise,
+        balance_before_paise=user_rec["balance_paise"],
+        balance_after_paise=user_rec["balance_paise"],
+        ref_id=req_id,
+        actor="customer",
+        notes=f"Withdrawal request reserved to {bank_acc['account_masked']}"
+    )
+
+    save_all_user_data(all_data)
 
     return JSONResponse(content={
         "status": "success",
-        "message": f"Withdrawal request of ₹{amount:,.2f} processed!",
-        "balance": user["balance"],
-        "transaction": tx
+        "message": f"Withdrawal request of ₹{amount:,.2f} submitted! Amount is reserved while admin processes manual bank transfer.",
+        "request": wth_req,
+        "balance": user_rec.get("balance", 0.0),
+        "available_balance": from_paise(user_rec["balance_paise"] - user_rec["reserved_withdrawal_paise"] - user_rec["exposure_paise"])
     })
 
 # ==================== BET PLACEMENT & CASHOUT ====================
@@ -1615,11 +1970,72 @@ async def admin_add_money(request: Request):
         "balance": target["balance"]
     })
 
+# ==================== MOBILE ADMIN PWA & FINANCIAL SETTLEMENT DESK ====================
+@app.get("/admin/mobile", response_class=HTMLResponse)
+@app.get("/admin/pwa", response_class=HTMLResponse)
+async def admin_mobile_portal(request: Request):
+    return templates.TemplateResponse(request=request, name="admin_mobile.html", context={})
+
+@app.websocket("/ws/admin-alerts")
+async def ws_admin_alerts(websocket: WebSocket):
+    await websocket.accept()
+    ADMIN_WEBSOCKETS.append(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except Exception:
+        pass
+    finally:
+        if websocket in ADMIN_WEBSOCKETS:
+            ADMIN_WEBSOCKETS.remove(websocket)
+
+@app.get("/api/admin/financial-queue")
+async def get_financial_queue(request: Request):
+    all_data = load_all_user_data()
+    return JSONResponse(content={
+        "status": "success",
+        "deposits": all_data.get("deposit_requests", []),
+        "withdrawals": all_data.get("withdrawal_requests", [])
+    })
+
+@app.get("/api/admin/ledger")
+async def get_admin_ledger(request: Request):
+    all_data = load_all_user_data()
+    return JSONResponse(content={
+        "status": "success",
+        "ledger": all_data.get("ledger", [])[:200]
+    })
+
+@app.get("/api/admin/push/vapid-public-key")
+async def get_vapid_public_key():
+    vapid_info = load_json(VAPID_FILE, {})
+    return JSONResponse(content={"status": "success", "public_key": vapid_info.get("public_key", "")})
+
+@app.post("/api/admin/push/subscribe")
+async def subscribe_admin_push(request: Request):
+    sub_data = await request.json()
+    subscriptions = load_json(PUSH_SUBSCRIPTIONS_FILE, [])
+    sub_endpoint = sub_data.get("endpoint")
+    if not any(s.get("endpoint") == sub_endpoint for s in subscriptions):
+        subscriptions.append(sub_data)
+        save_json(PUSH_SUBSCRIPTIONS_FILE, subscriptions)
+    return JSONResponse(content={"status": "success", "message": "Admin phone push subscription saved successfully!"})
+
+@app.post("/api/admin/push/test")
+async def test_admin_push():
+    send_admin_push_notification(
+        title="New deposit request",
+        body="Test alert: A customer submitted a new deposit claim. Open admin to verify.",
+        url="/admin/mobile"
+    )
+    return JSONResponse(content={"status": "success", "message": "Test push alert dispatched to registered phones!"})
+
 @app.post("/api/admin/deposit/action")
 async def admin_deposit_action(request: Request):
     data = await request.json()
-    req_id = data.get("request_id")
+    req_id = str(data.get("request_id", "")).strip()
     action = str(data.get("action", "APPROVE")).upper()
+    reason = str(data.get("reason", "Declined by admin")).strip()
 
     all_data = load_all_user_data()
     reqs = all_data.get("deposit_requests", [])
@@ -1627,30 +2043,204 @@ async def admin_deposit_action(request: Request):
     if not target_req:
         raise HTTPException(status_code=404, detail="Deposit request not found")
 
+    # Idempotent: If already approved, return success without double crediting
+    if target_req.get("status") == "APPROVED":
+        return JSONResponse(content={
+            "status": "success",
+            "message": f"Request {req_id} was already approved on {target_req.get('approved_at')}.",
+            "request": target_req
+        })
+
     if action == "APPROVE":
         target_req["status"] = "APPROVED"
         target_req["approved_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
-        mobile = target_req["mobile"]
-        amt = float(target_req.get("amount", 0.0))
-        if mobile in all_data.get("users", {}):
-            all_data["users"][mobile]["balance"] += amt
-            all_data["users"][mobile].setdefault("transactions", []).insert(0, {
-                "id": f"DEP-{target_req['id']}",
+        target_req["approved_by"] = "admin_master"
+        mobile = target_req.get("user_mobile") or target_req.get("mobile")
+        amount_paise = target_req.get("amount_paise") or to_paise(target_req.get("amount", 0.0))
+
+        users = all_data.get("users", {})
+        if mobile in users:
+            u = users[mobile]
+            u["balance_paise"] = u.get("balance_paise", to_paise(u.get("balance", 0.0)))
+            before_paise = u["balance_paise"]
+            u["balance_paise"] += amount_paise
+            after_paise = u["balance_paise"]
+            u["balance"] = from_paise(u["balance_paise"])
+
+            # Record immutable ledger entry
+            record_ledger_entry(
+                all_data=all_data,
+                user_mobile=mobile,
+                entry_type="DEPOSIT_CREDIT",
+                amount_paise=amount_paise,
+                balance_before_paise=before_paise,
+                balance_after_paise=after_paise,
+                ref_id=req_id,
+                actor="admin_master",
+                notes=f"Deposit verified on BharatPe. UTR: {target_req.get('utr')}"
+            )
+
+            # User transaction history entry
+            u.setdefault("transactions", []).insert(0, {
+                "id": req_id,
                 "type": "DEPOSIT",
-                "method": target_req.get("method", "UPI"),
+                "method": target_req.get("method", "BharatPe QR"),
                 "utr": target_req.get("utr", ""),
-                "amount": amt,
+                "amount": from_paise(amount_paise),
                 "status": "COMPLETED",
-                "date": time.strftime("%Y-%m-%d %H:%M:%S")
+                "date": target_req["approved_at"]
             })
-        msg = f"Approved deposit of ₹{amt:,.2f} for +91 {mobile}!"
+
+        msg = f"Approved deposit of ₹{from_paise(amount_paise):,.2f} for +91 {mobile}!"
     else:
-        target_req["status"] = "REJECTED"
-        target_req["rejected_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
-        msg = f"Rejected deposit request {req_id}."
+        target_req["status"] = "DECLINED"
+        target_req["declined_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        target_req["declined_by"] = "admin_master"
+        target_req["decline_reason"] = reason
+
+        record_ledger_entry(
+            all_data=all_data,
+            user_mobile=target_req.get("user_mobile") or target_req.get("mobile", ""),
+            entry_type="DEPOSIT_DECLINED",
+            amount_paise=target_req.get("amount_paise", 0),
+            balance_before_paise=0,
+            balance_after_paise=0,
+            ref_id=req_id,
+            actor="admin_master",
+            notes=f"Deposit declined: {reason}"
+        )
+        msg = f"Declined deposit request {req_id}."
 
     save_all_user_data(all_data)
     return JSONResponse(content={"status": "success", "message": msg, "request": target_req})
+
+@app.post("/api/admin/withdraw/action")
+async def admin_withdrawal_action(request: Request):
+    data = await request.json()
+    req_id = str(data.get("request_id", "")).strip()
+    action = str(data.get("action", "MARK_PAID")).upper()
+    payout_utr = str(data.get("payout_bank_utr", "")).strip()
+    reason = str(data.get("reason", "Declined by admin")).strip()
+
+    all_data = load_all_user_data()
+    wths = all_data.get("withdrawal_requests", [])
+    target = next((w for w in wths if w.get("id") == req_id), None)
+    if not target:
+        raise HTTPException(status_code=404, detail="Withdrawal request not found.")
+
+    if target.get("status") in ["PAID", "COMPLETED"]:
+        return JSONResponse(content={
+            "status": "success",
+            "message": f"Withdrawal {req_id} was already marked as PAID.",
+            "request": target
+        })
+
+    mobile = target.get("user_mobile") or target.get("mobile")
+    amt_paise = target.get("amount_paise") or to_paise(target.get("amount", 0.0))
+    user_rec = all_data.get("users", {}).get(mobile)
+
+    if action in ["MARK_PAID", "PAID", "APPROVE"]:
+        if not payout_utr:
+            raise HTTPException(status_code=400, detail="Bank transfer reference / UTR is required to mark withdrawal as PAID.")
+
+        target["status"] = "PAID"
+        target["paid_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        target["paid_by"] = "admin_master"
+        target["payout_bank_utr"] = payout_utr
+
+        if user_rec:
+            before_paise = user_rec.get("balance_paise", to_paise(user_rec.get("balance", 0.0)))
+            user_rec["reserved_withdrawal_paise"] = max(0, user_rec.get("reserved_withdrawal_paise", amt_paise) - amt_paise)
+            user_rec["balance_paise"] = max(0, before_paise - amt_paise)
+            user_rec["balance"] = from_paise(user_rec["balance_paise"])
+
+            record_ledger_entry(
+                all_data=all_data,
+                user_mobile=mobile,
+                entry_type="WITHDRAWAL_SETTLE",
+                amount_paise=amt_paise,
+                balance_before_paise=before_paise,
+                balance_after_paise=user_rec["balance_paise"],
+                ref_id=req_id,
+                actor="admin_master",
+                notes=f"Withdrawal paid via Bank UTR: {payout_utr}"
+            )
+
+            user_rec.setdefault("transactions", []).insert(0, {
+                "id": req_id,
+                "type": "WITHDRAWAL",
+                "method": f"Bank Payout ({target.get('bank_name', 'Bank')})",
+                "account": target.get("bank_account_masked", ""),
+                "utr": payout_utr,
+                "amount": from_paise(amt_paise),
+                "status": "COMPLETED",
+                "date": target["paid_at"]
+            })
+
+        msg = f"Withdrawal {req_id} marked as PAID. Bank UTR: {payout_utr}."
+    else:
+        # DECLINE: Release reserved amount back to user's available balance
+        target["status"] = "DECLINED"
+        target["declined_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        target["declined_by"] = "admin_master"
+        target["decline_reason"] = reason
+
+        if user_rec:
+            user_rec["reserved_withdrawal_paise"] = max(0, user_rec.get("reserved_withdrawal_paise", amt_paise) - amt_paise)
+            cur_bal = user_rec.get("balance_paise", to_paise(user_rec.get("balance", 0.0)))
+
+            record_ledger_entry(
+                all_data=all_data,
+                user_mobile=mobile,
+                entry_type="WITHDRAWAL_RELEASE",
+                amount_paise=amt_paise,
+                balance_before_paise=cur_bal,
+                balance_after_paise=cur_bal,
+                ref_id=req_id,
+                actor="admin_master",
+                notes=f"Withdrawal declined ({reason}). Reserved balance released."
+            )
+
+        msg = f"Withdrawal {req_id} declined. Reserved ₹{from_paise(amt_paise):,.2f} released back to customer."
+
+    save_all_user_data(all_data)
+    return JSONResponse(content={"status": "success", "message": msg, "request": target})
+
+@app.post("/api/admin/withdraw/reveal-account")
+async def admin_reveal_bank_account(request: Request):
+    data = await request.json()
+    req_id = str(data.get("request_id", "")).strip()
+
+    all_data = load_all_user_data()
+    wths = all_data.get("withdrawal_requests", [])
+    target = next((w for w in wths if w.get("id") == req_id), None)
+    if not target:
+        raise HTTPException(status_code=404, detail="Withdrawal request not found.")
+
+    encrypted_acc = target.get("bank_account_encrypted")
+    if not encrypted_acc:
+        raise HTTPException(status_code=400, detail="No encrypted account found.")
+
+    plain_account = decrypt_sensitive(encrypted_acc)
+
+    # Audit the reveal action
+    record_ledger_entry(
+        all_data=all_data,
+        user_mobile=target.get("user_mobile", ""),
+        entry_type="AUDIT_ACCOUNT_REVEAL",
+        amount_paise=0,
+        balance_before_paise=0,
+        balance_after_paise=0,
+        ref_id=req_id,
+        actor="admin_master",
+        notes=f"Admin revealed full bank account for withdrawal {req_id}"
+    )
+    save_all_user_data(all_data)
+
+    return JSONResponse(content={
+        "status": "success",
+        "account_number": plain_account
+    })
 
 @app.post("/api/admin/settle")
 async def admin_settle_match(request: Request):

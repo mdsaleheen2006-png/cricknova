@@ -510,43 +510,151 @@ function setQuickDeposit(amount) {
   if (input) input.value = amount;
 }
 
-async function submitDepositRequest() {
-  const amount = parseFloat(document.getElementById('deposit-amount-input').value);
-  const method = document.getElementById('deposit-method-input').value;
-  const utr = document.getElementById('deposit-utr-input').value.trim();
+async function autoExtractUtrFromReceipt(fileInput) {
+  if (!fileInput.files || !fileInput.files[0]) return;
+  const file = fileInput.files[0];
+  const statusBox = document.getElementById('ocr-status-box');
+  const utrInput = document.getElementById('deposit-utr-input');
 
-  if (isNaN(amount) || amount <= 0) {
-    alert('Please enter a valid deposit amount');
-    return;
+  if (statusBox) {
+    statusBox.style.display = 'block';
+    statusBox.style.background = 'rgba(245, 166, 35, 0.15)';
+    statusBox.style.border = '1px solid var(--winbuzz-gold)';
+    statusBox.style.color = '#fde68a';
+    statusBox.innerHTML = '⏳ <strong>Scanning receipt screenshot...</strong> Auto-extracting 12-digit UPI UTR...';
   }
 
   try {
+    // 1. Client-side Tesseract.js if available
+    if (window.Tesseract) {
+      const res = await Tesseract.recognize(file, 'eng');
+      const text = res.data.text;
+      console.log('[Receipt OCR parsed text]:', text);
+      const match = text.match(/(?:UTR|UPI Ref|Ref No|Txn ID|Transaction ID)[:\s]*([0-9]{12})/i) || text.match(/\b([0-9]{12})\b/);
+      if (match && match[1]) {
+        if (utrInput) utrInput.value = match[1];
+        if (statusBox) {
+          statusBox.style.background = 'rgba(0, 230, 118, 0.15)';
+          statusBox.style.border = '1px solid #00e676';
+          statusBox.style.color = '#00e676';
+          statusBox.innerHTML = `✅ <strong>UTR Auto-Detected:</strong> <code style="font-size: 13px; font-weight: 900; letter-spacing: 1px;">${match[1]}</code>. Verify and click Submit!`;
+        }
+        return;
+      }
+    }
+
+    // 2. Server-side pattern extraction
+    const formData = new FormData();
+    formData.append('receipt', file);
+    const sRes = await fetch('/api/ocr/extract-utr', { method: 'POST', body: formData });
+    const sData = await sRes.json();
+    if (sRes.ok && sData.extracted_utr) {
+      if (utrInput) utrInput.value = sData.extracted_utr;
+      if (statusBox) {
+        statusBox.style.background = 'rgba(0, 230, 118, 0.15)';
+        statusBox.style.border = '1px solid #00e676';
+        statusBox.style.color = '#00e676';
+        statusBox.innerHTML = `✅ <strong>UTR Auto-Detected:</strong> <code style="font-size: 13px; font-weight: 900;">${sData.extracted_utr}</code>. Verify and click Submit!`;
+      }
+    } else {
+      if (statusBox) {
+        statusBox.style.background = 'rgba(100, 116, 139, 0.15)';
+        statusBox.style.border = '1px solid #475569';
+        statusBox.style.color = '#cbd5e1';
+        statusBox.innerHTML = `📸 Receipt screenshot attached! Please verify or enter the 12-digit UTR below.`;
+      }
+    }
+  } catch (err) {
+    if (statusBox) {
+      statusBox.style.display = 'block';
+      statusBox.style.background = 'rgba(100, 116, 139, 0.15)';
+      statusBox.style.border = '1px solid #475569';
+      statusBox.style.color = '#cbd5e1';
+      statusBox.innerHTML = `📸 Screenshot attached. Please enter the 12-digit UTR from your payment receipt.`;
+    }
+  }
+}
+
+async function submitDepositRequestWithProof() {
+  const amountInput = document.getElementById('deposit-amount-input');
+  const utrInput = document.getElementById('deposit-utr-input');
+  const fileInput = document.getElementById('deposit-receipt-file');
+  const btn = document.getElementById('btn-submit-deposit-claim') || document.querySelector('#deposit-modal .btn-deposit');
+  const resultBox = document.getElementById('deposit-result-box');
+
+  const amount = parseFloat(amountInput ? amountInput.value : 1000);
+  const utr = utrInput ? utrInput.value.trim() : '';
+
+  if (isNaN(amount) || amount < 100) {
+    alert('Please enter a valid deposit amount of at least ₹100');
+    return;
+  }
+  if (!utr || utr.length < 6) {
+    alert('Please enter a valid 12-digit UPI / UTR reference number from your payment receipt.');
+    if (utrInput) utrInput.focus();
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = 'SUBMITTING CLAIM...';
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('amount', amount);
+    formData.append('utr', utr);
+    formData.append('method', 'BharatPe Static QR');
+    formData.append('notes', 'Customer claim via BharatPe QR');
+
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+      formData.append('proof_image', fileInput.files[0]);
+    }
+
     const res = await fetch('/api/user/deposit-request', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        amount: amount,
-        method: method,
-        utr: utr,
-        notes: `Customer request via ${method}`
-      })
+      body: formData
     });
     const data = await res.json();
+
     if (res.status === 401) {
       alert('⚠️ Please login first to deposit money into your account.');
       window.location.href = '/login';
       return;
     }
+
     if (res.ok) {
-      alert(`✅ Deposit Request of ₹${amount.toLocaleString('en-IN')} submitted successfully!\n\nYour request is pending in Admin Desk. Once Admin verifies, your wallet balance will be credited instantly.`);
-      closeDepositModal();
+      if (resultBox) {
+        resultBox.style.display = 'block';
+        resultBox.style.background = 'rgba(0, 176, 255, 0.12)';
+        resultBox.style.border = '1px solid #00b0ff';
+        resultBox.style.color = '#e2e8f0';
+        resultBox.innerHTML = `
+          <div style="font-weight: 900; color: #00b0ff; margin-bottom: 4px;">⏳ DEPOSIT CLAIM SUBMITTED (PENDING)</div>
+          <div>Request ID: <strong style="color: #fff;">${data.request.id}</strong></div>
+          <div>Amount: <strong style="color: var(--winbuzz-gold);">₹${amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</strong></div>
+          <div>UTR Reference: <code style="color: #fff;">${utr}</code></div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
+            Admin will verify your payment against BharatPe merchant transactions. Your wallet will be credited automatically once confirmed.
+          </div>
+        `;
+      }
+      alert(`✅ Deposit Request of ₹${amount.toLocaleString('en-IN')} submitted!\n\nStatus: PENDING REVIEW.\nAdmin is verifying your UTR against BharatPe statement.`);
     } else {
       alert('❌ ' + (data.detail || data.message || 'Failed to submit request'));
     }
   } catch (err) {
-    alert('Network error submitting deposit request: ' + err.message);
+    alert('Network error submitting deposit: ' + err.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = '⚡ SUBMIT DEPOSIT CLAIM';
+    }
   }
 }
+
+// Backward compatibility alias
+const submitDepositRequest = submitDepositRequestWithProof;
 
 // ==================== 6. WITHDRAWAL ====================
 function openWithdrawModal() {
@@ -563,27 +671,32 @@ async function submitWithdraw() {
   const amount = parseFloat(document.getElementById('withdraw-amount-input').value);
   const dest = document.getElementById('withdraw-dest-input').value.trim();
 
-  if (isNaN(amount) || amount <= 0) {
-    alert('Please enter a valid withdrawal amount');
+  if (isNaN(amount) || amount < 500) {
+    alert('Minimum withdrawal amount is ₹500');
     return;
   }
 
   try {
-    const res = await fetch('/api/user/withdraw', {
+    const res = await fetch('/api/user/withdraw-request', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: amount, method: `Bank/UPI (${dest || 'Default Bank'})` })
+      body: JSON.stringify({ amount: amount, destination: dest })
     });
     const data = await res.json();
+    if (res.status === 401) {
+      alert('Please login to request a withdrawal');
+      window.location.href = '/login';
+      return;
+    }
     if (res.ok) {
-      alert(`✅ Withdrawal of ₹${amount.toLocaleString('en-IN')} processed successfully!`);
+      alert(`✅ Withdrawal request of ₹${amount.toLocaleString('en-IN')} submitted!\n\nStatus: PENDING REVIEW.\nFunds are reserved in your wallet while admin processes the manual bank transfer.`);
       closeWithdrawModal();
       window.location.reload();
     } else {
       alert('❌ ' + (data.detail || 'Withdrawal failed'));
     }
   } catch (err) {
-    alert('Network error during withdrawal');
+    alert('Network error during withdrawal: ' + err.message);
   }
 }
 

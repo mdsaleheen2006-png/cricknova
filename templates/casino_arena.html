@@ -1691,36 +1691,54 @@
       </div>
       <div class="modal-body">
         <div style="background: rgba(245, 166, 35, 0.08); border: 1px solid var(--winbuzz-gold); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 14px;">
-          <div style="font-size: 11px; color: var(--winbuzz-gold); font-weight: 800; margin-bottom: 6px;">⚡ FAST UPI PAYMENT DETAILS</div>
+          <div style="font-size: 11px; color: var(--winbuzz-gold); font-weight: 800; margin-bottom: 6px;">⚡ OFFICIAL BHARATPE MERCHANT QR</div>
           <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-darkest); padding: 8px 10px; border-radius: 4px; border: 1px dashed var(--border-light); margin-bottom: 8px;">
             <div>
-              <div style="font-size: 9.5px; color: var(--text-dim);">Receiver UPI ID:</div>
-              <strong id="deposit-upi-val" style="color: #fff; font-size: 13px;">{{ payment_config.upi_id }}</strong>
+              <div style="font-size: 9.5px; color: var(--text-dim);">Merchant Payee: <strong style="color: #fff;">MDSALEHEEN</strong></div>
+              <strong id="deposit-upi-val" style="color: var(--winbuzz-gold); font-size: 12px; font-family: monospace;">BHARATPE2S0W0C6I4D04292@unitype</strong>
             </div>
-            <button type="button" class="btn-quick-credit" onclick="copyUpiId('{{ payment_config.upi_id }}')" style="padding: 6px 12px; font-size: 11px;">
+            <button type="button" class="btn-quick-credit" onclick="copyUpiId('BHARATPE2S0W0C6I4D04292@unitype')" style="padding: 6px 10px; font-size: 11px;">
               📋 COPY UPI
             </button>
           </div>
-          <div style="font-size: 10px; color: var(--text-muted); text-align: center;">
-            Pay with PhonePe, Google Pay, or Paytm & submit your UTR below for instant auto-credit.
+
+          <!-- Supplied Static BharatPe Merchant QR -->
+          <div style="text-align: center; margin: 10px 0;">
+            <img src="/static/images/BharatPe-QR.jpeg"
+                 alt="BharatPe QR Code" style="width: 170px; height: 220px; object-fit: contain; border-radius: 8px; border: 2px solid #fff; background: #fff; padding: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+            <div style="font-size: 10.5px; color: #cbd5e1; font-weight: 700; margin-top: 6px;">
+              Scan with PhonePe / GPay / Paytm / BHIM UPI
+            </div>
+            <div style="font-size: 9.5px; color: var(--text-muted);">
+              Pay the exact deposit amount selected below
+            </div>
           </div>
         </div>
 
-        <div style="margin-bottom: 12px;">
-          <label style="font-size: 11px; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">DEPOSIT AMOUNT (₹)</label>
-          <input type="number" id="deposit-amount-input" value="1000" min="100" step="50"
+        <div style="margin-bottom: 10px;">
+          <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 4px;">1. SELECT DEPOSIT AMOUNT (₹)</label>
+          <input type="number" id="deposit-amount-input" value="1000" min="100" max="100000" step="50"
                  style="width: 100%; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 800; border-radius: var(--radius-xs);">
         </div>
 
+        <div style="margin-bottom: 10px;">
+          <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 4px;">2. UPLOAD PAYMENT SCREENSHOT (AUTO-EXTRACTS UTR)</label>
+          <input type="file" id="deposit-receipt-file" accept="image/*" onchange="autoExtractUtrFromReceipt(this)"
+                 style="width: 100%; font-size: 11px; padding: 8px; background: var(--bg-darkest); border: 1px dashed var(--winbuzz-gold); color: #cbd5e1; border-radius: var(--radius-xs);">
+        </div>
+        <div id="ocr-status-box" style="display: none; font-size: 11px; margin-bottom: 10px; padding: 6px 10px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid #334155;"></div>
+
         <div style="margin-bottom: 14px;">
-          <label style="font-size: 11px; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">12-DIGIT UPI / UTR REF NO.</label>
-          <input type="text" id="deposit-utr-input" placeholder="e.g. 402918239012"
-                 style="width: 100%; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 12px; border-radius: var(--radius-xs);">
+          <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 4px;">3. 12-DIGIT UPI / UTR REF NO.</label>
+          <input type="text" id="deposit-utr-input" placeholder="e.g. 402918239012" maxlength="25"
+                 style="width: 100%; padding: 9px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: var(--winbuzz-gold); font-size: 13px; font-family: monospace; font-weight: 800; border-radius: var(--radius-xs);">
         </div>
 
-        <button class="btn-deposit" style="width: 100%; padding: 10px; justify-content: center; font-size: 13px; font-weight: 900;" onclick="submitDepositRequest()">
-          ⚡ SUBMIT DEPOSIT REQUEST
+        <button id="btn-submit-deposit-claim" class="btn-deposit" style="width: 100%; padding: 11px; justify-content: center; font-size: 13px; font-weight: 900;" onclick="submitDepositRequestWithProof()">
+          ⚡ SUBMIT DEPOSIT CLAIM
         </button>
+
+        <div id="deposit-result-box" style="display: none; margin-top: 12px; padding: 10px; border-radius: 6px; font-size: 11.5px; line-height: 1.5;"></div>
 
         <div style="margin-top: 10px; text-align: center;">
           <a href="https://wa.me/{{ payment_config.whatsapp_number }}?text=Hello%20CrickNova,%20I%20want%20to%20add%20money" target="_blank"
@@ -2455,5 +2473,7 @@
       }
     });
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="/static/js/app.js"></script>
 </body>
 </html>
