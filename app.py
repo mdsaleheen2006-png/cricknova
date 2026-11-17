@@ -921,75 +921,56 @@ def send_sms_otp(mobile: str, otp: str) -> Dict[str, Any]:
 
     try:
         if provider in ["fast2sms", "fast2sms_whatsapp"]:
-            # Fast2SMS Multi-Channel Delivery (WhatsApp -> Smart OTP -> Direct OTP -> Quick Route)
-            whatsapp_phone_id = str(sms_cfg.get("whatsapp_phone_number_id", "")).strip()
-            whatsapp_msg_id = str(sms_cfg.get("whatsapp_message_id", "")).strip()
-            smart_otp_id = str(sms_cfg.get("smart_otp_id", "")).strip()
+            # FAST2SMS OFFICIAL WHATSAPP API ONLY (Cost: ~₹0.40 / Zero expensive SMS fallback)
+            whatsapp_phone_id = str(sms_cfg.get("whatsapp_phone_number_id") or "1324823784037087").strip()
+            whatsapp_msg_id = str(sms_cfg.get("whatsapp_message_id") or "45194").strip()
 
-            # 1. WhatsApp Official Fast2SMS Template API
             if whatsapp_phone_id and whatsapp_msg_id:
                 try:
                     url = f"https://www.fast2sms.com/dev/whatsapp?message_id={whatsapp_msg_id}&phone_number_id={whatsapp_phone_id}&numbers={mobile}&variables_values={otp}"
                     req = urllib.request.Request(url, headers={"Authorization": api_key, "User-Agent": "CrickNova/1.0"})
-                    with urllib.request.urlopen(req, timeout=7) as resp:
+                    with urllib.request.urlopen(req, timeout=8) as resp:
                         res_body = resp.read().decode()
                         print(f"[Fast2SMS WhatsApp API Response]: {res_body}")
-                        return {"status": "sent", "channel": "whatsapp", "provider": "fast2sms", "response": res_body}
-                except Exception as wa_err:
-                    print(f"[Fast2SMS WhatsApp API Error, falling back]: {wa_err}")
-
-            # 2. Smart OTP Route (WhatsApp Priority with SMS Fallback)
-            if smart_otp_id:
-                try:
-                    url = "https://www.fast2sms.com/dev/otp/send"
-                    payload = json.dumps({"mobile": mobile, "otp_id": smart_otp_id, "otp": otp}).encode("utf-8")
-                    req = urllib.request.Request(url, data=payload, headers={"authorization": api_key, "Content-Type": "application/json", "User-Agent": "CrickNova/1.0"})
-                    with urllib.request.urlopen(req, timeout=7) as resp:
-                        res_body = resp.read().decode()
-                        print(f"[Fast2SMS Smart OTP Response]: {res_body}")
-                        return {"status": "sent", "channel": "smart_otp", "provider": "fast2sms", "response": res_body}
-                except Exception as smart_err:
-                    print(f"[Fast2SMS Smart OTP Error, falling back]: {smart_err}")
-
-            # 3. Direct Fast2SMS OTP Route
-            try:
-                url = "https://www.fast2sms.com/dev/bulkV2"
-                payload = json.dumps({
-                    "route": "otp",
-                    "variables_values": otp,
-                    "numbers": mobile
-                }).encode("utf-8")
-                req = urllib.request.Request(url, data=payload, headers={"authorization": api_key, "Content-Type": "application/json", "User-Agent": "CrickNova/1.0"}, method="POST")
-                with urllib.request.urlopen(req, timeout=7) as resp:
-                    res_body = resp.read().decode()
-                    print(f"[Fast2SMS OTP Route Response]: {res_body}")
-                    return {"status": "sent", "channel": "otp_route", "provider": "fast2sms", "response": res_body}
-            except Exception as otp_err:
-                print(f"[Fast2SMS OTP Route fallback to Quick route]: {otp_err}")
-                # 4. Fast2SMS Quick Route (route=q)
-                try:
-                    url = "https://www.fast2sms.com/dev/bulkV2"
-                    payload = json.dumps({
-                        "route": "q",
-                        "message": f"Your CrickNova verification code is {otp}. Do not share it with anyone.",
-                        "language": "english",
-                        "flash": 0,
-                        "numbers": mobile
-                    }).encode("utf-8")
-                    req = urllib.request.Request(url, data=payload, headers={"authorization": api_key, "Content-Type": "application/json", "User-Agent": "CrickNova/1.0"}, method="POST")
-                    with urllib.request.urlopen(req, timeout=7) as resp:
-                        res_body = resp.read().decode()
-                        print(f"[Fast2SMS Quick Route Response]: {res_body}")
-                        return {"status": "sent", "channel": "fast2sms_otp", "provider": "fast2sms", "response": res_body}
-                except urllib.error.HTTPError as q_err:
-                    q_text = q_err.read().decode("utf-8") if hasattr(q_err, "read") else str(q_err)
-                    print(f"[Fast2SMS Quick Route Error]: {q_text}")
-                    try:
-                        q_json = json.loads(q_text)
-                        clean_msg = q_json.get("message") or q_text
-                    except Exception:
-                        clean_msg = q_text
-                    return {"status": "error", "provider": "fast2sms", "message": f"{clean_msg}"}
+                        try:
+                            parsed = json.loads(res_body)
+                            if parsed.get("return") is True:
+                                return {"status": "sent", "channel": "whatsapp", "provider": "fast2sms", "response": res_body}
+                            else:
+                                err_msg = parsed.get("message", "WhatsApp delivery issue")
+                                return {
+                                    "status": "error",
+                                    "channel": "whatsapp",
+                                    "provider": "fast2sms",
+                                    "message": f"{err_msg} (Protected: No ₹7 SMS was sent)"
+                                }
+                        except Exception:
+                            return {"status": "sent", "channel": "whatsapp", "provider": "fast2sms", "response": res_body}
+                except urllib.error.HTTPError as wa_err:
+                    err_text = wa_err.read().decode("utf-8") if hasattr(wa_err, "read") else str(wa_err)
+                    print(f"[Fast2SMS WhatsApp API HTTP Error]: {err_text}")
+                    # NEVER fallback to expensive route=q (which costs ₹7/SMS)!
+                    return {
+                        "status": "error",
+                        "channel": "whatsapp",
+                        "provider": "fast2sms",
+                        "message": "WhatsApp OTP Template Meta review me hai (Pending). Aapka wallet balance protect karne ke liye koi ₹7 wala SMS nahi bheja gaya. Meta approval milte hi WhatsApp aayega."
+                    }
+                except Exception as wa_e:
+                    print(f"[Fast2SMS WhatsApp API General Error]: {wa_e}")
+                    return {
+                        "status": "error",
+                        "channel": "whatsapp",
+                        "provider": "fast2sms",
+                        "message": f"WhatsApp API error: {wa_e}. (Protected: No ₹7 SMS was sent)"
+                    }
+            else:
+                return {
+                    "status": "error",
+                    "channel": "whatsapp",
+                    "provider": "fast2sms",
+                    "message": "WhatsApp Phone Number ID ya Message ID missing hai."
+                }
 
         elif provider == "authkey":
             url = f"https://api.authkey.io/request?authkey={api_key}&mobile={mobile}&country_code=91&sid=1001&otp={otp}"
