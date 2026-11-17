@@ -993,6 +993,126 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+// ==================== 7. TRANSACTION HISTORY (DEPOSIT & WITHDRAWAL) ====================
+function openHistoryModal(tab = 'deposit') {
+  const modal = document.getElementById('history-modal');
+  if (modal) {
+    modal.classList.add('active');
+    switchHistoryTab(tab);
+  }
+}
+
+function closeHistoryModal() {
+  const modal = document.getElementById('history-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+async function switchHistoryTab(tab) {
+  const depBtn = document.getElementById('tab-btn-deposit-history');
+  const wthBtn = document.getElementById('tab-btn-withdraw-history');
+  const container = document.getElementById('history-list-container');
+  const loading = document.getElementById('history-loading');
+  if (loading) loading.style.display = 'block';
+  if (container) container.innerHTML = '';
+
+  if (tab === 'deposit') {
+    if (depBtn) {
+      depBtn.style.color = '#fff';
+      depBtn.style.borderBottom = '2px solid var(--winbuzz-gold)';
+    }
+    if (wthBtn) {
+      wthBtn.style.color = '#94a3b8';
+      wthBtn.style.borderBottom = 'none';
+    }
+    try {
+      const res = await fetch('/api/user/deposit-history');
+      const data = await res.json();
+      if (loading) loading.style.display = 'none';
+      const deposits = data.deposits || [];
+      if (deposits.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:30px 10px; color:#64748b; font-size:12px;">No deposit requests found yet.</div>';
+        return;
+      }
+      let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
+      deposits.forEach(d => {
+        const badgeColor = d.status === 'APPROVED' ? '#00e676' : d.status === 'DECLINED' ? '#ef4444' : '#f5a623';
+        const badgeBg = d.status === 'APPROVED' ? 'rgba(0,230,118,0.15)' : d.status === 'DECLINED' ? 'rgba(239,68,68,0.15)' : 'rgba(245,166,35,0.15)';
+        html += `
+          <div style="background:var(--bg-darkest); border:1px solid var(--border-dark); border-radius:6px; padding:12px; font-size:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-family:monospace; color:var(--winbuzz-gold); font-weight:800;">${d.id || 'DEP'}</span>
+              <span style="font-size:11px; padding:2px 8px; border-radius:4px; font-weight:800; color:${badgeColor}; background:${badgeBg}; border:1px solid ${badgeColor};">
+                ${d.status}
+              </span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:14px; font-weight:900; color:#fff;">₹${Number(d.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+              <span style="font-size:11px; color:#94a3b8;">${d.created_at || ''}</span>
+            </div>
+            <div style="font-size:11px; color:#94a3b8; font-family:monospace;">
+              UTR: <span style="color:#e2e8f0;">${d.utr || '—'}</span>
+            </div>
+            ${d.decline_reason ? `<div style="font-size:10.5px; color:#ef4444; margin-top:4px;">Reason: ${d.decline_reason}</div>` : ''}
+          </div>
+        `;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    } catch (e) {
+      if (loading) loading.style.display = 'none';
+      container.innerHTML = `<div style="color:#ef4444; font-size:12px; text-align:center;">Failed to load deposits: ${e.message}</div>`;
+    }
+  } else {
+    if (depBtn) {
+      depBtn.style.color = '#94a3b8';
+      depBtn.style.borderBottom = 'none';
+    }
+    if (wthBtn) {
+      wthBtn.style.color = '#fff';
+      wthBtn.style.borderBottom = '2px solid var(--winbuzz-gold)';
+    }
+    try {
+      const res = await fetch('/api/user/withdrawal-history');
+      const data = await res.json();
+      if (loading) loading.style.display = 'none';
+      const wths = data.withdrawals || [];
+      if (wths.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:30px 10px; color:#64748b; font-size:12px;">No withdrawal requests found yet.</div>';
+        return;
+      }
+      let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
+      wths.forEach(w => {
+        const badgeColor = (w.status === 'PAID' || w.status === 'COMPLETED') ? '#00e676' : w.status === 'DECLINED' ? '#ef4444' : '#f5a623';
+        const badgeBg = (w.status === 'PAID' || w.status === 'COMPLETED') ? 'rgba(0,230,118,0.15)' : w.status === 'DECLINED' ? 'rgba(239,68,68,0.15)' : 'rgba(245,166,35,0.15)';
+        html += `
+          <div style="background:var(--bg-darkest); border:1px solid var(--border-dark); border-radius:6px; padding:12px; font-size:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-family:monospace; color:var(--winbuzz-gold); font-weight:800;">${w.id || 'WTH'}</span>
+              <span style="font-size:11px; padding:2px 8px; border-radius:4px; font-weight:800; color:${badgeColor}; background:${badgeBg}; border:1px solid ${badgeColor};">
+                ${w.status}
+              </span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:14px; font-weight:900; color:#fff;">₹${Number(w.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+              <span style="font-size:11px; color:#94a3b8;">${w.created_at || ''}</span>
+            </div>
+            <div style="font-size:11px; color:#94a3b8;">
+              Account: <span style="color:#e2e8f0; font-family:monospace;">${w.bank_account_masked || 'Bank'}</span> (${w.bank_holder_name || ''})
+            </div>
+            ${w.payout_bank_utr ? `<div style="font-size:11px; color:#00e676; margin-top:3px; font-family:monospace;">Bank Transfer UTR: ${w.payout_bank_utr}</div>` : ''}
+            ${w.decline_reason ? `<div style="font-size:10.5px; color:#ef4444; margin-top:4px;">Reason: ${w.decline_reason}</div>` : ''}
+          </div>
+        `;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    } catch (e) {
+      if (loading) loading.style.display = 'none';
+      container.innerHTML = `<div style="color:#ef4444; font-size:12px; text-align:center;">Failed to load withdrawals: ${e.message}</div>`;
+    }
+  }
+}
+
   // Modal backdrop click handler
   window.addEventListener('click', (e) => {
     if (e.target.classList.contains('modal-overlay')) {

@@ -685,6 +685,10 @@ def recalculate_user_exposure(user: Dict[str, Any]):
             if worst_case < 0:
                 total_exp += abs(worst_case)
 
+    # In Winbuzz exchange model, funds reserved for pending withdrawals reflect in Exposure
+    reserved_wth = from_paise(user.get("reserved_withdrawal_paise", 0))
+    total_exp += reserved_wth
+
     user["exposure"] = round(total_exp, 2)
 
 def recalculate_all_exposures():
@@ -2276,6 +2280,15 @@ async def get_user_deposit_history(request: Request):
     reqs = [r for r in all_data.get("deposit_requests", []) if r.get("user_mobile") == user["mobile"] or r.get("mobile") == user["mobile"]]
     return JSONResponse(content={"status": "success", "deposits": reqs})
 
+@app.get("/api/user/withdrawal-history")
+async def get_user_withdrawal_history(request: Request):
+    user = get_active_user(request)
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login.")
+    all_data = load_all_user_data()
+    reqs = [r for r in all_data.get("withdrawal_requests", []) if r.get("user_mobile") == user["mobile"] or r.get("mobile") == user["mobile"]]
+    return JSONResponse(content={"status": "success", "withdrawals": reqs})
+
 @app.post("/api/ocr/extract-utr")
 async def extract_utr_api(request: Request):
     try:
@@ -2410,9 +2423,10 @@ async def submit_withdrawal_request(request: Request):
     amt_paise = to_paise(amount)
     user_rec["balance_paise"] = user_rec.get("balance_paise", to_paise(user_rec.get("balance", 0.0)))
     user_rec["reserved_withdrawal_paise"] = user_rec.get("reserved_withdrawal_paise", 0)
-    user_rec["exposure_paise"] = user_rec.get("exposure_paise", to_paise(user_rec.get("exposure", 0.0)))
-
-    available_paise = user_rec["balance_paise"] - user_rec["reserved_withdrawal_paise"] - user_rec["exposure_paise"]
+    # Exposure already accounts for open bets + previously reserved withdrawals
+    recalculate_user_exposure(user_rec)
+    cur_exp_paise = to_paise(user_rec.get("exposure", 0.0))
+    available_paise = max(0, user_rec["balance_paise"] - cur_exp_paise)
     if amt_paise > available_paise:
         raise HTTPException(
             status_code=400,
@@ -2421,6 +2435,7 @@ async def submit_withdrawal_request(request: Request):
 
     # Immediately RESERVE amount so it cannot be spent or double-withdrawn
     user_rec["reserved_withdrawal_paise"] += amt_paise
+    recalculate_user_exposure(user_rec)
     req_id = f"WTH-{time.strftime('%Y%m%d')}-{random.randint(10000, 99999)}"
 
     wth_req = {
@@ -2865,6 +2880,7 @@ async def admin_withdrawal_action(request: Request):
                 "status": "COMPLETED",
                 "date": target["paid_at"]
             })
+            recalculate_user_exposure(user_rec)
 
         msg = f"Withdrawal {req_id} marked as PAID. Bank UTR: {payout_utr}."
     else:
@@ -2889,6 +2905,7 @@ async def admin_withdrawal_action(request: Request):
                 actor="admin_master",
                 notes=f"Withdrawal declined ({reason}). Reserved balance released."
             )
+            recalculate_user_exposure(user_rec)
 
         msg = f"Withdrawal {req_id} declined. Reserved ₹{from_paise(amt_paise):,.2f} released back to customer."
 

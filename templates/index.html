@@ -96,6 +96,9 @@
         <button class="btn-header btn-withdraw" onclick="openWithdrawModal()">
           WITHDRAW
         </button>
+        <button class="btn-header" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border-light); font-size: 11px; padding: 4px 8px; color: #cbd5e1;" onclick="openHistoryModal('deposit')" title="Deposit & Withdrawal History">
+          📜 HISTORY
+        </button>
         <span class="user-badge-header">📱 {{ user.mobile }}</span>
         <a href="/logout" class="btn-header btn-logout-hdr" title="Sign Out">LOGOUT</a>
         {% else %}
@@ -441,12 +444,20 @@
             </div>
           </div>
 
-          <div class="account-actions-grid">
-            <button class="btn-deposit" style="padding: 12px; justify-content: center; font-size: 13px;" onclick="openDepositModal()">
+          <div class="account-actions-grid" style="margin-bottom: 8px;">
+            <button class="btn-deposit" style="padding: 11px; justify-content: center; font-size: 12px;" onclick="openDepositModal()">
               <span>+</span> ADD MONEY / DEPOSIT
             </button>
-            <button class="btn-withdraw" style="padding: 12px; justify-content: center; font-size: 13px;" onclick="openWithdrawModal()">
+            <button class="btn-withdraw" style="padding: 11px; justify-content: center; font-size: 12px;" onclick="openWithdrawModal()">
               WITHDRAW TO BANK
+            </button>
+          </div>
+          <div class="account-actions-grid" style="margin-bottom: 12px; gap: 6px;">
+            <button class="btn-header" style="padding: 9px; justify-content: center; font-size: 11px; font-weight: 800; background: rgba(245, 166, 35, 0.1); border: 1px solid var(--winbuzz-gold); color: var(--winbuzz-gold);" onclick="openHistoryModal('deposit')">
+              ⚡ DEPOSIT HISTORY
+            </button>
+            <button class="btn-header" style="padding: 9px; justify-content: center; font-size: 11px; font-weight: 800; background: rgba(0, 176, 255, 0.1); border: 1px solid #00b0ff; color: #00b0ff;" onclick="openHistoryModal('withdraw')">
+              💳 WITHDRAW HISTORY
             </button>
           </div>
           {% endif %}
@@ -1305,6 +1316,30 @@
         <button class="btn-place-bet" style="width: 100%; padding: 10px; justify-content: center; font-size: 13px;" onclick="submitWithdraw()">
           WITHDRAW TO BANK NOW
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: TRANSACTION HISTORY (WINBUZZ STYLE DEPOSIT & WITHDRAWAL LOGS) -->
+  <div class="modal-overlay" id="history-modal">
+    <div class="modal-box" style="max-width: 500px; max-height: 85vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <h3 id="history-modal-title">📜 TRANSACTION STATEMENT</h3>
+        <button class="modal-close" onclick="closeHistoryModal()">✕</button>
+      </div>
+      <div style="display: flex; gap: 8px; padding: 10px 16px 0; border-bottom: 1px solid var(--border-dark); background: var(--bg-darkest);">
+        <button id="tab-btn-deposit-history" class="btn-history-tab active" style="flex: 1; padding: 10px; background: none; border: none; font-size: 11.5px; font-weight: 900; color: #fff; border-bottom: 2px solid var(--winbuzz-gold); cursor: pointer;" onclick="switchHistoryTab('deposit')">
+          ⚡ DEPOSIT LOGS
+        </button>
+        <button id="tab-btn-withdraw-history" class="btn-history-tab" style="flex: 1; padding: 10px; background: none; border: none; font-size: 11.5px; font-weight: 900; color: #94a3b8; cursor: pointer;" onclick="switchHistoryTab('withdraw')">
+          💳 WITHDRAWAL LOGS
+        </button>
+      </div>
+      <div class="modal-body" id="history-modal-body" style="overflow-y: auto; flex: 1; padding: 14px;">
+        <div id="history-loading" style="text-align: center; color: var(--text-dim); padding: 25px; font-size: 12px;">
+          ⏳ Loading transaction history...
+        </div>
+        <div id="history-list-container"></div>
       </div>
     </div>
   </div>
