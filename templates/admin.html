@@ -352,32 +352,49 @@
     <!-- 3. REAL SMS GATEWAY & OTP DELIVERY DESK -->
     <div class="admin-card">
       <div class="admin-card-header">
-        <span class="admin-card-title">📱 REAL SMS GATEWAY & OTP DELIVERY CONFIGURATION</span>
-        <span style="font-size: 10px; color: var(--color-green); font-weight: 800;">LIVE MOBILE OTP</span>
+        <span class="admin-card-title">📱 REAL FAST2SMS & WHATSAPP OTP CONFIGURATION</span>
+        <span style="font-size: 10px; color: var(--color-green); font-weight: 800;">FAST2SMS • WHATSAPP • SMS</span>
       </div>
       <div class="admin-card-body">
-        <div style="background: rgba(245, 166, 35, 0.1); border: 1px solid var(--winbuzz-gold); border-radius: 4px; padding: 10px 14px; margin-bottom: 14px; font-size: 11px;">
-          <strong style="color: var(--winbuzz-gold);">🎁 ₹2,500 Free Credit Offer:</strong> 
-          You can sign up for a free developer account at <a href="https://authkey.io" target="_blank" style="color: #00b0ff; font-weight: 800;">Authkey.io</a> to get <strong>₹2,500 in free SMS credits</strong>. Alternatively, you can use <a href="https://fast2sms.com" target="_blank" style="color: #00b0ff; font-weight: 800;">Fast2SMS</a> or <a href="https://2factor.in" target="_blank" style="color: #00b0ff; font-weight: 800;">2Factor.in</a>. Once you paste your API Key below, live OTP SMS will be delivered directly to all Indian mobile numbers!
+        <div style="background: rgba(0, 230, 118, 0.1); border: 1px solid var(--color-green); border-radius: 4px; padding: 10px 14px; margin-bottom: 14px; font-size: 11px;">
+          <strong style="color: var(--color-green);">⚡ Fast2SMS WhatsApp OTP Active:</strong> 
+          Copy your <strong>API Authorization Key</strong> from your <a href="https://www.fast2sms.com/app/dev-api" target="_blank" style="color: #00b0ff; font-weight: 800;">Fast2SMS Dev API Dashboard</a> and paste it below. 
+          New users will receive a 6-digit verification code directly on <strong>WhatsApp</strong> when signing up, set their password, and can subsequently log in with their password without needing an OTP every time!
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 14px;">
           <div>
             <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 3px;">
-              SELECT SMS PROVIDER
+              GATEWAY PROVIDER
             </label>
             <select id="sms-provider-select" style="width: 100%; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 12px; font-weight: 700; border-radius: var(--radius-xs);">
+              <option value="fast2sms" {% if sms_config.provider == 'fast2sms' or not sms_config.provider %}selected{% endif %}>Fast2SMS (WhatsApp OTP & India SMS)</option>
               <option value="authkey" {% if sms_config.provider == 'authkey' %}selected{% endif %}>Authkey.io (₹2,500 Free Credits Supported)</option>
-              <option value="fast2sms" {% if sms_config.provider == 'fast2sms' %}selected{% endif %}>Fast2SMS (Quick OTP India)</option>
               <option value="2factor" {% if sms_config.provider == '2factor' %}selected{% endif %}>2Factor.in (Instant OTP)</option>
             </select>
           </div>
 
           <div>
             <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 3px;">
-              GATEWAY API KEY / AUTH KEY
+              FAST2SMS AUTHORIZATION API KEY *
             </label>
-            <input type="text" id="sms-api-key" value="{{ sms_config.api_key }}" placeholder="Paste your API key here"
+            <input type="text" id="sms-api-key" value="{{ sms_config.api_key }}" placeholder="Paste Fast2SMS API key here"
+                   style="width: 100%; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 12px; border-radius: var(--radius-xs);">
+          </div>
+
+          <div>
+            <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 3px;">
+              WHATSAPP PHONE NUMBER ID (OPTIONAL)
+            </label>
+            <input type="text" id="sms-wa-phone-id" value="{{ sms_config.whatsapp_phone_number_id }}" placeholder="WABA Phone Number ID (Optional)"
+                   style="width: 100%; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 12px; border-radius: var(--radius-xs);">
+          </div>
+
+          <div>
+            <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 3px;">
+              WHATSAPP TEMPLATE / MESSAGE ID (OPTIONAL)
+            </label>
+            <input type="text" id="sms-wa-msg-id" value="{{ sms_config.whatsapp_message_id }}" placeholder="Approved Template ID e.g. 12 (Optional)"
                    style="width: 100%; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 12px; border-radius: var(--radius-xs);">
           </div>
         </div>
@@ -684,12 +701,19 @@
     async function saveSmsConfig() {
       const provider = document.getElementById('sms-provider-select').value;
       const apiKey = document.getElementById('sms-api-key').value.trim();
+      const waPhoneId = document.getElementById('sms-wa-phone-id')?.value.trim() || '';
+      const waMsgId = document.getElementById('sms-wa-msg-id')?.value.trim() || '';
 
       try {
         const res = await fetch('/api/admin/sms-config', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ provider: provider, api_key: apiKey })
+          body: JSON.stringify({
+            provider: provider,
+            api_key: apiKey,
+            whatsapp_phone_number_id: waPhoneId,
+            whatsapp_message_id: waMsgId
+          })
         });
         const data = await res.json();
         if (res.ok) {

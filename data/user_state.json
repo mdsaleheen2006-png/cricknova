@@ -146,9 +146,12 @@
   ],
   "default_user_mobile": "9123456789",
   "sms_config": {
-    "provider": "authkey",
-    "api_key": "SAMPLE_AUTHKEY_KEY",
+    "provider": "fast2sms",
+    "api_key": "",
     "sender_id": "",
-    "updated_at": "2026-11-17 20:52:31"
+    "whatsapp_phone_number_id": "1324823784037087",
+    "whatsapp_message_id": "",
+    "smart_otp_id": "",
+    "updated_at": "2026-11-18 00:20:00"
   }
 }

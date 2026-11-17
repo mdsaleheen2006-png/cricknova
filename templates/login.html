@@ -306,8 +306,8 @@
 
       <!-- ==================== 2. REGISTER WITH MOBILE OTP ==================== -->
       <div id="panel-register" class="login-panel">
-        <div style="background: rgba(0, 230, 118, 0.12); border: 1px solid var(--color-green); border-radius: 4px; padding: 7px 10px; font-size: 11px; margin-bottom: 12px; color: #fff;">
-          🎁 <strong>Instant ₹500 Bonus:</strong> Register now to get ₹500 welcome credit in your wallet!
+        <div style="background: rgba(0, 230, 118, 0.12); border: 1px solid var(--color-green); border-radius: 6px; padding: 10px 12px; font-size: 11px; margin-bottom: 14px; color: #fff;">
+          🎁 <strong>New User Sign Up:</strong> Pehli baar aapke <strong>WhatsApp</strong> par OTP aayega. OTP daal kar password set karein, agli baar aap direct <strong>Password se bina OTP</strong> ke login kar sakenge! + ₹500 Welcome Bonus instantly!
         </div>
 
         <!-- Step A: Enter Phone -->
@@ -320,25 +320,25 @@
             </div>
           </div>
           <button type="button" id="btn-reg-send-otp" class="btn-submit-main btn-register-green" onclick="doRegisterSendOtp()">
-            SEND OTP CODE 📲
+            SEND WHATSAPP OTP 📲
           </button>
         </div>
 
         <!-- Step B: Verify OTP & Set Password -->
         <div id="reg-verify-step" style="display: none;">
-          <div style="background: rgba(0, 176, 255, 0.1); border: 1px solid #00b0ff; border-radius: 4px; padding: 6px 10px; font-size: 10.5px; margin-bottom: 10px; color: #cbd5e1;">
-            ⚡ OTP sent to mobile! (Demo OTP: <strong style="color: var(--winbuzz-gold);">123456</strong>)
+          <div id="reg-otp-msg" style="background: rgba(0, 176, 255, 0.12); border: 1px solid #00b0ff; border-radius: 6px; padding: 8px 12px; font-size: 11px; margin-bottom: 12px; color: #cbd5e1;">
+            📲 <strong>WhatsApp OTP Sent!</strong> Check your WhatsApp for the 6-digit verification code.
           </div>
 
           <div class="form-group">
-            <label class="form-label">6-DIGIT OTP</label>
-            <input type="text" id="reg-otp" placeholder="123456" maxlength="6" class="form-input" style="text-align: center; letter-spacing: 4px; font-size: 16px;">
+            <label class="form-label">ENTER 6-DIGIT OTP</label>
+            <input type="text" id="reg-otp" placeholder="Enter 6-digit OTP" maxlength="6" class="form-input" style="text-align: center; letter-spacing: 4px; font-size: 17px; font-weight: 800;">
           </div>
 
           <div class="form-group">
-            <label class="form-label">CREATE PASSWORD (MIN 6 CHARACTERS)</label>
+            <label class="form-label">CREATE PASSWORD (FOR FUTURE LOGINS)</label>
             <div style="position: relative;">
-              <input type="password" id="reg-pwd" placeholder="Enter password" class="form-input" style="padding-right: 36px;">
+              <input type="password" id="reg-pwd" placeholder="Create strong password (min 6 characters)" class="form-input" style="padding-right: 36px;">
               <button type="button" class="pwd-toggle-btn" onclick="togglePwdVisibility('reg-pwd', this)">👁️</button>
             </div>
           </div>
@@ -349,10 +349,10 @@
           </div>
 
           <button type="button" id="btn-reg-finish" class="btn-submit-main btn-register-green" onclick="doCompleteRegister()">
-            ✓ COMPLETE REGISTRATION & START PLAYING
+            ✓ VERIFY OTP & CREATE ACCOUNT (₹500 BONUS)
           </button>
-          <div style="text-align: center; margin-top: 8px;">
-            <a href="javascript:void(0)" onclick="document.getElementById('reg-verify-step').style.display='none'; document.getElementById('reg-phone-step').style.display='block';" style="font-size: 10.5px; color: var(--text-muted); text-decoration: underline;">
+          <div style="text-align: center; margin-top: 10px;">
+            <a href="javascript:void(0)" onclick="document.getElementById('reg-verify-step').style.display='none'; document.getElementById('reg-phone-step').style.display='block';" style="font-size: 11px; color: var(--text-muted); text-decoration: underline;">
               ← Change Mobile Number
             </a>
           </div>
@@ -482,7 +482,12 @@
           window.location.href = '/';
         } else {
           alert('❌ ' + (data.detail || 'Login failed'));
-          if (data.detail && data.detail.includes('no password set')) {
+          if (data.detail && (data.detail.includes('No account found') || data.detail.includes('not found'))) {
+            if (confirm('No account found for +91 ' + mobile + '. Would you like to Sign Up with WhatsApp OTP now?')) {
+              showLoginTab('register');
+              document.getElementById('reg-phone').value = mobile;
+            }
+          } else if (data.detail && data.detail.includes('no password set')) {
             showLoginTab('otp');
             document.getElementById('otp-phone').value = mobile;
           }
@@ -535,23 +540,32 @@
         const data = await res.json();
         if (res.ok) {
           if (data.user_exists && data.has_password) {
-            alert('ℹ️ This number is already registered! Please login with your password.');
+            alert('ℹ️ This mobile number is already registered! Please login with your password.');
             showLoginTab('login');
             document.getElementById('login-phone').value = mobile;
+            document.getElementById('login-pwd').focus();
             return;
           }
           document.getElementById('reg-phone-step').style.display = 'none';
           document.getElementById('reg-verify-step').style.display = 'block';
-          document.getElementById('reg-otp').value = data.test_otp || '123456';
+          const msgEl = document.getElementById('reg-otp-msg');
+          if (data.sms_provider === 'demo') {
+            if (msgEl) msgEl.innerHTML = `⚡ Demo Mode Active (No live API key set yet). Test OTP is <strong style="color: var(--winbuzz-gold);">${data.test_otp || '123456'}</strong>`;
+            document.getElementById('reg-otp').value = data.test_otp || '123456';
+          } else {
+            if (msgEl) msgEl.innerHTML = `📲 <strong>WhatsApp OTP Sent!</strong> A 6-digit code has been delivered to your WhatsApp <strong>+91 ${mobile}</strong>. Check your WhatsApp!`;
+            document.getElementById('reg-otp').value = '';
+            document.getElementById('reg-otp').focus();
+          }
           document.getElementById('reg-pwd').focus();
         } else {
           alert('❌ ' + (data.detail || 'Failed to send OTP'));
         }
       } catch (e) {
-        alert('Network error sending OTP');
+        alert('Network error sending OTP: ' + e.message);
       } finally {
         btn.disabled = false;
-        btn.innerText = 'SEND OTP CODE 📲';
+        btn.innerText = 'SEND WHATSAPP OTP 📲';
       }
     }
 
@@ -610,15 +624,22 @@
         if (res.ok) {
           document.getElementById('otp-phone-step').style.display = 'none';
           document.getElementById('otp-verify-step').style.display = 'block';
-          document.getElementById('otp-code').value = data.test_otp || '123456';
+          if (data.sms_provider === 'demo') {
+            document.getElementById('otp-code').value = data.test_otp || '123456';
+          } else {
+            alert(`📲 WhatsApp OTP Sent! A 6-digit code has been delivered to your WhatsApp (+91 ${mobile}).`);
+            document.getElementById('otp-code').value = '';
+            document.getElementById('otp-code').placeholder = 'Enter 6-digit OTP';
+            document.getElementById('otp-code').focus();
+          }
         } else {
           alert('❌ ' + (data.detail || 'Failed to send OTP'));
         }
       } catch (e) {
-        alert('Network error sending OTP');
+        alert('Network error sending OTP: ' + e.message);
       } finally {
         btn.disabled = false;
-        btn.innerText = 'SEND OTP CODE 📲';
+        btn.innerText = 'SEND WHATSAPP OTP 📲';
       }
     }
 

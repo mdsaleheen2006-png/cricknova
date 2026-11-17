@@ -887,47 +887,97 @@ async def download_apk():
 
 # ==================== PASSWORD & REAL SMS GATEWAY HELPERS ====================
 def hash_password(password: str) -> str:
-    salt = "cricknova_secure_2026_salt"
-    return hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
+    # High-grade cryptographic encryption: PBKDF2 with SHA-256 and 100,000 iterations
+    salt = b"cricknova_super_secure_vault_2026"
+    key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100000)
+    return key.hex()
 
 def verify_password(password: str, hashed: str) -> bool:
     if not hashed:
         return False
-    return hash_password(password) == hashed
+    # 1. Verify against PBKDF2 SHA-256
+    salt = b"cricknova_super_secure_vault_2026"
+    key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100000).hex()
+    if key == hashed:
+        return True
+    # 2. Backward compatibility with legacy SHA-256 for demo accounts
+    legacy_salt = "cricknova_secure_2026_salt"
+    legacy_hash = hashlib.sha256((legacy_salt + password).encode("utf-8")).hexdigest()
+    return legacy_hash == hashed
 
 def send_sms_otp(mobile: str, otp: str) -> Dict[str, Any]:
     all_data = load_all_user_data()
     sms_cfg = all_data.get("sms_config", {})
-    provider = str(sms_cfg.get("provider", "authkey")).lower()
-    api_key = str(sms_cfg.get("api_key") or os.getenv("SMS_API_KEY", "")).strip()
+    provider = str(sms_cfg.get("provider", "fast2sms")).lower()
+    api_key = str(sms_cfg.get("api_key") or os.getenv("FAST2SMS_API_KEY", "") or os.getenv("SMS_API_KEY", "")).strip()
 
-    if not api_key:
-        print(f"[SMS SIMULATION] Sent OTP {otp} to mobile +91 {mobile} (Demo Mode)")
+    if not api_key or api_key in ["SAMPLE_AUTHKEY_KEY", "YOUR_API_KEY"]:
+        print(f"[OTP SIMULATION] Sent OTP {otp} to mobile +91 {mobile} (Demo Mode)")
         return {
             "status": "simulated",
             "provider": "demo",
-            "message": f"Demo OTP is {otp}. (To send live SMS, paste your Authkey.io or Fast2SMS API key in Admin Panel)"
+            "message": f"Demo OTP is {otp}. (To send live WhatsApp OTP, save your Fast2SMS API key in Admin Panel)"
         }
 
     try:
-        if provider == "authkey":
-            # Authkey.io OTP API (Supports ₹2,500 startup credits)
+        if provider in ["fast2sms", "fast2sms_whatsapp"]:
+            # Fast2SMS Multi-Channel Delivery (WhatsApp -> Smart OTP -> Direct OTP -> Quick Route)
+            whatsapp_phone_id = str(sms_cfg.get("whatsapp_phone_number_id", "")).strip()
+            whatsapp_msg_id = str(sms_cfg.get("whatsapp_message_id", "")).strip()
+            smart_otp_id = str(sms_cfg.get("smart_otp_id", "")).strip()
+
+            # 1. WhatsApp Official Fast2SMS Template API
+            if whatsapp_phone_id and whatsapp_msg_id:
+                try:
+                    url = f"https://www.fast2sms.com/dev/whatsapp?message_id={whatsapp_msg_id}&phone_number_id={whatsapp_phone_id}&numbers={mobile}&variables_values={otp}"
+                    req = urllib.request.Request(url, headers={"Authorization": api_key, "User-Agent": "CrickNova/1.0"})
+                    with urllib.request.urlopen(req, timeout=7) as resp:
+                        res_body = resp.read().decode()
+                        print(f"[Fast2SMS WhatsApp API Response]: {res_body}")
+                        return {"status": "sent", "channel": "whatsapp", "provider": "fast2sms", "response": res_body}
+                except Exception as wa_err:
+                    print(f"[Fast2SMS WhatsApp API Error, falling back]: {wa_err}")
+
+            # 2. Smart OTP Route (WhatsApp Priority with SMS Fallback)
+            if smart_otp_id:
+                try:
+                    url = "https://www.fast2sms.com/dev/otp/send"
+                    payload = json.dumps({"mobile": mobile, "otp_id": smart_otp_id, "otp": otp}).encode("utf-8")
+                    req = urllib.request.Request(url, data=payload, headers={"authorization": api_key, "Content-Type": "application/json", "User-Agent": "CrickNova/1.0"})
+                    with urllib.request.urlopen(req, timeout=7) as resp:
+                        res_body = resp.read().decode()
+                        print(f"[Fast2SMS Smart OTP Response]: {res_body}")
+                        return {"status": "sent", "channel": "smart_otp", "provider": "fast2sms", "response": res_body}
+                except Exception as smart_err:
+                    print(f"[Fast2SMS Smart OTP Error, falling back]: {smart_err}")
+
+            # 3. Direct Fast2SMS OTP Route
+            try:
+                url = f"https://www.fast2sms.com/dev/bulkV2?authorization={api_key}&variables_values={otp}&route=otp&numbers={mobile}"
+                req = urllib.request.Request(url, headers={"User-Agent": "CrickNova/1.0"})
+                with urllib.request.urlopen(req, timeout=7) as resp:
+                    res_body = resp.read().decode()
+                    print(f"[Fast2SMS OTP Route Response]: {res_body}")
+                    return {"status": "sent", "channel": "otp_route", "provider": "fast2sms", "response": res_body}
+            except Exception as otp_err:
+                print(f"[Fast2SMS OTP Route Error, trying Quick route]: {otp_err}")
+                # 4. Fast2SMS Quick Route (route=q)
+                url = f"https://www.fast2sms.com/dev/bulkV2?authorization={api_key}&message=Your+CrickNova+verification+code+is+{otp}.+Do+not+share+it.&language=english&route=q&numbers={mobile}"
+                req = urllib.request.Request(url, headers={"User-Agent": "CrickNova/1.0"})
+                with urllib.request.urlopen(req, timeout=7) as resp:
+                    res_body = resp.read().decode()
+                    print(f"[Fast2SMS Quick Route Response]: {res_body}")
+                    return {"status": "sent", "channel": "quick_sms", "provider": "fast2sms", "response": res_body}
+
+        elif provider == "authkey":
             url = f"https://api.authkey.io/request?authkey={api_key}&mobile={mobile}&country_code=91&sid=1001&otp={otp}"
             req = urllib.request.Request(url, headers={"User-Agent": "CrickNova/1.0"})
             with urllib.request.urlopen(req, timeout=6) as resp:
                 res_body = resp.read().decode()
                 print(f"[Authkey.io Response]: {res_body}")
                 return {"status": "sent", "provider": "authkey", "response": res_body}
-        elif provider == "fast2sms":
-            # Fast2SMS Quick OTP API (Direct India route)
-            url = f"https://www.fast2sms.com/dev/bulkV2?authorization={api_key}&variables_values={otp}&route=otp&numbers={mobile}"
-            req = urllib.request.Request(url, headers={"User-Agent": "CrickNova/1.0"})
-            with urllib.request.urlopen(req, timeout=6) as resp:
-                res_body = resp.read().decode()
-                print(f"[Fast2SMS Response]: {res_body}")
-                return {"status": "sent", "provider": "fast2sms", "response": res_body}
+
         elif provider == "2factor":
-            # 2Factor.in OTP API
             url = f"https://2factor.in/API/V1/{api_key}/SMS/{mobile}/{otp}/OTP1"
             req = urllib.request.Request(url, headers={"User-Agent": "CrickNova/1.0"})
             with urllib.request.urlopen(req, timeout=6) as resp:
@@ -936,7 +986,7 @@ def send_sms_otp(mobile: str, otp: str) -> Dict[str, Any]:
                 return {"status": "sent", "provider": "2factor", "response": res_body}
     except Exception as e:
         print(f"[SMS Gateway Error]: {e}")
-        return {"status": "error", "error": str(e), "message": f"SMS Gateway error: {e}"}
+        return {"status": "error", "error": str(e), "message": f"Gateway error: {e}"}
 
     return {"status": "simulated", "message": f"OTP is {otp}"}
 
@@ -1210,21 +1260,27 @@ async def get_current_auth_user(request: Request):
 @app.post("/api/admin/sms-config")
 async def save_sms_config(request: Request):
     data = await request.json()
-    provider = str(data.get("provider", "authkey")).lower()
+    provider = str(data.get("provider", "fast2sms")).lower()
     api_key = str(data.get("api_key", "")).strip()
     sender_id = str(data.get("sender_id", "")).strip()
+    whatsapp_phone_number_id = str(data.get("whatsapp_phone_number_id", "")).strip()
+    whatsapp_message_id = str(data.get("whatsapp_message_id", "")).strip()
+    smart_otp_id = str(data.get("smart_otp_id", "")).strip()
 
     all_data = load_all_user_data()
     all_data["sms_config"] = {
         "provider": provider,
         "api_key": api_key,
         "sender_id": sender_id,
+        "whatsapp_phone_number_id": whatsapp_phone_number_id,
+        "whatsapp_message_id": whatsapp_message_id,
+        "smart_otp_id": smart_otp_id,
         "updated_at": time.strftime("%Y-%m-%d %H:%M:%S")
     }
     save_all_user_data(all_data)
     return JSONResponse(content={
         "status": "success",
-        "message": f"SMS Gateway configured successfully for {provider.upper()}!"
+        "message": f"Gateway configured successfully for {provider.upper()} (WhatsApp & SMS)!"
     })
 
 @app.post("/api/admin/send-test-sms")
