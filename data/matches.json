@@ -1,0 +1,586 @@
+[
+  {
+    "id": "-11239905",
+    "event_id": "-11239905",
+    "sportsradar_id": "75261904",
+    "name": "Himachal Pradesh v Rajasthan",
+    "competition": "Ranji Trophy Elite 2026",
+    "sport": "cricket",
+    "sport_icon": "🏏",
+    "is_inplay": true,
+    "status": "LIVE IN-PLAY",
+    "score": "HP 127/5 (30.5 ov) vs RAJ 78",
+    "status_note": "Himachal Pradesh lead by 49 runs • Day 1: 3rd Session",
+    "batters": [
+      {
+        "name": "Vaibhav Kalta",
+        "runs": 953,
+        "balls": 510,
+        "sr": 186.9
+      },
+      {
+        "name": "Nitin Sharma",
+        "runs": 6,
+        "balls": 16,
+        "sr": 37.5
+      }
+    ],
+    "date": "LIVE",
+    "tv_url": "https://vid.dreamcasino.live/GetAPI.html?MatchID=75261904",
+    "scorecard_url": "https://scorecard.oddstrad.com/get-scorecard-iframe/4/-11239905/75261904",
+    "match_odds": [
+      {
+        "runner": "Himachal Pradesh",
+        "back": [
+          {
+            "price": 3.13,
+            "size": 674935
+          }
+        ],
+        "lay": [
+          {
+            "price": 3.16,
+            "size": 187814
+          }
+        ]
+      },
+      {
+        "runner": "Rajasthan",
+        "back": [
+          {
+            "price": 2.8,
+            "size": 304563
+          }
+        ],
+        "lay": [
+          {
+            "price": 2.82,
+            "size": 229026
+          }
+        ]
+      }
+    ],
+    "bookmaker": [
+      {
+        "runner": "Himachal Pradesh",
+        "back": 122,
+        "lay": 123
+      },
+      {
+        "runner": "Rajasthan",
+        "back": 210,
+        "lay": 213
+      }
+    ],
+    "fancy_markets": [
+      {
+        "name": "Fall of 6th Wicket",
+        "no_runs": 142,
+        "no_rate": 100,
+        "yes_runs": 143,
+        "yes_rate": 100,
+        "status": "ACTIVE"
+      },
+      {
+        "name": "40 Over Total Runs",
+        "no_runs": 165,
+        "no_rate": 95,
+        "yes_runs": 167,
+        "yes_rate": 105,
+        "status": "ACTIVE"
+      },
+      {
+        "name": "Innings Total Runs",
+        "no_runs": 220,
+        "no_rate": 100,
+        "yes_runs": 222,
+        "yes_rate": 100,
+        "status": "ACTIVE"
+      }
+    ],
+    "last_balls": [
+      "2",
+      "0",
+      "1",
+      "W",
+      "0",
+      "W"
+    ]
+  },
+  {
+    "id": "-11239906",
+    "event_id": "-11239906",
+    "sportsradar_id": "75261905",
+    "name": "Uttar Pradesh v Baroda",
+    "competition": "Ranji Trophy Elite 2026",
+    "sport": "cricket",
+    "sport_icon": "🏏",
+    "is_inplay": true,
+    "status": "LIVE IN-PLAY",
+    "score": "BRD 211/3 (71.0 ov)",
+    "status_note": "Day 1: 3rd Session • Baroda in commanding position",
+    "batters": [
+      {
+        "name": "Dhruv Patel",
+        "runs": 1001,
+        "balls": 728,
+        "sr": 137.5
+      },
+      {
+        "name": "Mitesh Patel",
+        "runs": 32,
+        "balls": 50,
+        "sr": 64.0
+      }
+    ],
+    "date": "LIVE",
+    "tv_url": "https://vid.dreamcasino.live/GetAPI.html?MatchID=75261905",
+    "scorecard_url": "https://scorecard.oddstrad.com/get-scorecard-iframe/4/-11239906/75261905",
+    "match_odds": [
+      {
+        "runner": "Uttar Pradesh",
+        "back": [
+          {
+            "price": 3.45,
+            "size": 215008
+          }
+        ],
+        "lay": [
+          {
+            "price": 3.46,
+            "size": 247197
+          }
+        ]
+      },
+      {
+        "runner": "Baroda",
+        "back": [
+          {
+            "price": 2.16,
+            "size": 520483
+          }
+        ],
+        "lay": [
+          {
+            "price": 2.19,
+            "size": 718659
+          }
+        ]
+      }
+    ],
+    "bookmaker": [
+      {
+        "runner": "Uttar Pradesh",
+        "back": 47,
+        "lay": 50
+      },
+      {
+        "runner": "Baroda",
+        "back": 77,
+        "lay": 78
+      }
+    ],
+    "fancy_markets": [
+      {
+        "name": "Fall of 4th Wicket",
+        "no_runs": 228,
+        "no_rate": 100,
+        "yes_runs": 230,
+        "yes_rate": 100,
+        "status": "ACTIVE"
+      },
+      {
+        "name": "80 Over Total Runs",
+        "no_runs": 245,
+        "no_rate": 95,
+        "yes_runs": 248,
+        "yes_rate": 105,
+        "status": "ACTIVE"
+      }
+    ],
+    "last_balls": [
+      "2",
+      "6",
+      "1",
+      "W",
+      "0",
+      "2"
+    ]
+  },
+  {
+    "id": "36266908",
+    "event_id": "36266908",
+    "sportsradar_id": "75261906",
+    "name": "Oman v Netherlands",
+    "competition": "ICC Cricket World Cup League 2",
+    "sport": "cricket",
+    "sport_icon": "🏏",
+    "is_inplay": true,
+    "status": "LIVE IN-PLAY",
+    "score": "NED 62/1 (14.0 ov) vs OMAN 182",
+    "status_note": "Netherlands need 121 runs to win",
+    "batters": [
+      {
+        "name": "Cedric de Lange",
+        "runs": 972,
+        "balls": 534,
+        "sr": 182.0
+      },
+      {
+        "name": "Zach Lion-Cachet",
+        "runs": 10,
+        "balls": 14,
+        "sr": 71.4
+      }
+    ],
+    "date": "LIVE",
+    "tv_url": "https://vid.dreamcasino.live/GetAPI.html?MatchID=75261906",
+    "scorecard_url": "https://scorecard.oddstrad.com/get-scorecard-iframe/4/36266908/75261906",
+    "match_odds": [
+      {
+        "runner": "Oman",
+        "back": [
+          {
+            "price": 2.59,
+            "size": 304598
+          }
+        ],
+        "lay": [
+          {
+            "price": 2.6,
+            "size": 599967
+          }
+        ]
+      },
+      {
+        "runner": "Netherlands",
+        "back": [
+          {
+            "price": 2.01,
+            "size": 244494
+          }
+        ],
+        "lay": [
+          {
+            "price": 2.03,
+            "size": 181733
+          }
+        ]
+      }
+    ],
+    "bookmaker": [
+      {
+        "runner": "Oman",
+        "back": 548,
+        "lay": 549
+      },
+      {
+        "runner": "Netherlands",
+        "back": 43,
+        "lay": 45
+      }
+    ],
+    "fancy_markets": [
+      {
+        "name": "20 Over Innings Total Runs",
+        "no_runs": 88,
+        "no_rate": 100,
+        "yes_runs": 90,
+        "yes_rate": 100,
+        "status": "ACTIVE"
+      },
+      {
+        "name": "Zach Lion-Cachet Runs",
+        "no_runs": 28,
+        "no_rate": 95,
+        "yes_runs": 30,
+        "yes_rate": 105,
+        "status": "ACTIVE"
+      }
+    ],
+    "last_balls": [
+      "0",
+      "4",
+      "2",
+      "6",
+      "1",
+      "0"
+    ]
+  },
+  {
+    "id": "36254752",
+    "event_id": "36254752",
+    "sportsradar_id": "75261907",
+    "name": "Kathmandu Gurkhas v Karnali Yaks",
+    "competition": "Nepal Premier League 2026",
+    "sport": "cricket",
+    "sport_icon": "🏏",
+    "is_inplay": true,
+    "status": "LIVE IN-PLAY",
+    "score": "KAG 160/5 (17.5 ov) vs KAY 180/6",
+    "status_note": "Karnali Yaks need 21 runs off 13 balls • CRR: 8.97",
+    "batters": [
+      {
+        "name": "Karan KC",
+        "runs": 1010,
+        "balls": 512,
+        "sr": 197.3
+      },
+      {
+        "name": "Jahandad Khan",
+        "runs": 6,
+        "balls": 3,
+        "sr": 200.0
+      }
+    ],
+    "date": "LIVE",
+    "tv_url": "https://vid.dreamcasino.live/GetAPI.html?MatchID=75261907",
+    "scorecard_url": "https://scorecard.oddstrad.com/get-scorecard-iframe/4/36254752/75261907",
+    "match_odds": [
+      {
+        "runner": "Kathmandu Gurkhas",
+        "back": [
+          {
+            "price": 3.47,
+            "size": 714341
+          }
+        ],
+        "lay": [
+          {
+            "price": 3.5,
+            "size": 773582
+          }
+        ]
+      },
+      {
+        "runner": "Karnali Yaks",
+        "back": [
+          {
+            "price": 2.52,
+            "size": 354153
+          }
+        ],
+        "lay": [
+          {
+            "price": 2.54,
+            "size": 583036
+          }
+        ]
+      }
+    ],
+    "bookmaker": [
+      {
+        "runner": "Kathmandu Gurkhas",
+        "back": 127,
+        "lay": 128
+      },
+      {
+        "runner": "Karnali Yaks",
+        "back": 56,
+        "lay": 57
+      }
+    ],
+    "fancy_markets": [
+      {
+        "name": "19 Over Run KAG",
+        "no_runs": 11,
+        "no_rate": 100,
+        "yes_runs": 12,
+        "yes_rate": 100,
+        "status": "ACTIVE"
+      },
+      {
+        "name": "20 Over Innings Total Runs",
+        "no_runs": 178,
+        "no_rate": 95,
+        "yes_runs": 180,
+        "yes_rate": 105,
+        "status": "ACTIVE"
+      }
+    ],
+    "last_balls": [
+      "4",
+      "0",
+      "6",
+      "W",
+      "1",
+      "W"
+    ]
+  },
+  {
+    "id": "36262294",
+    "event_id": "36262294",
+    "sportsradar_id": "75261908",
+    "name": "Melbourne Stars W v Perth Scorchers W",
+    "competition": "Womens Big Bash League 2026",
+    "sport": "cricket",
+    "sport_icon": "🏏",
+    "is_inplay": true,
+    "status": "LIVE IN-PLAY",
+    "score": "MLSW 45/4 (7.0 ov) vs PRSW 124/9",
+    "status_note": "Melbourne Stars Women need 80 runs off 78 balls",
+    "batters": [
+      {
+        "name": "Meg Lanning",
+        "runs": 941,
+        "balls": 514,
+        "sr": 183.1
+      },
+      {
+        "name": "Charlotte Dean",
+        "runs": 1,
+        "balls": 2,
+        "sr": 50.0
+      }
+    ],
+    "date": "LIVE",
+    "tv_url": "https://vid.dreamcasino.live/GetAPI.html?MatchID=75261908",
+    "scorecard_url": "https://scorecard.oddstrad.com/get-scorecard-iframe/4/36262294/75261908",
+    "match_odds": [
+      {
+        "runner": "Melbourne Stars W",
+        "back": [
+          {
+            "price": 1.7,
+            "size": 722757
+          }
+        ],
+        "lay": [
+          {
+            "price": 1.73,
+            "size": 360085
+          }
+        ]
+      },
+      {
+        "runner": "Perth Scorchers W",
+        "back": [
+          {
+            "price": 2.39,
+            "size": 360440
+          }
+        ],
+        "lay": [
+          {
+            "price": 2.4,
+            "size": 357986
+          }
+        ]
+      }
+    ],
+    "bookmaker": [
+      {
+        "runner": "Melbourne Stars W",
+        "back": 370,
+        "lay": 373
+      },
+      {
+        "runner": "Perth Scorchers W",
+        "back": 6,
+        "lay": 8
+      }
+    ],
+    "fancy_markets": [
+      {
+        "name": "10 Over Total Runs MLSW",
+        "no_runs": 64,
+        "no_rate": 100,
+        "yes_runs": 66,
+        "yes_rate": 100,
+        "status": "ACTIVE"
+      }
+    ],
+    "last_balls": [
+      "W",
+      "2",
+      "4",
+      "6",
+      "W",
+      "W"
+    ]
+  },
+  {
+    "id": "epl_arsenal_chelsea",
+    "event_id": "epl_arsenal_chelsea",
+    "name": "Arsenal vs Chelsea",
+    "competition": "English Premier League",
+    "sport": "soccer",
+    "sport_icon": "⚽",
+    "is_inplay": true,
+    "status": "LIVE IN-PLAY",
+    "score": "Arsenal 2 - 1 Chelsea (68')",
+    "status_note": "2nd Half in progress • High tempo London Derby",
+    "batters": [],
+    "date": "LIVE",
+    "tv_url": "https://vid.dreamcasino.live/GetAPI.html?MatchID=soccer",
+    "scorecard_url": "",
+    "match_odds": [
+      {
+        "runner": "Arsenal",
+        "back": [
+          {
+            "price": 1.04,
+            "size": 678065
+          }
+        ],
+        "lay": [
+          {
+            "price": 1.05,
+            "size": 577043
+          }
+        ]
+      },
+      {
+        "runner": "Chelsea",
+        "back": [
+          {
+            "price": 7.39,
+            "size": 338686
+          }
+        ],
+        "lay": [
+          {
+            "price": 7.42,
+            "size": 721740
+          }
+        ]
+      },
+      {
+        "runner": "The Draw",
+        "back": [
+          {
+            "price": 6.05,
+            "size": 736538
+          }
+        ],
+        "lay": [
+          {
+            "price": 6.07,
+            "size": 424915
+          }
+        ]
+      }
+    ],
+    "bookmaker": [
+      {
+        "runner": "Arsenal",
+        "back": 105,
+        "lay": 108
+      },
+      {
+        "runner": "Chelsea",
+        "back": 641,
+        "lay": 642
+      }
+    ],
+    "fancy_markets": [],
+    "last_balls": [
+      "1",
+      "W",
+      "4",
+      "1",
+      "1",
+      "0"
+    ]
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "aviator",
+    "name": "Aviator Crash",
+    "category": "crash",
+    "provider": "Spribe",
+    "rtp": "97.0%",
+    "players_online": "14,820",
+    "thumbnail": "https://click22frnt.hurry2.net/templates/winbuzz/assets/aviator-banner-D2zN79r3.webp",
+    "badge": "HOT"
+  },
+  {
+    "id": "teen-patti",
+    "name": "Live Teen Patti 20-20",
+    "category": "cards",
+    "provider": "Evolution Gaming",
+    "rtp": "96.5%",
+    "players_online": "6,410",
+    "thumbnail": "https://click22frnt.hurry2.net/templates/winbuzz/assets/teen-patti-live-CW38aXm-.webp",
+    "badge": "POPULAR"
+  },
+  {
+    "id": "andar-bahar",
+    "name": "Super Andar Bahar",
+    "category": "cards",
+    "provider": "Ezugi",
+    "rtp": "97.2%",
+    "players_online": "5,190",
+    "thumbnail": "https://click22frnt.hurry2.net/templates/winbuzz/assets/andar-bahar-Cg2nE0r7.webp",
+    "badge": "LIVE"
+  },
+  {
+    "id": "roulette",
+    "name": "European Live Roulette",
+    "category": "roulette",
+    "provider": "Pragmatic Play",
+    "rtp": "97.3%",
+    "players_online": "3,890",
+    "thumbnail": "https://click22frnt.hurry2.net/templates/winbuzz/assets/roulette-live-DE17kP2-.webp",
+    "badge": "VIP"
+  }
+]

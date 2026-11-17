@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Winbuzz Admin Settlement & Ledger</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-top: 8px;
+    }
+    .admin-table th, .admin-table td {
+      padding: 6px 10px;
+      border: 1px solid var(--border-dark);
+      text-align: left;
+    }
+    .admin-table th {
+      background: #080f1e;
+      color: var(--winbuzz-gold);
+      font-weight: 800;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP RUNNING TICKER -->
+  <div class="ticker-strip">
+    <span class="ticker-badge">ADMIN</span>
+    <div class="ticker-content">
+      <div class="ticker-text">
+        ⚙️ <span>Admin Settlement Desk:</span> Settle live cricket and exchange markets • Automatic balance calculation & payout
+      </div>
+    </div>
+  </div>
+
+  <header class="winbuzz-header">
+    <div class="header-top">
+      <a href="/" class="brand-container">
+        <div class="brand-text">WINBUZZ<span>.ADMIN</span></div>
+      </a>
+      <div class="header-right">
+        <a href="/" style="color: var(--winbuzz-gold); text-decoration: none; font-weight: 800; font-size: 12px;">← RETURN TO EXCHANGE</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-wrapper casino-layout" style="max-width: 1200px;">
+    <!-- SETTLEMENT CARD -->
+    <div class="exchange-card">
+      <div class="exchange-header" style="background: #080f1e; padding: 8px 12px; border-bottom: 1px solid var(--border-dark);">
+        <span style="font-size: 12px; font-weight: 800; color: #fff;">⚙️ MATCH & RUNNER SETTLEMENT ENGINE</span>
+      </div>
+      <div style="padding: 12px;">
+        <p style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 12px;">
+          Choose an active match and declare the winning runner. All matching BACK bets and non-matching LAY bets will be instantly credited to the user's wallet with full winnings.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: flex-end;">
+          <div>
+            <label style="font-size: 10px; font-weight: 800; color: var(--text-dim);">SELECT MATCH</label>
+            <select id="settle-match-select" style="width: 100%; margin-top: 3px; padding: 7px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; border-radius: var(--radius-xs); font-size: 11px;" onchange="updateSettlementRunners()">
+              {% for m in matches %}
+              <option value="{{ m.id }}" data-runners='{{ m.match_odds|tojson }}'>{{ m.name }} ({{ m.competition }})</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size: 10px; font-weight: 800; color: var(--text-dim);">DECLARE WINNING RUNNER</label>
+            <select id="settle-runner-select" style="width: 100%; margin-top: 3px; padding: 7px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; border-radius: var(--radius-xs); font-size: 11px;">
+            </select>
+          </div>
+
+          <button class="btn-deposit" style="padding: 8px 16px; font-size: 11.5px; font-weight: 900;" onclick="settleMatch()">
+            SETTLE MATCH
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BET LEDGER TABLE -->
+    <div class="exchange-card" style="margin-top: 14px;">
+      <div class="exchange-header" style="background: #080f1e; padding: 8px 12px; border-bottom: 1px solid var(--border-dark);">
+        <span style="font-size: 12px; font-weight: 800; color: #fff;">📋 COMPLETE BET AUDIT LEDGER</span>
+      </div>
+      <div style="padding: 12px; overflow-x: auto;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>BET ID</th>
+              <th>MATCH</th>
+              <th>RUNNER</th>
+              <th>TYPE</th>
+              <th>ODDS</th>
+              <th>STAKE</th>
+              <th>LIABILITY</th>
+              <th>STATUS</th>
+              <th>PLACED AT</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in all_bets %}
+            <tr>
+              <td style="font-family: monospace;">{{ b.id }}</td>
+              <td>{{ b.match_name }}</td>
+              <td><strong>{{ b.runner }}</strong></td>
+              <td><span class="bet-badge {{ b.type }}">{{ b.type|upper }}</span></td>
+              <td>{{ b.odds }}</td>
+              <td>₹{{ b.stake }}</td>
+              <td style="color: var(--color-red);">₹{{ b.liability }}</td>
+              <td>
+                <span style="font-weight: 800; color: {% if b.status == 'WON' %}var(--color-green){% elif b.status == 'CASHED_OUT' %}var(--winbuzz-gold){% elif b.status == 'LOST' %}var(--color-red){% else %}#fff{% endif %};">
+                  {{ b.status }}
+                </span>
+              </td>
+              <td style="color: var(--text-dim);">{{ b.placed_at }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="9" style="text-align: center; color: var(--text-dim); padding: 16px;">No bets recorded yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function updateSettlementRunners() {
+      const matchSelect = document.getElementById('settle-match-select');
+      const opt = matchSelect.options[matchSelect.selectedIndex];
+      const runnersData = JSON.parse(opt.getAttribute('data-runners') || '[]');
+      const runnerSelect = document.getElementById('settle-runner-select');
+      runnerSelect.innerHTML = runnersData.map(r => `<option value="${r.runner}">${r.runner}</option>`).join('');
+    }
+
+    async function settleMatch() {
+      const matchId = document.getElementById('settle-match-select').value;
+      const winner = document.getElementById('settle-runner-select').value;
+      if (!confirm(`Confirm declaring "${winner}" as winner? Bets will be settled immediately.`)) return;
+
+      const res = await fetch('/api/admin/settle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ match_id: matchId, winning_runner: winner })
+      });
+      const data = await res.json();
+      alert(data.message);
+      window.location.reload();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      updateSettlementRunners();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "user": {
+    "username": "vip_cricknova_77",
+    "name": "DEMO7890",
+    "mobile": "+91 98765 43210",
+    "tier": "VIP Platinum",
+    "balance": 50000.0,
+    "exposure": 0.0,
+    "total_winnings": 18450.0,
+    "kyc_status": "VERIFIED"
+  },
+  "bets": [],
+  "transactions": [
+    {
+      "id": "DEP-918273",
+      "type": "DEPOSIT",
+      "method": "UPI Instant",
+      "utr": "429182910283",
+      "amount": 50000.0,
+      "status": "COMPLETED",
+      "date": "2026-11-17 12:00:00"
+    }
+  ]
+}

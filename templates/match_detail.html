@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ match.name }} | Winbuzz Live Exchange</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="icon" type="image/png" href="https://click22frnt.hurry2.net/templates/winbuzz/assets/logo-Cz5zLpWl.webp">
+</head>
+<body>
+
+  <!-- TOP RUNNING TICKER -->
+  <div class="ticker-strip">
+    <span class="ticker-badge">LIVE MATCH</span>
+    <div class="ticker-content">
+      <div class="ticker-text">
+        🏏 <span>{{ match.name }}</span> ({{ match.competition }}) In-Play • ⚡ <span>Live Provider Feed:</span> zplay1.co Streaming • 💰 <span>Turbo Cash-Out:</span> Active • 1-Click Bet Execution
+      </div>
+    </div>
+  </div>
+
+  <div class="stale-warning-banner" id="stale-feed-banner">
+    <span class="stale-msg">⚠️ Live sports feed disconnected. Attempting to reconnect...</span>
+  </div>
+
+  <!-- WINBUZZ COMPACT PRO HEADER -->
+  <header class="winbuzz-header">
+    <div class="header-top">
+      <a href="/" class="brand-container">
+        <img src="https://click22frnt.hurry2.net/templates/winbuzz/assets/logo-Cz5zLpWl.webp" alt="Winbuzz" class="brand-logo" onerror="this.style.display='none'">
+        <div class="brand-text">WINBUZZ<span>.PLUS</span></div>
+      </a>
+
+      <div id="live-ist-clock" class="live-clock-badge">--:--:-- IST</div>
+
+      <!-- Live Provider Status Badge -->
+      <span id="provider-feed-badge" class="provider-feed-badge" style="color: #00e676;">
+        🟢 FEED: LIVE (zplay1.co) • {{ last_updated }}
+      </span>
+
+      <div class="header-right">
+        <!-- 1-Click Bet Switcher -->
+        <div class="one-click-wrap" title="Toggle 1-Click Betting">
+          <span class="one-click-label">1-Click</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="one-click-toggle" onchange="toggleOneClickBet(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="ws-status-indicator" style="width: 8px; height: 8px; border-radius: 50%; background-color: #00e676; box-shadow: 0 0 6px #00e676;" title="WebSocket Stream Connected"></div>
+
+        <div class="wallet-chip">
+          <div class="wallet-stat">
+            <span class="label">Balance</span>
+            <span class="value" id="wallet-balance" data-raw="{{ user.balance }}">₹{{ "{:,.2f}".format(user.balance) }}</span>
+          </div>
+          <div class="wallet-stat" style="border-left: 1px solid var(--border-dark); padding-left: 10px;">
+            <span class="label">Exposure</span>
+            <span class="value exposure" id="wallet-exposure">₹{{ "{:,.2f}".format(user.exposure) }}</span>
+          </div>
+        </div>
+
+        <button class="btn-header btn-deposit" onclick="openDepositModal()">+ DEPOSIT</button>
+        <button class="btn-header btn-withdraw" onclick="openWithdrawModal()">WITHDRAW</button>
+      </div>
+    </div>
+
+    <!-- Sports Sub-Navigation -->
+    <nav class="sports-nav-bar">
+      <div class="sports-nav-inner">
+        <a href="/" class="nav-item">⚡ IN-PLAY</a>
+        <a href="/" class="nav-item active">🏏 CRICKET</a>
+        <a href="/" class="nav-item">⚽ FOOTBALL</a>
+        <a href="/" class="nav-item">🎾 TENNIS</a>
+        <a href="/casino" class="nav-item">✈️ AVIATOR</a>
+        <a href="/casino" class="nav-item">🎰 LIVE CASINO</a>
+        <a href="/admin" class="nav-item" style="margin-left: auto; color: var(--text-dim);">⚙️ ADMIN PORTAL</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- HIGH-DENSITY 2-COLUMN MATCH VIEW -->
+  <main class="main-wrapper full-match">
+    <!-- CENTER CONTENT: LIVE SCORECARD, STREAM & ALL MARKETS -->
+    <section class="content-center">
+
+      <!-- LIVE TV STREAM / RADAR PLAYER -->
+      <div class="live-stream-container">
+        <div style="position: absolute; top: 8px; left: 8px; display: flex; gap: 6px; z-index: 10;">
+          <span style="background: rgba(220, 38, 38, 0.9); color: #fff; font-size: 9px; font-weight: 900; padding: 2px 6px; border-radius: 3px;">● LIVE STREAM</span>
+          <span style="background: rgba(0,0,0,0.6); color: #fff; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px;">{{ match.competition }}</span>
+        </div>
+        <iframe src="{{ match.tv_url }}" allow="autoplay; fullscreen" loading="lazy"></iframe>
+      </div>
+
+      <!-- CRICBUZZ REAL SCORECARD & BATTERS AT CREASE -->
+      <div class="exchange-card" style="padding: 10px 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <div style="font-size: 16px; font-weight: 900; color: #fff;" class="match-score-{{ match.id }}">{{ match.score }}</div>
+            <div style="font-size: 11px; color: var(--winbuzz-gold); font-weight: 600; margin-top: 2px;">{{ match.competition }} • {{ match.name }}</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 10px; color: var(--text-dim); font-weight: 800; margin-bottom: 4px;">CURRENT OVER BALLS</div>
+            <div class="over-balls-list balls-container-{{ match.id }}">
+              {% for ball in match.last_balls %}
+              <div class="ball-circle {% if ball == '0' %}dot{% elif ball == '4' %}four{% elif ball == '6' %}six{% elif ball == 'W' %}wicket{% endif %}">{{ ball }}</div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- BATSMEN AT CREASE TABLE -->
+        {% if match.batters and match.batters|length > 0 %}
+        <div style="margin-top: 10px; border-top: 1px solid var(--border-dark); padding-top: 8px;">
+          <table class="batters-table">
+            <thead>
+              <tr>
+                <th>BATSMAN (ON PITCH)</th>
+                <th style="text-align: center;">RUNS</th>
+                <th style="text-align: center;">BALLS</th>
+                <th style="text-align: center;">SR</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for b in match.batters %}
+              <tr id="batter-row-{{ loop.index0 }}" class="batters-row-{{ match.id }}">
+                <td style="font-weight: 700;">{{ b.name }} 🏏</td>
+                <td style="text-align: center; font-weight: 900;" class="bat-runs">{{ b.runs }}</td>
+                <td style="text-align: center; color: var(--text-muted);" class="bat-balls">{{ b.balls }}</td>
+                <td style="text-align: center;" class="sr-col bat-sr">{{ b.sr }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- MARKET 1: MATCH ODDS (GENUINE PROVIDER FEED) -->
+      <div class="market-section">
+        <div class="market-header-row">
+          <div class="market-title">MATCH ODDS • 1-CLICK EXCHANGE</div>
+          <div class="odds-labels" style="width: 140px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 10px; font-weight: 800;">
+            <span style="color: var(--back-bg);">BACK</span>
+            <span style="color: var(--lay-bg);">LAY</span>
+          </div>
+        </div>
+
+        {% for r in match.match_odds %}
+        {% set r_clean = r.runner.replace(' ', '_').replace('.', '_').replace('-', '_') %}
+        {% set is_susp = (match.status == 'SUSPENDED') or (r.status == 'SUSPENDED') %}
+        <div class="market-runner-row">
+          <div class="runner-meta">
+            <span class="runner-name">{{ r.runner }}</span>
+            <!-- Runner Net Book Position (Barabar Zero Math) -->
+            {% set pnl = book_match_odds.get(r.runner, 0.0) %}
+            <span class="runner-book-pnl {% if pnl > 0 %}positive{% elif pnl < 0 %}negative{% else %}zero{% endif %} pnl-{{ match.id }}-{{ r_clean }}">
+              {% if pnl > 0 %}+{% endif %}₹{{ "{:.2f}".format(pnl) }}
+            </span>
+          </div>
+
+          <div class="odds-pair" style="width: 140px;">
+            <div class="odds-box back {% if is_susp %}suspended{% endif %}"
+                 id="box-back-{{ match.id }}-{{ r_clean }}"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ r.runner }}"
+                 data-type="back"
+                 data-market-type="match_odds">
+              <span class="odds-price">{% if is_susp %}SUSP{% elif r.back[0].price > 0 %}{{ "{:.2f}".format(r.back[0].price) }}{% else %}-{% endif %}</span>
+              <span class="odds-size">{% if not is_susp and r.back[0].size > 0 %}{{ (r.back[0].size / 1000)|round|int }}k{% endif %}</span>
+            </div>
+            <div class="odds-box lay {% if is_susp %}suspended{% endif %}"
+                 id="box-lay-{{ match.id }}-{{ r_clean }}"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ r.runner }}"
+                 data-type="lay"
+                 data-market-type="match_odds">
+              <span class="odds-price">{% if is_susp %}SUSP{% elif r.lay[0].price > 0 %}{{ "{:.2f}".format(r.lay[0].price) }}{% else %}-{% endif %}</span>
+              <span class="odds-size">{% if not is_susp and r.lay[0].size > 0 %}{{ (r.lay[0].size / 1000)|round|int }}k{% endif %}</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- MARKET 2: BOOKMAKER 0% COMMISSION -->
+      {% if match.bookmaker and match.bookmaker|length > 0 %}
+      <div class="market-section">
+        <div class="market-header-row">
+          <div class="market-title">BOOKMAKER 0% COMMISSION</div>
+          <div class="odds-labels" style="width: 140px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 10px; font-weight: 800;">
+            <span style="color: var(--back-bg);">BACK</span>
+            <span style="color: var(--lay-bg);">LAY</span>
+          </div>
+        </div>
+
+        {% for bm in match.bookmaker %}
+        {% set bm_clean = bm.runner.replace(' ', '_').replace('.', '_').replace('-', '_') %}
+        <div class="market-runner-row">
+          <div class="runner-meta">
+            <span class="runner-name">{{ bm.runner }}</span>
+            {% set bm_pnl = book_bookmaker.get(bm.runner, 0.0) %}
+            <span class="runner-book-pnl {% if bm_pnl > 0 %}positive{% elif bm_pnl < 0 %}negative{% else %}zero{% endif %} pnl-{{ match.id }}-{{ bm_clean }}">
+              {% if bm_pnl > 0 %}+{% endif %}₹{{ "{:.2f}".format(bm_pnl) }}
+            </span>
+          </div>
+
+          <div class="odds-pair" style="width: 140px;">
+            <div class="odds-box back"
+                 id="box-bm-back-{{ match.id }}-{{ bm_clean }}"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ bm.runner }}"
+                 data-type="back"
+                 data-market-type="bookmaker">
+              <span class="odds-price">{{ bm.back }}</span>
+              <span class="odds-size">100k</span>
+            </div>
+            <div class="odds-box lay"
+                 id="box-bm-lay-{{ match.id }}-{{ bm_clean }}"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ bm.runner }}"
+                 data-type="lay"
+                 data-market-type="bookmaker">
+              <span class="odds-price">{{ bm.lay }}</span>
+              <span class="odds-size">100k</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- MARKET 3: FANCY & SESSION BETTING -->
+      {% if match.fancy_markets %}
+      <div class="market-section">
+        <div class="market-header-row">
+          <div class="market-title">FANCY & SESSION BETTING</div>
+          <div class="odds-labels" style="width: 140px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 10px; font-weight: 800;">
+            <span style="color: var(--lay-bg);">NO</span>
+            <span style="color: var(--back-bg);">YES</span>
+          </div>
+        </div>
+
+        {% for f in match.fancy_markets %}
+        <div class="market-runner-row">
+          <div class="runner-meta">
+            <span class="runner-name">{{ f.name }}</span>
+            <span style="font-size: 9.5px; color: var(--color-green);">ACTIVE SESSION</span>
+          </div>
+
+          <div class="odds-pair" style="width: 140px;">
+            <div class="odds-box lay"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ f.name }} (NO)"
+                 data-type="lay"
+                 data-market-type="fancy">
+              <span class="odds-price">{{ f.no_runs }}</span>
+              <span class="odds-size">{{ f.no_rate }}%</span>
+            </div>
+            <div class="odds-box back"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ f.name }} (YES)"
+                 data-type="back"
+                 data-market-type="fancy">
+              <span class="odds-price">{{ f.yes_runs }}</span>
+              <span class="odds-size">{{ f.yes_rate }}%</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </section>
+
+    <!-- RIGHT SIDEBAR: BET SLIP & ACTIVE OPEN BETS -->
+    <aside class="sidebar-right">
+      <div class="desk-tabs">
+        <button class="desk-tab-btn active" id="tab-btn-betslip" onclick="switchDeskTab('betslip')">
+          <span>BET SLIP</span>
+        </button>
+        <button class="desk-tab-btn" id="tab-btn-openbets" onclick="switchDeskTab('openbets')">
+          <span>MY BETS</span>
+          <span class="badge-count" id="desk-open-count">{{ open_bets|length }}</span>
+        </button>
+      </div>
+
+      <!-- BET SLIP CONTAINER -->
+      <div id="betslip-container">
+        <div class="betslip-card">
+          <div class="betslip-header">
+            <span class="betslip-title">⚡ EXCHANGE BET SLIP</span>
+          </div>
+          <div class="betslip-empty">
+            Click any <strong>Back (Blue)</strong> or <strong>Lay (Pink)</strong> box on this match to open bet slip.
+          </div>
+        </div>
+      </div>
+
+      <!-- MY OPEN BETS CONTAINER -->
+      <div id="open-bets-container" style="display: none;">
+        <div class="open-bets-card">
+          <div class="betslip-header">
+            <span class="betslip-title">⚡ OPEN BETS ON THIS MATCH</span>
+          </div>
+          <div id="open-bets-list">
+            {% if open_bets %}
+              {% for bet in open_bets %}
+              <div class="open-bet-item">
+                <div class="open-bet-top">
+                  <span class="bet-badge {{ bet.type }}">{{ bet.type|upper }}</span>
+                  <span style="font-size: 11px; font-weight: 800; color: #fff;">{{ bet.runner }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text-muted);">
+                  <span>Odds: <strong style="color: #fff;">{{ bet.odds }}</strong></span>
+                  <span>Stake: <strong style="color: #fff;">₹{{ bet.stake }}</strong></span>
+                  <span>Liab: <strong style="color: var(--color-red);">₹{{ bet.liability }}</strong></span>
+                </div>
+                <button class="btn-turbo-cashout cashout-btn"
+                        data-bet-id="{{ bet.id }}"
+                        data-match-id="{{ bet.match_id }}"
+                        data-runner="{{ bet.runner }}"
+                        data-orig-odds="{{ bet.odds }}"
+                        data-stake="{{ bet.stake }}">
+                  <span>⚡ TURBO CASH-OUT</span>
+                  <span class="cashout-payout">₹{{ bet.stake }}</span>
+                </button>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="betslip-empty">No active bets on this match yet.</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <!-- MODALS -->
+  <div class="modal-overlay" id="deposit-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>⚡ INSTANT DEPOSIT</h3>
+        <button class="modal-close" onclick="closeDepositModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">SELECT QUICK AMOUNT (₹)</label>
+        <div class="quick-deposit-grid">
+          <button class="quick-dep-btn" onclick="setQuickDeposit(500)">+₹500</button>
+          <button class="quick-dep-btn" onclick="setQuickDeposit(1000)">+₹1,000</button>
+          <button class="quick-dep-btn" onclick="setQuickDeposit(5000)">+₹5,000</button>
+          <button class="quick-dep-btn" onclick="setQuickDeposit(10000)">+₹10,000</button>
+          <button class="quick-dep-btn" onclick="setQuickDeposit(25000)">+₹25,000</button>
+          <button class="quick-dep-btn" onclick="setQuickDeposit(50000)">+₹50,000</button>
+        </div>
+        <input type="number" id="deposit-amount-input" value="1000" style="width: 100%; margin-top: 4px; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 800; border-radius: var(--radius-xs);">
+        <button class="btn-deposit" style="width: 100%; padding: 10px; justify-content: center; font-size: 13px;" onclick="submitDeposit()">
+          DEPOSIT INSTANTLY
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="withdraw-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>⚡ INSTANT WITHDRAWAL</h3>
+        <button class="modal-close" onclick="closeWithdrawModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <label style="font-size: 11px; color: var(--text-muted); font-weight: 700;">ENTER AMOUNT (₹)</label>
+        <input type="number" id="withdraw-amount-input" value="1000" style="width: 100%; margin-top: 4px; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 800; border-radius: var(--radius-xs);">
+        <button class="btn-place-bet" style="width: 100%; padding: 10px; justify-content: center; font-size: 13px;" onclick="submitWithdraw()">
+          WITHDRAW TO BANK
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+  <script src="/static/js/live_odds.js"></script>
+  <script src="/static/js/betting.js"></script>
+</body>
+</html>

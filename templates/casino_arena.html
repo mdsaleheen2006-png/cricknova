@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Winbuzz Casino Arena | Aviator & Live Table Games</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="icon" type="image/png" href="https://click22frnt.hurry2.net/templates/winbuzz/assets/logo-Cz5zLpWl.webp">
+  <style>
+    .casino-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .game-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-dark);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .game-card-header {
+      background: #080f1e;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-dark);
+    }
+    .game-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+    .aviator-canvas-container {
+      width: 100%;
+      height: 240px;
+      background: #090f1d;
+      border-radius: var(--radius-xs);
+      position: relative;
+    }
+    .aviator-mult-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 38px;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 4px 16px rgba(0,0,0,0.8);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP RUNNING TICKER -->
+  <div class="ticker-strip">
+    <span class="ticker-badge">CASINO ARENA</span>
+    <div class="ticker-content">
+      <div class="ticker-text">
+        ✈️ <span>Spribe Aviator:</span> High multiplier active • 🎴 <span>Live Teen Patti 20-20:</span> Evolution Gaming tables open • 🃏 <span>Super Andar Bahar:</span> Instant settlement • 24x7 UPI / IMPS Deposits
+      </div>
+    </div>
+  </div>
+
+  <!-- WINBUZZ PRO COMPACT HEADER -->
+  <header class="winbuzz-header">
+    <div class="header-top">
+      <a href="/" class="brand-container">
+        <img src="https://click22frnt.hurry2.net/templates/winbuzz/assets/logo-Cz5zLpWl.webp" alt="Winbuzz" class="brand-logo" onerror="this.style.display='none'">
+        <div class="brand-text">WINBUZZ<span>.CASINO</span></div>
+      </a>
+
+      <div id="live-ist-clock" class="live-clock-badge">--:--:-- IST</div>
+
+      <div class="header-right">
+        <div class="wallet-chip">
+          <div class="wallet-stat">
+            <span class="label">Balance</span>
+            <span class="value" id="wallet-balance" data-raw="{{ user.balance }}">₹{{ "{:,.2f}".format(user.balance) }}</span>
+          </div>
+          <div class="wallet-stat" style="border-left: 1px solid var(--border-dark); padding-left: 10px;">
+            <span class="label">Exposure</span>
+            <span class="value exposure" id="wallet-exposure">₹{{ "{:,.2f}".format(user.exposure) }}</span>
+          </div>
+        </div>
+
+        <button class="btn-header btn-deposit" onclick="openDepositModal()">+ DEPOSIT</button>
+        <button class="btn-header btn-withdraw" onclick="openWithdrawModal()">WITHDRAW</button>
+      </div>
+    </div>
+
+    <!-- Sports Sub-Navigation -->
+    <nav class="sports-nav-bar">
+      <div class="sports-nav-inner">
+        <a href="/" class="nav-item">⚡ IN-PLAY</a>
+        <a href="/" class="nav-item">🏏 CRICKET</a>
+        <a href="/casino" class="nav-item active" style="color: var(--winbuzz-gold);">✈️ AVIATOR</a>
+        <a href="/casino" class="nav-item">🎰 LIVE CASINO</a>
+        <a href="/admin" class="nav-item" style="margin-left: auto; color: var(--text-dim);">⚙️ ADMIN PORTAL</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- CASINO MAIN GRID -->
+  <main class="main-wrapper casino-layout" style="max-width: 1200px;">
+    <div class="casino-grid">
+      <!-- GAME 1: AVIATOR CRASH GAME (CANVAS) -->
+      <div class="game-card" style="grid-column: span 2;">
+        <div class="game-card-header">
+          <span style="font-weight: 800; color: #fff; font-size: 13px;">✈️ SPRIBE AVIATOR • REAL MULTIPLIER CRASH</span>
+          <div id="aviator-history" style="display: flex; gap: 4px;"></div>
+        </div>
+        <div class="game-body">
+          <div class="aviator-canvas-container">
+            <canvas id="aviator-canvas" width="800" height="240" style="width: 100%; height: 100%;"></canvas>
+            <div class="aviator-mult-overlay" id="aviator-mult-display">1.00x</div>
+          </div>
+
+          <div style="display: flex; gap: 12px; width: 100%; max-width: 480px; justify-content: center;">
+            <button class="btn-deposit" id="aviator-bet-btn" style="flex: 1; padding: 10px; font-size: 13px; font-weight: 900;">
+              BET ₹200
+            </button>
+            <button class="btn-turbo-cashout" id="aviator-cashout-btn" style="flex: 1; padding: 10px; font-size: 13px; font-weight: 900; justify-content: center;" disabled>
+              CASH OUT
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- GAME 2: TEEN PATTI 20-20 -->
+      <div class="game-card">
+        <div class="game-card-header">
+          <span style="font-weight: 800; color: #fff; font-size: 12.5px;">🎴 TEEN PATTI 20-20 LIVE</span>
+          <span style="font-size: 9.5px; color: var(--color-green); font-weight: 800;">EVOLUTION</span>
+        </div>
+        <div class="game-body">
+          <img src="https://click22frnt.hurry2.net/templates/winbuzz/assets/teen-patti-live-CW38aXm-.webp" style="max-height: 130px; border-radius: 6px;" onerror="this.src='/static/css/style.css'">
+          <div id="tp-result" style="font-size: 12px; font-weight: 800; min-height: 18px; color: var(--text-muted);">Place your bet on Player A or B</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%;">
+            <button class="btn-place-bet" style="padding: 8px;" onclick="placeCasinoBet('tp', 'player_a', 500)">
+              PLAYER A (1.95x)
+            </button>
+            <button class="btn-place-bet" style="padding: 8px; background: linear-gradient(135deg, #9333ea, #7e22ce);" onclick="placeCasinoBet('tp', 'player_b', 500)">
+              PLAYER B (1.95x)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- GAME 3: SUPER ANDAR BAHAR -->
+      <div class="game-card">
+        <div class="game-card-header">
+          <span style="font-weight: 800; color: #fff; font-size: 12.5px;">🃏 SUPER ANDAR BAHAR</span>
+          <span style="font-size: 9.5px; color: var(--color-green); font-weight: 800;">EZUGI LIVE</span>
+        </div>
+        <div class="game-body">
+          <img src="https://click22frnt.hurry2.net/templates/winbuzz/assets/andar-bahar-Cg2nE0r7.webp" style="max-height: 130px; border-radius: 6px;" onerror="this.src='/static/css/style.css'">
+          <div id="ab-result" style="font-size: 12px; font-weight: 800; min-height: 18px; color: var(--text-muted);">Choose Andar or Bahar</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%;">
+            <button class="btn-place-bet" style="padding: 8px; background: linear-gradient(135deg, #0284c7, #0369a1);" onclick="placeCasinoBet('ab', 'andar', 500)">
+              ANDAR (1.90x)
+            </button>
+            <button class="btn-place-bet" style="padding: 8px; background: linear-gradient(135deg, #e11d48, #be123c);" onclick="placeCasinoBet('ab', 'bahar', 500)">
+              BAHAR (2.00x)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODALS -->
+  <div class="modal-overlay" id="deposit-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>⚡ INSTANT DEPOSIT</h3>
+        <button class="modal-close" onclick="closeDepositModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="quick-deposit-grid">
+          <button class="quick-dep-btn" onclick="setQuickDeposit(1000)">+₹1,000</button>
+          <button class="quick-dep-btn" onclick="setQuickDeposit(5000)">+₹5,000</button>
+          <button class="quick-dep-btn" onclick="setQuickDeposit(10000)">+₹10,000</button>
+        </div>
+        <input type="number" id="deposit-amount-input" value="1000" style="width: 100%; margin-top: 4px; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 800; border-radius: var(--radius-xs);">
+        <button class="btn-deposit" style="width: 100%; padding: 10px; justify-content: center; font-size: 13px;" onclick="submitDeposit()">
+          DEPOSIT INSTANTLY
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="withdraw-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>⚡ INSTANT WITHDRAWAL</h3>
+        <button class="modal-close" onclick="closeWithdrawModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="number" id="withdraw-amount-input" value="1000" style="width: 100%; margin-top: 4px; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 800; border-radius: var(--radius-xs);">
+        <button class="btn-place-bet" style="width: 100%; padding: 10px; justify-content: center; font-size: 13px;" onclick="submitWithdraw()">
+          WITHDRAW TO BANK
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+  <script src="/static/js/betting.js"></script>
+  <script src="/static/js/aviator.js"></script>
+  <script src="/static/js/casino.js"></script>
+</body>
+</html>

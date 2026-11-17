@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  cricknova:
+    build: .
+    container_name: cricknova_production_server
+    restart: always
+    ports:
+      - "80:8000"
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - ENV=production
+    volumes:
+      - ./data:/app/data
