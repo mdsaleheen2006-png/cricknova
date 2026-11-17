@@ -2099,3 +2099,52 @@ body.mode-android .android-bottom-nav {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+
+/* ========================================================
+   AUTHENTICATION TABS & PANELS STYLING
+   ======================================================== */
+.auth-tabs-row {
+  display: flex;
+  background: var(--bg-darkest);
+  border-bottom: 1px solid var(--border-dark);
+  margin-bottom: 14px;
+}
+
+.auth-tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 10px 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.auth-tab-btn:hover {
+  color: #fff;
+}
+
+.auth-tab-btn.active {
+  color: var(--winbuzz-gold);
+  border-bottom-color: var(--winbuzz-gold);
+  background: rgba(245, 166, 35, 0.05);
+}
+
+.auth-panel {
+  display: none;
+  animation: fadeInPanel 0.2s ease-in-out;
+}
+
+.auth-panel.active {
+  display: block;
+}
+
+@keyframes fadeInPanel {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

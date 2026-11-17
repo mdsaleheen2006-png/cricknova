@@ -128,15 +128,17 @@ function startLiveClock() {
   setInterval(update, 1000);
 }
 
-// ==================== 4. CUSTOMER OTP AUTHENTICATION ====================
+// ==================== 4. CUSTOMER AUTHENTICATION (PASSWORD & REAL SMS OTP) ====================
 let authUserMobile = null;
+let isUserLoggedIn = false;
 
 async function checkAuthStatus() {
   try {
     const res = await fetch('/api/auth/me');
     const data = await res.json();
     if (data.status === 'success' && data.user) {
-      authUserMobile = data.user.mobile;
+      isUserLoggedIn = !!data.authenticated;
+      authUserMobile = data.authenticated ? data.user.mobile : null;
       updateAuthUI(data.user, data.authenticated);
     }
   } catch (e) {
@@ -153,42 +155,49 @@ function updateAuthUI(user, isAuthenticated) {
   const accBalEl = document.getElementById('account-bal-val');
   const accExpEl = document.getElementById('account-exp-val');
 
-  const phoneStr = user.mobile || 'Guest';
-  const balStr = `₹${Math.round(user.balance || 0).toLocaleString('en-IN')}`;
-  const expStr = `₹${Math.round(user.exposure || 0).toLocaleString('en-IN')}`;
+  if (isAuthenticated && user && user.mobile) {
+    const phoneStr = user.mobile;
+    const balStr = `₹${Math.round(user.balance || 0).toLocaleString('en-IN')}`;
+    const expStr = `₹${Math.round(user.exposure || 0).toLocaleString('en-IN')}`;
 
-  if (authLabel) {
-    authLabel.innerHTML = `👤 ${phoneStr}`;
+    if (authLabel) authLabel.innerHTML = `📱 ${phoneStr} <span style="color: var(--winbuzz-gold); font-size: 9px; margin-left: 4px;">VIP</span>`;
+    if (accountPhone) accountPhone.innerText = phoneStr;
+    if (balEl) balEl.innerText = `₹${(user.balance || 0).toFixed(2)}`;
+    if (expEl) expEl.innerText = expStr;
+    if (mBalEl) mBalEl.innerText = Math.round(user.balance || 0).toLocaleString('en-IN');
+    if (accBalEl) accBalEl.innerText = `₹${(user.balance || 0).toFixed(2)}`;
+    if (accExpEl) accExpEl.innerText = expStr;
+  } else {
+    // Guest State
+    if (authLabel) authLabel.innerHTML = `👤 Login / Register`;
+    if (accountPhone) accountPhone.innerText = 'Guest (Not logged in)';
+    if (balEl) balEl.innerText = '₹0.00';
+    if (expEl) expEl.innerText = '₹0.00';
+    if (mBalEl) mBalEl.innerText = '0';
+    if (accBalEl) accBalEl.innerText = '₹0.00';
+    if (accExpEl) accExpEl.innerText = '₹0.00';
   }
-  if (accountPhone) {
-    accountPhone.innerText = phoneStr;
-  }
-  if (balEl) balEl.innerText = `₹${(user.balance || 0).toFixed(2)}`;
-  if (expEl) expEl.innerText = expStr;
-  if (mBalEl) mBalEl.innerText = Math.round(user.balance || 0).toLocaleString('en-IN');
-  if (accBalEl) accBalEl.innerText = `₹${(user.balance || 0).toFixed(2)}`;
-  if (accExpEl) accExpEl.innerText = expStr;
 }
 
 function handleAuthPillClick() {
-  if (authUserMobile) {
+  if (isUserLoggedIn && authUserMobile) {
     if (document.body.classList.contains('mode-android')) {
       switchAndroidTab('account');
     } else {
-      if (confirm(`Logged in as 📱 ${authUserMobile}.\n\nDo you want to sign out / switch account?`)) {
+      if (confirm(`Logged in as 📱 +91 ${authUserMobile}.\n\nDo you want to sign out / switch to another account?`)) {
         logoutUser();
       }
     }
   } else {
-    openLoginModal();
+    openLoginModal('login');
   }
 }
 
-function openLoginModal() {
+function openLoginModal(defaultTab = 'login') {
   const modal = document.getElementById('otp-modal');
   if (modal) {
     modal.classList.add('active');
-    resetOtpStep();
+    switchAuthTab(defaultTab);
   }
 }
 
@@ -197,65 +206,76 @@ function closeLoginModal() {
   if (modal) modal.classList.remove('active');
 }
 
-function resetOtpStep() {
-  document.getElementById('otp-step-phone').style.display = 'block';
-  document.getElementById('otp-step-verify').style.display = 'none';
-  document.getElementById('login-phone-input').focus();
+function switchAuthTab(tabName) {
+  // Update Tab buttons
+  const tabBtns = document.querySelectorAll('.auth-tab-btn');
+  tabBtns.forEach(b => b.classList.remove('active'));
+
+  // Update Panels
+  const panels = document.querySelectorAll('.auth-panel');
+  panels.forEach(p => p.classList.remove('active'));
+
+  if (tabName === 'login') {
+    const btn = document.getElementById('tab-btn-login');
+    const panel = document.getElementById('auth-panel-login');
+    if (btn) btn.classList.add('active');
+    if (panel) panel.classList.add('active');
+    document.getElementById('pwd-login-mobile')?.focus();
+  } else if (tabName === 'register') {
+    const btn = document.getElementById('tab-btn-register');
+    const panel = document.getElementById('auth-panel-register');
+    if (btn) btn.classList.add('active');
+    if (panel) panel.classList.add('active');
+    document.getElementById('reg-step-mobile').style.display = 'block';
+    document.getElementById('reg-step-verify').style.display = 'none';
+    document.getElementById('reg-mobile')?.focus();
+  } else if (tabName === 'otp' || tabName === 'forgot') {
+    const btn = document.getElementById('tab-btn-otp');
+    const panel = document.getElementById('auth-panel-otp');
+    if (btn) btn.classList.add('active');
+    if (panel) panel.classList.add('active');
+    document.getElementById('otp-login-step-mobile').style.display = 'block';
+    document.getElementById('otp-login-step-verify').style.display = 'none';
+    document.getElementById('otp-only-mobile')?.focus();
+  }
 }
 
-async function sendOtp() {
-  const phone = document.getElementById('login-phone-input').value.trim();
-  if (!phone || phone.length !== 10 || !/^\d{10}$/.test(phone)) {
+function togglePasswordVisibility(inputId, iconEl) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    iconEl.innerText = '🙈';
+  } else {
+    input.type = 'password';
+    iconEl.innerText = '👁️';
+  }
+}
+
+// 1. LOGIN WITH PASSWORD
+async function handlePasswordLogin(e) {
+  e.preventDefault();
+  const mobile = document.getElementById('pwd-login-mobile').value.trim();
+  const password = document.getElementById('pwd-login-password').value.trim();
+
+  if (!mobile || mobile.length !== 10) {
     alert('Please enter a valid 10-digit mobile number');
     return;
   }
-
-  const btn = document.getElementById('btn-send-otp');
-  btn.disabled = true;
-  btn.innerText = 'SENDING OTP...';
-
-  try {
-    const res = await fetch('/api/auth/send-otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mobile: phone })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      document.getElementById('otp-step-phone').style.display = 'none';
-      document.getElementById('otp-step-verify').style.display = 'block';
-      const otpInput = document.getElementById('login-otp-input');
-      otpInput.value = data.test_otp || '123456';
-      otpInput.focus();
-    } else {
-      alert(data.detail || 'Failed to send OTP');
-    }
-  } catch (err) {
-    alert('Network error while requesting OTP');
-  } finally {
-    btn.disabled = false;
-    btn.innerText = 'SEND OTP CODE 📲';
-  }
-}
-
-async function verifyOtp() {
-  const phone = document.getElementById('login-phone-input').value.trim();
-  const otp = document.getElementById('login-otp-input').value.trim();
-
-  if (!otp || otp.length < 4) {
-    alert('Please enter the OTP code (or Demo 123456)');
+  if (!password) {
+    alert('Please enter your password');
     return;
   }
 
-  const btn = document.getElementById('btn-verify-otp');
+  const btn = document.getElementById('btn-login-password-submit');
   btn.disabled = true;
-  btn.innerText = 'VERIFYING...';
+  btn.innerText = 'LOGGING IN...';
 
   try {
-    const res = await fetch('/api/auth/verify-otp', {
+    const res = await fetch('/api/auth/login-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mobile: phone, otp: otp })
+      body: JSON.stringify({ mobile: mobile, password: password })
     });
     const data = await res.json();
     if (res.ok) {
@@ -263,20 +283,195 @@ async function verifyOtp() {
       closeLoginModal();
       window.location.reload();
     } else {
-      alert('❌ ' + (data.detail || 'Invalid OTP code'));
+      alert('❌ ' + (data.detail || 'Login failed'));
+      // If user has no password yet, offer switch to OTP tab
+      if (data.detail && data.detail.includes('no password set')) {
+        switchAuthTab('otp');
+        const otpMob = document.getElementById('otp-only-mobile');
+        if (otpMob) otpMob.value = mobile;
+      }
     }
   } catch (err) {
-    alert('Error verifying OTP: ' + err.message);
+    alert('Network error while logging in: ' + err.message);
   } finally {
     btn.disabled = false;
-    btn.innerText = 'VERIFY & START BETTING 🚀';
+    btn.innerText = '🚀 LOGIN TO MY ACCOUNT';
+  }
+}
+
+// 2. REGISTER NEW ACCOUNT
+async function sendRegisterOtp() {
+  const mobile = document.getElementById('reg-mobile').value.trim();
+  if (!mobile || mobile.length !== 10 || !/^\d{10}$/.test(mobile)) {
+    alert('Please enter a valid 10-digit mobile number');
+    return;
+  }
+
+  const btn = document.getElementById('btn-reg-send-otp');
+  btn.disabled = true;
+  btn.innerText = 'SENDING OTP TO MOBILE...';
+
+  try {
+    const res = await fetch('/api/auth/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mobile: mobile, purpose: 'REGISTER' })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      if (data.user_exists && data.has_password) {
+        alert('ℹ️ This mobile number is already registered with a password! Please login with your password.');
+        switchAuthTab('login');
+        const mobInp = document.getElementById('pwd-login-mobile');
+        if (mobInp) mobInp.value = mobile;
+        return;
+      }
+
+      document.getElementById('reg-step-mobile').style.display = 'none';
+      document.getElementById('reg-step-verify').style.display = 'block';
+      const otpInput = document.getElementById('reg-otp');
+      otpInput.value = data.test_otp || '123456';
+      document.getElementById('reg-password').focus();
+    } else {
+      alert('❌ ' + (data.detail || 'Failed to send OTP'));
+    }
+  } catch (err) {
+    alert('Network error sending OTP');
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'SEND OTP TO MOBILE 📲';
+  }
+}
+
+async function completeRegistration() {
+  const mobile = document.getElementById('reg-mobile').value.trim();
+  const otp = document.getElementById('reg-otp').value.trim();
+  const password = document.getElementById('reg-password').value.trim();
+  const confirmPwd = document.getElementById('reg-password-confirm').value.trim();
+
+  if (!otp || otp.length < 4) {
+    alert('Please enter the 6-digit OTP code');
+    return;
+  }
+  if (!password || password.length < 6) {
+    alert('Password must be at least 6 characters long');
+    return;
+  }
+  if (password !== confirmPwd) {
+    alert('Passwords do not match! Please check and re-type.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-reg-complete');
+  btn.disabled = true;
+  btn.innerText = 'CREATING ACCOUNT...';
+
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mobile: mobile,
+        otp: otp,
+        password: password
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert(`🎉 ${data.message}\nYour account is verified and password is saved securely!`);
+      closeLoginModal();
+      window.location.reload();
+    } else {
+      alert('❌ ' + (data.detail || 'Registration failed'));
+    }
+  } catch (err) {
+    alert('Network error during registration: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = '✓ VERIFY OTP & CREATE ACCOUNT';
+  }
+}
+
+// 3. LOGIN WITH OTP ONLY / FORGOT PASSWORD
+async function sendOtpOnly() {
+  const mobile = document.getElementById('otp-only-mobile').value.trim();
+  if (!mobile || mobile.length !== 10 || !/^\d{10}$/.test(mobile)) {
+    alert('Please enter a valid 10-digit mobile number');
+    return;
+  }
+
+  const btn = document.getElementById('btn-otp-only-send');
+  btn.disabled = true;
+  btn.innerText = 'REQUESTING OTP...';
+
+  try {
+    const res = await fetch('/api/auth/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mobile: mobile, purpose: 'LOGIN' })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      document.getElementById('otp-login-step-mobile').style.display = 'none';
+      document.getElementById('otp-login-step-verify').style.display = 'block';
+      const codeInp = document.getElementById('otp-only-code');
+      codeInp.value = data.test_otp || '123456';
+      codeInp.focus();
+    } else {
+      alert('❌ ' + (data.detail || 'Failed to send OTP'));
+    }
+  } catch (err) {
+    alert('Network error requesting OTP');
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'REQUEST OTP CODE 📲';
+  }
+}
+
+async function completeOtpOnlyLogin() {
+  const mobile = document.getElementById('otp-only-mobile').value.trim();
+  const otp = document.getElementById('otp-only-code').value.trim();
+  const newPwd = document.getElementById('otp-only-new-pwd').value.trim();
+
+  if (!otp || otp.length < 4) {
+    alert('Please enter the OTP code');
+    return;
+  }
+
+  const btn = document.getElementById('btn-otp-only-verify');
+  btn.disabled = true;
+  btn.innerText = 'VERIFYING...';
+
+  try {
+    const res = await fetch('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mobile: mobile,
+        otp: otp,
+        new_password: newPwd || undefined
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert(`✅ ${data.message}`);
+      closeLoginModal();
+      window.location.reload();
+    } else {
+      alert('❌ ' + (data.detail || 'OTP verification failed'));
+    }
+  } catch (err) {
+    alert('Network error verifying OTP: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'VERIFY & LOGIN NOW 🚀';
   }
 }
 
 async function logoutUser() {
   try {
     await fetch('/api/auth/logout', { method: 'POST' });
-    alert('Logged out successfully');
+    alert('Logged out successfully.');
     window.location.reload();
   } catch (e) {
     window.location.reload();

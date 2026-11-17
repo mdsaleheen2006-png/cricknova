@@ -5,6 +5,8 @@ import time
 import urllib.request
 import urllib.error
 import re
+import hashlib
+import random
 from typing import List, Dict, Any, Optional
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
@@ -442,29 +444,19 @@ def get_active_user(request: Request) -> Dict[str, Any]:
         if clean_mobile in users:
             return users[clean_mobile]
 
-    # Fallback to default user
-    default_mobile = all_data.get("default_user_mobile", "9876543210")
-    if default_mobile in users:
-        return users[default_mobile]
-    elif users:
-        return list(users.values())[0]
-    else:
-        new_u = {
-            "mobile": "9876543210",
-            "name": "DEMO7890",
-            "tier": "VIP Platinum",
-            "balance": 100500.0,
-            "exposure": 0.0,
-            "total_winnings": 18450.0,
-            "kyc_status": "VERIFIED",
-            "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "bets": [],
-            "transactions": []
-        }
-        users["9876543210"] = new_u
-        all_data["default_user_mobile"] = "9876543210"
-        save_all_user_data(all_data)
-        return new_u
+    # Return Guest User if not logged in (prevents unauthorized access)
+    return {
+        "mobile": "",
+        "name": "Guest Player",
+        "tier": "Guest",
+        "balance": 0.0,
+        "exposure": 0.0,
+        "total_winnings": 0.0,
+        "kyc_status": "UNVERIFIED",
+        "is_guest": True,
+        "bets": [],
+        "transactions": []
+    }
 
 # ==================== RUNNER BOOK & HEDGING MATH ====================
 def calculate_runner_book(match_id: str, market_type: str = "match_odds", user_bets: list = None) -> Dict[str, float]:
@@ -744,6 +736,7 @@ async def admin_portal(request: Request):
             "total_customers": len(users_list),
             "total_balances": round(total_balances, 2),
             "total_liabilities": round(total_liabilities, 2),
+            "sms_config": all_data.get("sms_config", {"provider": "authkey", "api_key": "", "sender_id": ""}),
             "stats": {
                 "total_turnover": round(total_turnover, 2),
                 "total_users": len(users_list),
@@ -764,34 +757,213 @@ async def download_apk():
         )
     raise HTTPException(status_code=404, detail="CrickNova APK package not found")
 
-# ==================== AUTHENTICATION (PHONE & OTP) ====================
+# ==================== PASSWORD & REAL SMS GATEWAY HELPERS ====================
+def hash_password(password: str) -> str:
+    salt = "cricknova_secure_2026_salt"
+    return hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
+
+def verify_password(password: str, hashed: str) -> bool:
+    if not hashed:
+        return False
+    return hash_password(password) == hashed
+
+def send_sms_otp(mobile: str, otp: str) -> Dict[str, Any]:
+    all_data = load_all_user_data()
+    sms_cfg = all_data.get("sms_config", {})
+    provider = str(sms_cfg.get("provider", "authkey")).lower()
+    api_key = str(sms_cfg.get("api_key") or os.getenv("SMS_API_KEY", "")).strip()
+
+    if not api_key:
+        print(f"[SMS SIMULATION] Sent OTP {otp} to mobile +91 {mobile} (Demo Mode)")
+        return {
+            "status": "simulated",
+            "provider": "demo",
+            "message": f"Demo OTP is {otp}. (To send live SMS, paste your Authkey.io or Fast2SMS API key in Admin Panel)"
+        }
+
+    try:
+        if provider == "authkey":
+            # Authkey.io OTP API (Supports ₹2,500 startup credits)
+            url = f"https://api.authkey.io/request?authkey={api_key}&mobile={mobile}&country_code=91&sid=1001&otp={otp}"
+            req = urllib.request.Request(url, headers={"User-Agent": "CrickNova/1.0"})
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                res_body = resp.read().decode()
+                print(f"[Authkey.io Response]: {res_body}")
+                return {"status": "sent", "provider": "authkey", "response": res_body}
+        elif provider == "fast2sms":
+            # Fast2SMS Quick OTP API (Direct India route)
+            url = f"https://www.fast2sms.com/dev/bulkV2?authorization={api_key}&variables_values={otp}&route=otp&numbers={mobile}"
+            req = urllib.request.Request(url, headers={"User-Agent": "CrickNova/1.0"})
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                res_body = resp.read().decode()
+                print(f"[Fast2SMS Response]: {res_body}")
+                return {"status": "sent", "provider": "fast2sms", "response": res_body}
+        elif provider == "2factor":
+            # 2Factor.in OTP API
+            url = f"https://2factor.in/API/V1/{api_key}/SMS/{mobile}/{otp}/OTP1"
+            req = urllib.request.Request(url, headers={"User-Agent": "CrickNova/1.0"})
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                res_body = resp.read().decode()
+                print(f"[2Factor Response]: {res_body}")
+                return {"status": "sent", "provider": "2factor", "response": res_body}
+    except Exception as e:
+        print(f"[SMS Gateway Error]: {e}")
+        return {"status": "error", "error": str(e), "message": f"SMS Gateway error: {e}"}
+
+    return {"status": "simulated", "message": f"OTP is {otp}"}
+
+# ==================== AUTHENTICATION (PASSWORD, MOBILE & SMS OTP) ====================
 @app.post("/api/auth/send-otp")
 async def send_otp(request: Request):
     data = await request.json()
     mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
+    purpose = str(data.get("purpose", "LOGIN")).upper()
     if not mobile or len(mobile) != 10 or not mobile.isdigit():
-        raise HTTPException(status_code=400, detail="Please enter a valid 10-digit mobile number")
+        raise HTTPException(status_code=400, detail="Please enter a valid 10-digit Indian mobile number")
 
-    import random
     otp = str(random.randint(100000, 999999))
     OTP_STORE[mobile] = {
         "otp": otp,
+        "purpose": purpose,
         "created_at": time.time(),
         "expires_at": time.time() + 600
     }
-    print(f"[OTP SERVICE] Sent OTP {otp} to mobile +91 {mobile}")
+    
+    # Send via real SMS Gateway (Authkey.io / Fast2SMS / 2Factor)
+    sms_res = send_sms_otp(mobile, otp)
+    
+    all_data = load_all_user_data()
+    users = all_data.get("users", {})
+    user_exists = mobile in users
+    has_password = bool(users.get(mobile, {}).get("password_hash")) if user_exists else False
+
     return JSONResponse(content={
         "status": "success",
-        "message": f"OTP successfully sent to +91 {mobile}",
+        "message": f"OTP sent to +91 {mobile} successfully!",
         "mobile": mobile,
+        "user_exists": user_exists,
+        "has_password": has_password,
+        "sms_provider": sms_res.get("provider", "demo"),
+        "sms_status": sms_res.get("status"),
         "test_otp": otp
     })
+
+@app.post("/api/auth/register")
+async def register_user(request: Request):
+    data = await request.json()
+    mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
+    otp = str(data.get("otp", "")).strip()
+    password = str(data.get("password", "")).strip()
+    name = str(data.get("name", "")).strip() or f"Player {mobile[-4:]}"
+
+    if not mobile or len(mobile) != 10 or not mobile.isdigit():
+        raise HTTPException(status_code=400, detail="Please enter a valid 10-digit Indian mobile number")
+    if len(password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters long")
+
+    # OTP verification
+    record = OTP_STORE.get(mobile)
+    is_valid = False
+    if otp == "123456":
+        is_valid = True
+    elif record and record.get("otp") == otp and time.time() < record.get("expires_at", 0):
+        is_valid = True
+
+    if not is_valid:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP code. Please enter the correct OTP or test OTP 123456.")
+
+    all_data = load_all_user_data()
+    users = all_data.setdefault("users", {})
+
+    if mobile in users and users[mobile].get("password_hash"):
+        raise HTTPException(status_code=400, detail="An account with this mobile number already exists. Please 'Login with Password'.")
+
+    pwd_hash = hash_password(password)
+    if mobile not in users:
+        users[mobile] = {
+            "mobile": mobile,
+            "name": name,
+            "password_hash": pwd_hash,
+            "tier": "VIP Gold",
+            "balance": 500.0,
+            "exposure": 0.0,
+            "total_winnings": 0.0,
+            "kyc_status": "VERIFIED",
+            "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "bets": [],
+            "transactions": [
+                {
+                    "id": f"BONUS-{time.time_ns() % 1000000}",
+                    "type": "BONUS",
+                    "method": "Welcome Sign-up Bonus",
+                    "amount": 500.0,
+                    "status": "COMPLETED",
+                    "date": time.strftime("%Y-%m-%d %H:%M:%S")
+                }
+            ]
+        }
+    else:
+        users[mobile]["password_hash"] = pwd_hash
+        users[mobile]["kyc_status"] = "VERIFIED"
+
+    save_all_user_data(all_data)
+    user = users[mobile]
+    user_sanitized = {k: v for k, v in user.items() if k != "password_hash"}
+
+    response = JSONResponse(content={
+        "status": "success",
+        "message": f"Account verified! Welcome {user['name']}. ₹500 welcome bonus added.",
+        "user": user_sanitized,
+        "mobile": mobile
+    })
+    response.set_cookie("cricknova_user", mobile, max_age=86400 * 30, httponly=False)
+    return response
+
+@app.post("/api/auth/login-password")
+async def login_with_password(request: Request):
+    data = await request.json()
+    mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
+    password = str(data.get("password", "")).strip()
+
+    if not mobile or len(mobile) != 10:
+        raise HTTPException(status_code=400, detail="Please enter a valid 10-digit mobile number")
+    if not password:
+        raise HTTPException(status_code=400, detail="Please enter your password")
+
+    all_data = load_all_user_data()
+    users = all_data.get("users", {})
+
+    if mobile not in users:
+        raise HTTPException(status_code=404, detail="No account found for this mobile. Please click 'Create New Account'.")
+
+    user = users[mobile]
+    stored_hash = user.get("password_hash")
+
+    if not stored_hash:
+        raise HTTPException(
+            status_code=400, 
+            detail="Your account has no password set yet. Please use 'Login with OTP' to set your password."
+        )
+
+    if not verify_password(password, stored_hash):
+        raise HTTPException(status_code=401, detail="Incorrect password. Please verify or use 'Forgot Password / Login with OTP'.")
+
+    user_sanitized = {k: v for k, v in user.items() if k != "password_hash"}
+    response = JSONResponse(content={
+        "status": "success",
+        "message": f"Welcome back, {user['name']}! Login successful.",
+        "user": user_sanitized,
+        "mobile": mobile
+    })
+    response.set_cookie("cricknova_user", mobile, max_age=86400 * 30, httponly=False)
+    return response
 
 @app.post("/api/auth/verify-otp")
 async def verify_otp(request: Request):
     data = await request.json()
     mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
     otp = str(data.get("otp", "")).strip()
+    new_password = str(data.get("new_password", "")).strip()
 
     record = OTP_STORE.get(mobile)
     is_valid = False
@@ -801,7 +973,7 @@ async def verify_otp(request: Request):
         is_valid = True
 
     if not is_valid:
-        raise HTTPException(status_code=400, detail="Invalid OTP. Please check or use demo OTP 123456.")
+        raise HTTPException(status_code=400, detail="Invalid OTP code. Please check or use demo OTP 123456.")
 
     all_data = load_all_user_data()
     users = all_data.setdefault("users", {})
@@ -827,14 +999,57 @@ async def verify_otp(request: Request):
                 }
             ]
         }
-    all_data["default_user_mobile"] = mobile
-    save_all_user_data(all_data)
 
+    if new_password and len(new_password) >= 6:
+        users[mobile]["password_hash"] = hash_password(new_password)
+
+    save_all_user_data(all_data)
     user = users[mobile]
+    user_sanitized = {k: v for k, v in user.items() if k != "password_hash"}
+
     response = JSONResponse(content={
         "status": "success",
         "message": f"Welcome back, {user['name']}! Login verified.",
-        "user": user,
+        "user": user_sanitized,
+        "mobile": mobile
+    })
+    response.set_cookie("cricknova_user", mobile, max_age=86400 * 30, httponly=False)
+    return response
+
+@app.post("/api/auth/reset-password")
+async def reset_password(request: Request):
+    data = await request.json()
+    mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
+    otp = str(data.get("otp", "")).strip()
+    new_password = str(data.get("new_password", "")).strip()
+
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+
+    record = OTP_STORE.get(mobile)
+    is_valid = False
+    if otp == "123456":
+        is_valid = True
+    elif record and record.get("otp") == otp and time.time() < record.get("expires_at", 0):
+        is_valid = True
+
+    if not is_valid:
+        raise HTTPException(status_code=400, detail="Invalid OTP code.")
+
+    all_data = load_all_user_data()
+    users = all_data.setdefault("users", {})
+    if mobile not in users:
+        raise HTTPException(status_code=404, detail="Account not found. Please register first.")
+
+    users[mobile]["password_hash"] = hash_password(new_password)
+    save_all_user_data(all_data)
+
+    user = users[mobile]
+    user_sanitized = {k: v for k, v in user.items() if k != "password_hash"}
+    response = JSONResponse(content={
+        "status": "success",
+        "message": "Password updated successfully! Logged in.",
+        "user": user_sanitized,
         "mobile": mobile
     })
     response.set_cookie("cricknova_user", mobile, max_age=86400 * 30, httponly=False)
@@ -852,12 +1067,51 @@ async def get_current_auth_user(request: Request):
     recalculate_user_exposure(user)
     save_all_user_data()
     cookie_user = request.cookies.get("cricknova_user")
-    is_authenticated = bool(cookie_user and cookie_user == user.get("mobile"))
+    is_authenticated = bool(cookie_user and cookie_user == user.get("mobile") and not user.get("is_guest"))
+    user_sanitized = {k: v for k, v in user.items() if k != "password_hash"}
     return JSONResponse(content={
         "status": "success",
         "authenticated": is_authenticated,
+        "is_guest": user.get("is_guest", False),
+        "has_password": bool(user.get("password_hash")),
         "mobile": user.get("mobile"),
-        "user": user
+        "user": user_sanitized
+    })
+
+# ==================== ADMIN SMS GATEWAY MANAGEMENT ====================
+@app.post("/api/admin/sms-config")
+async def save_sms_config(request: Request):
+    data = await request.json()
+    provider = str(data.get("provider", "authkey")).lower()
+    api_key = str(data.get("api_key", "")).strip()
+    sender_id = str(data.get("sender_id", "")).strip()
+
+    all_data = load_all_user_data()
+    all_data["sms_config"] = {
+        "provider": provider,
+        "api_key": api_key,
+        "sender_id": sender_id,
+        "updated_at": time.strftime("%Y-%m-%d %H:%M:%S")
+    }
+    save_all_user_data(all_data)
+    return JSONResponse(content={
+        "status": "success",
+        "message": f"SMS Gateway configured successfully for {provider.upper()}!"
+    })
+
+@app.post("/api/admin/send-test-sms")
+async def admin_send_test_sms(request: Request):
+    data = await request.json()
+    mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
+    if not mobile or len(mobile) != 10:
+        raise HTTPException(status_code=400, detail="Please provide a 10-digit mobile number")
+
+    test_otp = str(random.randint(100000, 999999))
+    result = send_sms_otp(mobile, test_otp)
+    return JSONResponse(content={
+        "status": "success",
+        "message": f"Test SMS sent to +91 {mobile} with OTP {test_otp}",
+        "gateway_result": result
     })
 
 # ==================== USER PROFILE & WALLET ====================
@@ -878,6 +1132,8 @@ async def get_user_state_api(request: Request):
 async def submit_deposit_request(request: Request):
     data = await request.json()
     user = get_active_user(request)
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login to your account to submit a deposit request.")
     amount = float(data.get("amount", 500.0))
     if amount <= 0:
         raise HTTPException(status_code=400, detail="Invalid deposit amount")
@@ -969,6 +1225,8 @@ async def user_withdraw(request: Request):
 async def place_bet(request: Request):
     data = await request.json()
     user = get_active_user(request)
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login with your mobile and password to place bets.")
     match_id = str(data.get("match_id"))
     runner = data.get("runner")
     bet_type = data.get("type", "back").lower()
