@@ -874,18 +874,19 @@ GAME_ALIASES = {
     "one-day-teen-patti": "teen-patti",
     "super-andar-bahar": "andar-bahar",
     "speed-andar-bahar": "andar-bahar",
-    "lightning-roulette": "european-roulette",
-    "speed-roulette": "european-roulette",
-    "crazy-time": "wheel-of-fortune",
-    "mega-wheel": "wheel-of-fortune",
-    "monopoly-live": "lucky-spin",
-    "speed-baccarat": "baccarat",
-    "lightning-baccarat": "baccarat",
-    "infinite-blackjack": "blackjack",
+    "roulette": "lightning-roulette",
+    "european-roulette": "lightning-roulette",
+    "american-roulette": "lightning-roulette",
+    "speed-roulette": "lightning-roulette",
+    "zoo-roulette": "dragon-tiger",
+    "car-roulette": "lightning-roulette",
+    "baccarat": "speed-baccarat",
+    "lightning-baccarat": "speed-baccarat",
     "super-sic-bo": "sic-bo",
-    "gates-of-olympus": "egyptian-slots",
-    "sweet-bonanza": "diamond-slots",
-    "amar-akbar-anthony": "teen-patti",
+    "slots": "mega-jackpot-slots",
+    "egyptian-slots": "mega-jackpot-slots",
+    "diamond-slots": "mega-jackpot-slots",
+    "dragon-slots": "mega-jackpot-slots",
     "spaceman": "aviator",
     "jetx": "aviator"
 }
@@ -1157,7 +1158,7 @@ def evaluate_bet_payout(game_id: str, outcome: Dict[str, Any], bet_type: str) ->
 
 @app.get("/casino", response_class=HTMLResponse)
 @app.get("/casino/{game_slug}", response_class=HTMLResponse)
-async def casino_arena(request: Request, game_slug: str = "zoo-roulette"):
+async def casino_arena(request: Request, game_slug: str = "dragon-tiger"):
     if game_slug in GAME_ALIASES:
         game_slug = GAME_ALIASES[game_slug]
 
@@ -1170,7 +1171,7 @@ async def casino_arena(request: Request, game_slug: str = "zoo-roulette"):
 
     game = games_dict.get(game_slug)
     if not game:
-        game = games_dict.get("zoo-roulette", games_list[0] if games_list else {})
+        game = games_dict.get("dragon-tiger", games_list[0] if games_list else {})
 
     all_data = load_all_user_data()
     payment_config = all_data.get("payment_config", {

@@ -742,60 +742,134 @@
 
 
     {% elif game.id == 'dragon-tiger' %}
-    <!-- ==================== 3. LIVE DRAGON TIGER STUDIO ==================== -->
-    <div class="casino-stage-box">
-      <div class="dealer-camera-frame">
+    <!-- ==================== LIVE DRAGON TIGER MACAU VIP STUDIO ==================== -->
+    <div class="casino-stage-box" style="border: 1px solid rgba(220, 38, 38, 0.4); box-shadow: 0 10px 40px rgba(220, 38, 38, 0.2);">
+      <div class="dealer-camera-frame" style="background: radial-gradient(circle at 50% 30%, #7f1d1d 0%, #1e0505 100%);">
         <div class="dealer-badge-bar">
-          <span class="dealer-live-tag">● LIVE DRAGON TIGER</span>
-          <span style="background: rgba(0,0,0,0.7); font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 4px; color: #ffd700;">
-            Evolution Macau Live Studio
+          <span class="dealer-live-tag" style="background: #dc2626;">● LIVE 1080p 60FPS</span>
+          <span style="background: rgba(0,0,0,0.75); font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 4px; color: #ffd700; border: 1px solid rgba(255,215,0,0.3);">
+            Evolution Macau VIP Studio • Table DT-01
+          </span>
+          <span id="dt-timer-badge" style="background: rgba(245, 166, 35, 0.2); border: 1px solid #f5a623; color: #f5a623; font-size: 10.5px; font-weight: 900; padding: 3px 8px; border-radius: 4px;">
+            ⏱️ 15s
           </span>
         </div>
         <div class="dealer-avatar-center">
-          <div class="dealer-avatar-circle" style="background: radial-gradient(circle, #dc2626, #450a0a);">🐉</div>
-          <div class="dealer-name-title">Mei Ling</div>
-          <div class="dealer-studio-sub">Macau High Roller Studio</div>
+          <div class="dealer-avatar-circle" style="background: radial-gradient(circle, #dc2626, #450a0a); border: 2px solid #ffd700; font-size: 42px; width: 84px; height: 84px;">🐉</div>
+          <div class="dealer-name-title" style="font-size: 16px; margin-top: 6px; color: #fff; font-weight: 900;">Mei Ling</div>
+          <div class="dealer-studio-sub" style="color: #ffd700; font-size: 11px;">Macau High Roller VIP Lounge</div>
         </div>
       </div>
 
-      <div style="background: #090e1a; padding: 16px; border-radius: 0 0 14px 14px;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+      <!-- Live Squeeze Table -->
+      <div style="background: #0b0f19; padding: 18px; border-radius: 0 0 14px 14px;">
+        <!-- Bead Plate Roadmap (Macau Style History) -->
+        <div style="background: rgba(0,0,0,0.5); border: 1px solid #1e293b; border-radius: 6px; padding: 8px 12px; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 10px; font-weight: 900; color: #94a3b8; letter-spacing: 0.5px;">BEAD PLATE ROADMAP (LAST 16 ROUNDS)</span>
+            <div style="display: flex; gap: 8px; font-size: 10px; font-weight: 800;">
+              <span style="color: #ef4444;">● D: <span id="dt-stat-d">8</span></span>
+              <span style="color: #f59e0b;">● T: <span id="dt-stat-t">6</span></span>
+              <span style="color: #22c55e;">● Tie: <span id="dt-stat-tie">2</span></span>
+            </div>
+          </div>
+          <div id="dt-roadmap-strip" style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px;">
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: #dc2626; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;">D</span>
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: #dc2626; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;">D</span>
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: #d97706; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;">T</span>
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: #dc2626; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;">D</span>
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: #16a34a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;">Tie</span>
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: #d97706; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;">T</span>
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: #dc2626; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;">D</span>
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: #dc2626; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;">D</span>
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: #d97706; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;">T</span>
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: #d97706; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;">T</span>
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: #dc2626; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;">D</span>
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: #16a34a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;">Tie</span>
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: #dc2626; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;">D</span>
+            <span style="width: 22px; height: 22px; border-radius: 50%; background: #d97706; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;">T</span>
+          </div>
+        </div>
+
+        <!-- Main Betting Grid (Dragon vs Tie vs Suited Tie vs Tiger) -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 2fr; gap: 10px; margin-bottom: 14px;">
           <!-- Dragon -->
-          <div class="ab-box-bahar" style="background: rgba(185, 28, 28, 0.4); border-color: #ef4444;" onclick="placeDtBet('dragon')">
-            <div style="font-size: 18px; font-weight: 900; color: #ef4444;">🐉 DRAGON</div>
-            <div style="font-size: 12px; color: #ffd700;">1.95x Payout</div>
-            <div style="font-size: 10px;">Bet: <strong id="dt-bet-dragon">₹0</strong></div>
-            <div class="ab-cards-pile" id="card-dragon" style="min-height: 80px;">
-              <div class="play-card red"><span>K</span><span>♥</span></div>
+          <div class="ab-box-bahar" style="background: linear-gradient(180deg, rgba(220,38,38,0.3) 0%, rgba(127,29,29,0.5) 100%); border: 2px solid #ef4444; border-radius: 10px; padding: 14px 10px; text-align: center; cursor: pointer; transition: all 0.2s;" onclick="placeDtBet('dragon')">
+            <div style="font-size: 20px; font-weight: 900; color: #ef4444; letter-spacing: 1px;">🐉 DRAGON</div>
+            <div style="font-size: 13px; font-weight: 900; color: #ffd700; margin: 2px 0;">1.95x</div>
+            <div style="font-size: 11px; color: #cbd5e1;">Bet: <strong id="dt-bet-dragon" style="color: #ffd700;">₹0</strong></div>
+            <div class="ab-cards-pile" id="card-dragon" style="min-height: 85px; margin-top: 10px;">
+              <div class="play-card red" style="box-shadow: 0 4px 15px rgba(220,38,38,0.5);"><span>K</span><span>♥</span></div>
             </div>
           </div>
 
-          <!-- Tie -->
-          <div class="ab-box-andar" style="background: rgba(22, 163, 74, 0.4); border-color: #22c55e;" onclick="placeDtBet('tie')">
-            <div style="font-size: 18px; font-weight: 900; color: #4ade80;">🤝 TIE</div>
-            <div style="font-size: 12px; color: #ffd700;">8.0x Payout</div>
-            <div style="font-size: 10px;">Bet: <strong id="dt-bet-tie">₹0</strong></div>
-            <div style="font-size: 11px; color: var(--text-dim); margin-top: 25px;">Rank Tie</div>
+          <!-- Tie (9x) -->
+          <div class="ab-box-andar" style="background: linear-gradient(180deg, rgba(34,197,94,0.2) 0%, rgba(20,83,45,0.4) 100%); border: 1.5px solid #22c55e; border-radius: 10px; padding: 12px 6px; text-align: center; cursor: pointer;" onclick="placeDtBet('tie')">
+            <div style="font-size: 15px; font-weight: 900; color: #4ade80;">🤝 TIE</div>
+            <div style="font-size: 12px; font-weight: 900; color: #ffd700; margin: 2px 0;">9.0x</div>
+            <div style="font-size: 10.5px; color: #cbd5e1;">Bet: <strong id="dt-bet-tie" style="color: #ffd700;">₹0</strong></div>
+            <div style="font-size: 9.5px; color: #94a3b8; margin-top: 25px;">Same Rank</div>
+          </div>
+
+          <!-- Suited Tie (50x) -->
+          <div class="ab-box-andar" style="background: linear-gradient(180deg, rgba(168,85,247,0.2) 0%, rgba(88,28,135,0.4) 100%); border: 1.5px solid #a855f7; border-radius: 10px; padding: 12px 6px; text-align: center; cursor: pointer;" onclick="placeDtBet('suited_tie')">
+            <div style="font-size: 13px; font-weight: 900; color: #c084fc;">✨ SUITED</div>
+            <div style="font-size: 12px; font-weight: 900; color: #ffd700; margin: 2px 0;">50.0x</div>
+            <div style="font-size: 10.5px; color: #cbd5e1;">Bet: <strong id="dt-bet-suited_tie" style="color: #ffd700;">₹0</strong></div>
+            <div style="font-size: 9.5px; color: #94a3b8; margin-top: 25px;">Rank + Suit</div>
           </div>
 
           <!-- Tiger -->
-          <div class="ab-box-andar" style="background: rgba(217, 119, 6, 0.4); border-color: #f59e0b;" onclick="placeDtBet('tiger')">
-            <div style="font-size: 18px; font-weight: 900; color: #fbbf24;">🐯 TIGER</div>
-            <div style="font-size: 12px; color: #ffd700;">1.95x Payout</div>
-            <div style="font-size: 10px;">Bet: <strong id="dt-bet-tiger">₹0</strong></div>
-            <div class="ab-cards-pile" id="card-tiger" style="min-height: 80px;">
-              <div class="play-card"><span>9</span><span>♠</span></div>
+          <div class="ab-box-andar" style="background: linear-gradient(180deg, rgba(217,119,6,0.3) 0%, rgba(120,53,15,0.5) 100%); border: 2px solid #f59e0b; border-radius: 10px; padding: 14px 10px; text-align: center; cursor: pointer; transition: all 0.2s;" onclick="placeDtBet('tiger')">
+            <div style="font-size: 20px; font-weight: 900; color: #fbbf24; letter-spacing: 1px;">🐯 TIGER</div>
+            <div style="font-size: 13px; font-weight: 900; color: #ffd700; margin: 2px 0;">1.95x</div>
+            <div style="font-size: 11px; color: #cbd5e1;">Bet: <strong id="dt-bet-tiger" style="color: #ffd700;">₹0</strong></div>
+            <div class="ab-cards-pile" id="card-tiger" style="min-height: 85px; margin-top: 10px;">
+              <div class="play-card" style="box-shadow: 0 4px 15px rgba(245,158,11,0.5);"><span>Q</span><span>♠</span></div>
             </div>
           </div>
         </div>
 
-        <div style="text-align: center;">
-          <button class="btn-action-gold" style="padding: 12px 32px;" onclick="dealDragonTigerRound()">⚡ DEAL CARDS</button>
-          <div id="dt-status-text" style="font-size: 12px; font-weight: 800; color: #fff; margin-top: 8px;">Pick Dragon, Tie or Tiger!</div>
+        <!-- Side Bets: Odd/Even & Big/Small -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px;">
+          <div class="bet-cell-btn" data-bet="d_odd" onclick="placeDtBet('d_odd')" style="padding: 8px; font-size: 11px; text-align: center;">
+            <span style="color: #ef4444; font-weight: 900;">D. ODD</span> (1.90x)
+            <div id="dt-bet-d_odd" style="font-size: 10px; color: #ffd700;">₹0</div>
+          </div>
+          <div class="bet-cell-btn" data-bet="d_even" onclick="placeDtBet('d_even')" style="padding: 8px; font-size: 11px; text-align: center;">
+            <span style="color: #ef4444; font-weight: 900;">D. EVEN</span> (1.90x)
+            <div id="dt-bet-d_even" style="font-size: 10px; color: #ffd700;">₹0</div>
+          </div>
+          <div class="bet-cell-btn" data-bet="t_odd" onclick="placeDtBet('t_odd')" style="padding: 8px; font-size: 11px; text-align: center;">
+            <span style="color: #fbbf24; font-weight: 900;">T. ODD</span> (1.90x)
+            <div id="dt-bet-t_odd" style="font-size: 10px; color: #ffd700;">₹0</div>
+          </div>
+          <div class="bet-cell-btn" data-bet="t_even" onclick="placeDtBet('t_even')" style="padding: 8px; font-size: 11px; text-align: center;">
+            <span style="color: #fbbf24; font-weight: 900;">T. EVEN</span> (1.90x)
+            <div id="dt-bet-t_even" style="font-size: 10px; color: #ffd700;">₹0</div>
+          </div>
+        </div>
+
+        <!-- Chip Bar & Controls -->
+        <div class="chip-selector-bar" style="margin-bottom: 12px;">
+          <div class="poker-chip chip-50" onclick="selectActiveChip(50, this)">₹50</div>
+          <div class="poker-chip chip-100 active" onclick="selectActiveChip(100, this)">₹100</div>
+          <div class="poker-chip chip-500" onclick="selectActiveChip(500, this)">₹500</div>
+          <div class="poker-chip chip-1k" onclick="selectActiveChip(1000, this)">₹1k</div>
+          <div class="poker-chip chip-5k" onclick="selectActiveChip(5000, this)">₹5k</div>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
+          <button class="btn-action-gold" style="padding: 13px 40px; font-size: 14px; font-weight: 900; letter-spacing: 1px;" onclick="dealDragonTigerRound()">
+            ⚡ DEAL DRAGON & TIGER
+          </button>
+          <button class="btn-table-action" onclick="clearDtBets()">CLEAR</button>
+        </div>
+        <div id="dt-status-text" style="font-size: 12.5px; font-weight: 900; color: #ffd700; text-align: center; margin-top: 10px;">
+          Place bets on Dragon (1.95x), Tiger (1.95x), Tie (9x) or Suited Tie (50x)
         </div>
       </div>
     </div>
-
 
     {% elif game.id == 'zoo-roulette' %}
     <!-- ==================== 4. ZOO ROULETTE 3D ==================== -->
@@ -909,39 +983,116 @@
     </div>
 
 
-    {% elif game.id in ['european-roulette', 'american-roulette'] %}
-    <!-- ==================== 7. 3D ROULETTE ==================== -->
-    <div class="casino-stage-box">
-      <div class="wheel-arena-grid">
-        <div class="wheel-canvas-container">
-          <canvas id="classic-roulette-canvas" class="roulette-canvas" width="440" height="440"></canvas>
-          <div class="wheel-center-emblem">🎡</div>
+    {% elif game.id in ['lightning-roulette', 'european-roulette', 'american-roulette', 'roulette'] %}
+    <!-- ==================== LIGHTNING EUROPEAN ROULETTE 3D (500x MULTIPLIER) ==================== -->
+    <div class="casino-stage-box" style="border: 1px solid #ffd700; box-shadow: 0 10px 45px rgba(245, 166, 35, 0.25);">
+      <!-- Lightning Multipliers Live Chamber -->
+      <div style="background: linear-gradient(90deg, #18191c 0%, #2a1b02 50%, #18191c 100%); padding: 12px 18px; border-bottom: 2px solid #ffd700; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px; animation: pulse 1s infinite;">⚡</span>
+          <div>
+            <div style="font-size: 15px; font-weight: 900; color: #ffd700; letter-spacing: 1px; font-family: 'Cinzel', serif;">
+              LIGHTNING LUCKY NUMBERS
+            </div>
+            <div style="font-size: 11px; color: #cbd5e1;">Random numbers hit by lightning pay up to 500x!</div>
+          </div>
         </div>
-        <div class="casino-felt-table">
-          <div style="font-size: 11px; font-weight: 900; color: #ffd700; margin-bottom: 8px;">
-            🎡 {{ game.name|upper }} • 36x STRAIGHT PAYOUT
+        <!-- Lucky Numbers Display Pills -->
+        <div id="lightning-lucky-tiles" style="display: flex; gap: 8px;">
+          <div style="background: #000; border: 2px solid #ffd700; border-radius: 8px; padding: 4px 12px; text-align: center; box-shadow: 0 0 15px rgba(255,215,0,0.4);">
+            <div style="font-size: 16px; font-weight: 900; color: #ef4444;">7</div>
+            <div style="font-size: 10px; font-weight: 900; color: #ffd700;">⚡ 100x</div>
           </div>
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px;">
-            <div class="bet-cell-btn" data-bet="red" onclick="placeTableChip('red', this)" style="background: rgba(220,38,38,0.4);">RED (2x)</div>
-            <div class="bet-cell-btn" data-bet="black" onclick="placeTableChip('black', this)" style="background: rgba(15,23,42,0.8);">BLACK (2x)</div>
-            <div class="bet-cell-btn" data-bet="even" onclick="placeTableChip('even', this)">EVEN (2x)</div>
-            <div class="bet-cell-btn" data-bet="odd" onclick="placeTableChip('odd', this)">ODD (2x)</div>
+          <div style="background: #000; border: 2px solid #ffd700; border-radius: 8px; padding: 4px 12px; text-align: center; box-shadow: 0 0 15px rgba(255,215,0,0.4);">
+            <div style="font-size: 16px; font-weight: 900; color: #3b82f6;">18</div>
+            <div style="font-size: 10px; font-weight: 900; color: #ffd700;">⚡ 500x</div>
           </div>
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
-            <div class="bet-cell-btn" data-bet="1st12" onclick="placeTableChip('1st12', this)">1st 12 (3x)</div>
-            <div class="bet-cell-btn" data-bet="2nd12" onclick="placeTableChip('2nd12', this)">2nd 12 (3x)</div>
-            <div class="bet-cell-btn" data-bet="3rd12" onclick="placeTableChip('3rd12', this)">3rd 12 (3x)</div>
+          <div style="background: #000; border: 2px solid #ffd700; border-radius: 8px; padding: 4px 12px; text-align: center; box-shadow: 0 0 15px rgba(255,215,0,0.4);">
+            <div style="font-size: 16px; font-weight: 900; color: #ef4444;">29</div>
+            <div style="font-size: 10px; font-weight: 900; color: #ffd700;">⚡ 200x</div>
           </div>
-          <div class="chip-selector-bar">
+        </div>
+      </div>
+
+      <div class="wheel-arena-grid" style="grid-template-columns: 1fr 1.3fr; gap: 20px; padding: 18px; background: #070d18;">
+        <!-- 3D Roulette Wheel Canvas with physics ball -->
+        <div class="wheel-canvas-container" style="background: radial-gradient(circle, #2d1806 0%, #030712 75%); border: 2px solid rgba(255,215,0,0.3); border-radius: 50%; width: 380px; height: 380px; margin: 0 auto; display: flex; align-items: center; justify-content: center; position: relative;">
+          <canvas id="roulette-wheel-canvas" width="360" height="360" style="border-radius: 50%; box-shadow: 0 0 30px rgba(0,0,0,0.8);"></canvas>
+          <div id="roulette-center-turret" style="position: absolute; width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle, #ffe082 0%, #b45309 80%); border: 3px solid #ffd700; box-shadow: 0 0 20px rgba(255,215,0,0.6); display: flex; align-items: center; justify-content: center; font-size: 20px;">
+            ⚡
+          </div>
+        </div>
+
+        <!-- Full European Betting Table Felt -->
+        <div class="casino-felt-table" style="background: linear-gradient(135deg, #063720 0%, #021a0f 100%); border: 2px solid #ffd700; border-radius: 12px; padding: 16px; box-shadow: inset 0 0 30px rgba(0,0,0,0.6);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <div style="font-size: 12px; font-weight: 900; color: #ffd700; letter-spacing: 0.5px;">
+              ⚡ LIGHTNING EUROPEAN TABLE • 36x STRAIGHT (500x LIGHTNING)
+            </div>
+            <div id="roulette-last-win-badge" style="font-size: 11px; font-weight: 900; color: #fff; background: rgba(0,0,0,0.6); padding: 3px 10px; border-radius: 4px; border: 1px solid #ffd700;">
+              LAST: <span id="r-last-val" style="color: #ef4444;">7 RED</span>
+            </div>
+          </div>
+
+          <!-- Numbers Grid (0 on top, 1-36 in 3 rows x 12 cols) -->
+          <div style="display: flex; gap: 4px; margin-bottom: 8px;">
+            <!-- Zero (0) -->
+            <div class="roulette-tile" data-num="0" onclick="placeRouletteBet('0', this)" style="width: 44px; background: #15803d; border: 1px solid #22c55e; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: #fff; cursor: pointer;">
+              0
+              <div class="r-tile-bet" id="r-bet-0" style="font-size: 9px; color: #ffd700;"></div>
+            </div>
+            <!-- 36 Numbers Grid -->
+            <div id="roulette-36-grid" style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; flex: 1;"></div>
+          </div>
+
+          <!-- Dozens (1st 12, 2nd 12, 3rd 12) -->
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 6px;">
+            <div class="roulette-outside-btn" data-rbet="1st12" onclick="placeRouletteBet('1st12', this)">
+              1st 12 (3x) <span class="r-out-bet" id="r-bet-1st12"></span>
+            </div>
+            <div class="roulette-outside-btn" data-rbet="2nd12" onclick="placeRouletteBet('2nd12', this)">
+              2nd 12 (3x) <span class="r-out-bet" id="r-bet-2nd12"></span>
+            </div>
+            <div class="roulette-outside-btn" data-rbet="3rd12" onclick="placeRouletteBet('3rd12', this)">
+              3rd 12 (3x) <span class="r-out-bet" id="r-bet-3rd12"></span>
+            </div>
+          </div>
+
+          <!-- Outside Bets (1-18, EVEN, RED, BLACK, ODD, 19-36) -->
+          <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 12px;">
+            <div class="roulette-outside-btn" data-rbet="1-18" onclick="placeRouletteBet('1-18', this)">1-18</div>
+            <div class="roulette-outside-btn" data-rbet="even" onclick="placeRouletteBet('even', this)">EVEN</div>
+            <div class="roulette-outside-btn" data-rbet="red" onclick="placeRouletteBet('red', this)" style="background: rgba(220,38,38,0.7); border-color: #ef4444; color: #fff;">RED</div>
+            <div class="roulette-outside-btn" data-rbet="black" onclick="placeRouletteBet('black', this)" style="background: rgba(15,23,42,0.95); border-color: #475569; color: #fff;">BLACK</div>
+            <div class="roulette-outside-btn" data-rbet="odd" onclick="placeRouletteBet('odd', this)">ODD</div>
+            <div class="roulette-outside-btn" data-rbet="19-36" onclick="placeRouletteBet('19-36', this)">19-36</div>
+          </div>
+
+          <!-- Chip Selector -->
+          <div class="chip-selector-bar" style="margin-bottom: 12px;">
             <div class="poker-chip chip-50" onclick="selectActiveChip(50, this)">₹50</div>
             <div class="poker-chip chip-100 active" onclick="selectActiveChip(100, this)">₹100</div>
             <div class="poker-chip chip-500" onclick="selectActiveChip(500, this)">₹500</div>
             <div class="poker-chip chip-1k" onclick="selectActiveChip(1000, this)">₹1k</div>
+            <div class="poker-chip chip-5k" onclick="selectActiveChip(5000, this)">₹5k</div>
+          </div>
+
+          <!-- Controls -->
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div style="font-size: 13px; font-weight: 800; color: #cbd5e1;">
+              TOTAL BET: <strong id="roulette-total-stake" style="color: #ffd700; font-size: 15px;">₹0</strong>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn-table-action" onclick="clearRouletteBets()">CLEAR</button>
+              <button class="btn-table-action" onclick="doubleRouletteBets()">2X</button>
+              <button id="btn-spin-roulette" class="btn-action-gold" style="padding: 12px 28px; font-weight: 900;" onclick="spinLightningRoulette()">
+                ⚡ SPIN ROULETTE
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
 
     {% elif game.id == 'blackjack' %}
     <!-- ==================== 8. BLACKJACK ELITE 3D ==================== -->
@@ -1363,47 +1514,440 @@
     }
 
     // 4. DRAGON TIGER ENGINE
-    let dtBets = { dragon: 0, tiger: 0, tie: 0 };
-    function placeDtBet(s) {
+    
+    // ==================== DRAGON TIGER LIVE ENGINE (MACAU STUDIO) ====================
+    let dtBets = { dragon: 0, tiger: 0, tie: 0, suited_tie: 0, d_odd: 0, d_even: 0, t_odd: 0, t_even: 0 };
+    let dtStats = { d: 8, t: 6, tie: 2 };
+    const DT_SUITS = ['♠', '♥', '♣', '♦'];
+    const DT_RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+    function placeDtBet(side) {
       playCardSound();
-      dtBets[s] = (dtBets[s] || 0) + abActiveChip;
-      document.getElementById(`dt-bet-${s}`).innerText = `₹${dtBets[s]}`;
+      dtBets[side] = (dtBets[side] || 0) + abActiveChip;
+      const el = document.getElementById(`dt-bet-${side}`);
+      if (el) el.innerText = `₹${dtBets[side]}`;
+    }
+
+    function clearDtBets() {
+      for (let k in dtBets) {
+        dtBets[k] = 0;
+        const el = document.getElementById(`dt-bet-${k}`);
+        if (el) el.innerText = '₹0';
+      }
     }
 
     async function dealDragonTigerRound() {
-      const total = (dtBets.dragon || 0) + (dtBets.tiger || 0) + (dtBets.tie || 0);
-      if (total <= 0) {
-        alert('Please place a bet on Dragon, Tiger or Tie!');
+      let totalStake = 0;
+      for (let k in dtBets) totalStake += dtBets[k];
+      if (totalStake <= 0) {
+        alert('Please place a bet on Dragon (1.95x), Tiger (1.95x), Tie (9x) or Side Bets!');
         return;
       }
+
+      playCardSound();
+      const statusEl = document.getElementById('dt-status-text');
+      if (statusEl) statusEl.innerHTML = '<span style="color:#ffd700;">⏳ Dealing Dragon and Tiger from Shoe...</span>';
+
+      // Animate dealing back of cards first
+      const dCardEl = document.getElementById('card-dragon');
+      const tCardEl = document.getElementById('card-tiger');
+      if (dCardEl) dCardEl.innerHTML = '<div class="play-card" style="background:#1e293b; color:#ffd700; border-color:#ffd700;">🂠</div>';
+      if (tCardEl) tCardEl.innerHTML = '<div class="play-card" style="background:#1e293b; color:#ffd700; border-color:#ffd700;">🂠</div>';
+
+      await new Promise(r => setTimeout(r, 600));
       playCardSound();
 
       const rD = Math.floor(Math.random() * 13);
       const rT = Math.floor(Math.random() * 13);
-      const sD = SUITS[Math.floor(Math.random() * 4)];
-      const sT = SUITS[Math.floor(Math.random() * 4)];
+      const sD = DT_SUITS[Math.floor(Math.random() * 4)];
+      const sT = DT_SUITS[Math.floor(Math.random() * 4)];
 
-      document.getElementById('card-dragon').innerHTML = `<div class="play-card ${['♥','♦'].includes(sD) ? 'red' : ''}"><span>${RANKS[rD]}</span><span>${sD}</span></div>`;
-      document.getElementById('card-tiger').innerHTML = `<div class="play-card ${['♥','♦'].includes(sT) ? 'red' : ''}"><span>${RANKS[rT]}</span><span>${sT}</span></div>`;
+      // Reveal Dragon
+      if (dCardEl) {
+        dCardEl.innerHTML = `<div class="play-card ${['♥','♦'].includes(sD) ? 'red' : ''}" style="box-shadow: 0 4px 15px rgba(220,38,38,0.5);"><span>${DT_RANKS[rD]}</span><span>${sD}</span></div>`;
+      }
 
-      let win = (rD > rT) ? 'dragon' : (rT > rD ? 'tiger' : 'tie');
-      document.getElementById('dt-status-text').innerText = `Result: ${win.toUpperCase()} WINS!`;
+      await new Promise(r => setTimeout(r, 500));
+      playCardSound();
 
-      if (dtBets[win] > 0) {
-        const mult = win === 'tie' ? 8.0 : 1.95;
-        const payout = dtBets[win] * mult;
-        triggerWinCelebration(`DRAGON TIGER (${win.toUpperCase()})`, payout, '🐉');
+      // Reveal Tiger
+      if (tCardEl) {
+        tCardEl.innerHTML = `<div class="play-card ${['♥','♦'].includes(sT) ? 'red' : ''}" style="box-shadow: 0 4px 15px rgba(245,158,11,0.5);"><span>${DT_RANKS[rT]}</span><span>${sT}</span></div>`;
+      }
+
+      // Determine Winner
+      let winSide = '';
+      let isSuitedTie = false;
+      if (rD > rT) {
+        winSide = 'dragon';
+      } else if (rT > rD) {
+        winSide = 'tiger';
+      } else {
+        winSide = 'tie';
+        if (sD === sT) isSuitedTie = true;
+      }
+
+      // Calculate Payouts
+      let totalPayout = 0;
+      if (winSide === 'dragon' && dtBets.dragon > 0) totalPayout += dtBets.dragon * 1.95;
+      if (winSide === 'tiger' && dtBets.tiger > 0) totalPayout += dtBets.tiger * 1.95;
+      if (winSide === 'tie' && dtBets.tie > 0) totalPayout += dtBets.tie * 9.0;
+      if (isSuitedTie && dtBets.suited_tie > 0) totalPayout += dtBets.suited_tie * 50.0;
+
+      // Side bets
+      const dNum = rD + 1;
+      const tNum = rT + 1;
+      if (dNum % 2 !== 0 && dtBets.d_odd > 0) totalPayout += dtBets.d_odd * 1.90;
+      if (dNum % 2 === 0 && dtBets.d_even > 0) totalPayout += dtBets.d_even * 1.90;
+      if (tNum % 2 !== 0 && dtBets.t_odd > 0) totalPayout += dtBets.t_odd * 1.90;
+      if (tNum % 2 === 0 && dtBets.t_even > 0) totalPayout += dtBets.t_even * 1.90;
+
+      // Update Bead Plate Roadmap
+      const roadmapStrip = document.getElementById('dt-roadmap-strip');
+      if (roadmapStrip) {
+        const bead = document.createElement('span');
+        bead.style.cssText = 'width: 22px; height: 22px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; flex-shrink: 0;';
+        if (winSide === 'dragon') {
+          bead.style.background = '#dc2626';
+          bead.innerText = 'D';
+          dtStats.d++;
+        } else if (winSide === 'tiger') {
+          bead.style.background = '#d97706';
+          bead.innerText = 'T';
+          dtStats.t++;
+        } else {
+          bead.style.background = '#16a34a';
+          bead.innerText = isSuitedTie ? 'ST' : 'Tie';
+          dtStats.tie++;
+        }
+        roadmapStrip.appendChild(bead);
+        roadmapStrip.scrollLeft = roadmapStrip.scrollWidth;
+
+        const statD = document.getElementById('dt-stat-d');
+        const statT = document.getElementById('dt-stat-t');
+        const statTie = document.getElementById('dt-stat-tie');
+        if (statD) statD.innerText = dtStats.d;
+        if (statT) statT.innerText = dtStats.t;
+        if (statTie) statTie.innerText = dtStats.tie;
+      }
+
+      if (totalPayout > 0) {
+        playWinFanfare();
+        if (statusEl) statusEl.innerHTML = `<span style="color:#00e676; font-size:14px;">🎉 ${winSide.toUpperCase()} WINS! YOU WON ₹${totalPayout.toLocaleString('en-IN')}!</span>`;
+        triggerWinCelebration(`DRAGON TIGER (${winSide.toUpperCase()})`, totalPayout, '🐉');
         fetch('/api/casino/settle', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ game_id: 'dragon-tiger', outcome: 'WIN', stake: total, payout: payout })
+          body: JSON.stringify({ game_id: 'dragon-tiger', outcome: 'WIN', stake: totalStake, payout: totalPayout })
+        }).then(r => r.json()).then(d => { if (d.new_balance) updateBalanceDisplay(d.new_balance); });
+      } else {
+        if (statusEl) statusEl.innerHTML = `<span style="color:#ef4444;">Round Result: ${winSide.toUpperCase()} WINS (Dragon: ${DT_RANKS[rD]}, Tiger: ${DT_RANKS[rT]})</span>`;
+        fetch('/api/casino/settle', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ game_id: 'dragon-tiger', outcome: 'LOSS', stake: totalStake, payout: 0 })
         }).then(r => r.json()).then(d => { if (d.new_balance) updateBalanceDisplay(d.new_balance); });
       }
 
-      dtBets = { dragon: 0, tiger: 0, tie: 0 };
-      document.getElementById('dt-bet-dragon').innerText = '₹0';
-      document.getElementById('dt-bet-tiger').innerText = '₹0';
-      document.getElementById('dt-bet-tie').innerText = '₹0';
+      clearDtBets();
+    }
+
+    // ==================== LIGHTNING EUROPEAN ROULETTE 3D ENGINE ====================
+    const ROULETTE_ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+    const RED_NUMS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+    let rouletteBets = {};
+    let isRouletteSpinning = false;
+    let rouletteLuckyTiles = [
+      { num: 7, mult: 100 },
+      { num: 18, mult: 500 },
+      { num: 29, mult: 200 }
+    ];
+
+    function initRouletteBoard() {
+      const grid = document.getElementById('roulette-36-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      // Standard European 3 rows of 12 columns
+      // Row 1: 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36
+      // Row 2: 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35
+      // Row 3: 1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34
+      for (let r = 3; r >= 1; r--) {
+        for (let c = 0; c < 12; c++) {
+          const num = c * 3 + r;
+          const isRed = RED_NUMS.includes(num);
+          const tile = document.createElement('div');
+          tile.className = 'roulette-tile';
+          tile.setAttribute('data-num', num);
+          tile.style.cssText = `
+            background: ${isRed ? 'rgba(220,38,38,0.85)' : 'rgba(15,23,42,0.95)'};
+            border: 1px solid ${isRed ? '#ef4444' : '#475569'};
+            border-radius: 4px;
+            padding: 8px 2px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 900;
+            color: #fff;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.15s;
+          `;
+          tile.innerHTML = `
+            <span>${num}</span>
+            <div id="r-bet-${num}" style="font-size: 9px; color: #ffd700; min-height: 11px;"></div>
+          `;
+          tile.onclick = () => placeRouletteBet(String(num), tile);
+          grid.appendChild(tile);
+        }
+      }
+
+      drawRouletteWheelCanvas(0);
+    }
+
+    function placeRouletteBet(key, el) {
+      if (isRouletteSpinning) return;
+      playCardSound();
+      rouletteBets[key] = (rouletteBets[key] || 0) + abActiveChip;
+      const badge = document.getElementById(`r-bet-${key}`);
+      if (badge) badge.innerText = `₹${rouletteBets[key]}`;
+      updateRouletteTotalStake();
+    }
+
+    function clearRouletteBets() {
+      if (isRouletteSpinning) return;
+      for (let k in rouletteBets) {
+        rouletteBets[k] = 0;
+        const b = document.getElementById(`r-bet-${k}`);
+        if (b) b.innerText = '';
+      }
+      rouletteBets = {};
+      updateRouletteTotalStake();
+    }
+
+    function doubleRouletteBets() {
+      if (isRouletteSpinning) return;
+      playCardSound();
+      for (let k in rouletteBets) {
+        rouletteBets[k] *= 2;
+        const b = document.getElementById(`r-bet-${k}`);
+        if (b) b.innerText = `₹${rouletteBets[k]}`;
+      }
+      updateRouletteTotalStake();
+    }
+
+    function updateRouletteTotalStake() {
+      let tot = 0;
+      for (let k in rouletteBets) tot += rouletteBets[k];
+      const el = document.getElementById('roulette-total-stake');
+      if (el) el.innerText = `₹${tot.toLocaleString('en-IN')}`;
+    }
+
+    function drawRouletteWheelCanvas(rotationAngle = 0, ballAngle = 0, ballRadius = 145) {
+      const canvas = document.getElementById('roulette-wheel-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const outerR = cx - 10;
+      const innerR = cx - 65;
+      const numSectors = ROULETTE_ORDER.length;
+      const arc = (2 * Math.PI) / numSectors;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Outer mahogany wood rim
+      ctx.beginPath();
+      ctx.arc(cx, cy, cx - 2, 0, 2 * Math.PI);
+      ctx.fillStyle = '#3a1f04';
+      ctx.fill();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#ffd700';
+      ctx.stroke();
+
+      // Number Pockets
+      for (let i = 0; i < numSectors; i++) {
+        const angle = rotationAngle + i * arc;
+        const num = ROULETTE_ORDER[i];
+        let color = '#0f172a';
+        if (num === 0) color = '#15803d';
+        else if (RED_NUMS.includes(num)) color = '#dc2626';
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, outerR, angle, angle + arc);
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(255, 215, 0, 0.4)';
+        ctx.stroke();
+
+        // Number Label
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angle + arc / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillText(String(num), outerR - 8, 4);
+        ctx.restore();
+      }
+
+      // Inner Brass Track
+      ctx.beginPath();
+      ctx.arc(cx, cy, innerR, 0, 2 * Math.PI);
+      ctx.fillStyle = '#1c1917';
+      ctx.fill();
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Spinning Ball
+      if (ballRadius > 0) {
+        const bx = cx + Math.cos(ballAngle) * ballRadius;
+        const by = cy + Math.sin(ballAngle) * ballRadius;
+        ctx.beginPath();
+        ctx.arc(bx, by, 7, 0, 2 * Math.PI);
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#00e5ff';
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    async function spinLightningRoulette() {
+      if (isRouletteSpinning) return;
+      let totalStake = 0;
+      for (let k in rouletteBets) totalStake += rouletteBets[k];
+      if (totalStake <= 0) {
+        alert('Please place a chip on the roulette table before spinning!');
+        return;
+      }
+
+      isRouletteSpinning = true;
+      const spinBtn = document.getElementById('btn-spin-roulette');
+      if (spinBtn) { spinBtn.disabled = true; spinBtn.innerText = '⚡ SPINNING...'; }
+
+      // 1. LIGHTNING STRIKE LUCKY NUMBERS (Random 2-4 lucky tiles with 50x-500x)
+      const multPool = [50, 100, 200, 300, 500];
+      const strikeCount = 2 + Math.floor(Math.random() * 3);
+      rouletteLuckyTiles = [];
+      const shuffled = [...ROULETTE_ORDER].sort(() => 0.5 - Math.random());
+      for (let i = 0; i < strikeCount; i++) {
+        rouletteLuckyTiles.push({
+          num: shuffled[i],
+          mult: multPool[Math.floor(Math.random() * multPool.length)]
+        });
+      }
+
+      // Render Lucky Numbers Pills with flash animation
+      const luckyContainer = document.getElementById('lightning-lucky-tiles');
+      if (luckyContainer) {
+        let lHtml = '';
+        rouletteLuckyTiles.forEach(lt => {
+          const isRed = RED_NUMS.includes(lt.num);
+          lHtml += `
+            <div style="background: #000; border: 2px solid #ffd700; border-radius: 8px; padding: 4px 12px; text-align: center; box-shadow: 0 0 20px rgba(255,215,0,0.8); animation: pulse 0.5s infinite;">
+              <div style="font-size: 16px; font-weight: 900; color: ${isRed ? '#ef4444' : '#38bdf8'};">${lt.num}</div>
+              <div style="font-size: 10px; font-weight: 900; color: #ffd700;">⚡ ${lt.mult}x</div>
+            </div>
+          `;
+        });
+        luckyContainer.innerHTML = lHtml;
+      }
+
+      // 2. Physics Animation (Wheel rotates clockwise, ball spins counter-clockwise)
+      const winningNumber = ROULETTE_ORDER[Math.floor(Math.random() * ROULETTE_ORDER.length)];
+      const winSectorIdx = ROULETTE_ORDER.indexOf(winningNumber);
+      const arc = (2 * Math.PI) / ROULETTE_ORDER.length;
+
+      let startTime = performance.now();
+      const duration = 4000; // 4 seconds
+
+      function animateSpin(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+
+        const wheelAngle = easeOut * Math.PI * 8;
+        const ballAngle = -(1 - easeOut) * Math.PI * 16 - (winSectorIdx * arc);
+        const ballR = 150 - (easeOut * 35); // Ball drops into pocket
+
+        drawRouletteWheelCanvas(wheelAngle, ballAngle, ballR);
+
+        if (progress < 1) {
+          requestAnimationFrame(animateSpin);
+        } else {
+          finishRouletteSpin(winningNumber, totalStake);
+        }
+      }
+
+      requestAnimationFrame(animateSpin);
+    }
+
+    function finishRouletteSpin(winningNum, totalStake) {
+      isRouletteSpinning = false;
+      const spinBtn = document.getElementById('btn-spin-roulette');
+      if (spinBtn) { spinBtn.disabled = false; spinBtn.innerText = '⚡ SPIN ROULETTE'; }
+
+      const isRed = RED_NUMS.includes(winningNum);
+      const isBlack = winningNum !== 0 && !isRed;
+      const isEven = winningNum !== 0 && winningNum % 2 === 0;
+      const isOdd = winningNum !== 0 && winningNum % 2 !== 0;
+      const isLow = winningNum >= 1 && winningNum <= 18;
+      const isHigh = winningNum >= 19 && winningNum <= 36;
+      const is1st12 = winningNum >= 1 && winningNum <= 12;
+      const is2nd12 = winningNum >= 13 && winningNum <= 24;
+      const is3rd12 = winningNum >= 25 && winningNum <= 36;
+
+      const lastWinEl = document.getElementById('r-last-val');
+      if (lastWinEl) {
+        lastWinEl.innerText = `${winningNum} ${winningNum === 0 ? 'GREEN' : isRed ? 'RED' : 'BLACK'}`;
+        lastWinEl.style.color = winningNum === 0 ? '#22c55e' : isRed ? '#ef4444' : '#38bdf8';
+      }
+
+      // Check if winning number was hit by Lightning Multiplier!
+      const luckyHit = rouletteLuckyTiles.find(lt => lt.num === winningNum);
+      let straightMult = 36.0;
+      if (luckyHit) {
+        straightMult = luckyHit.mult;
+      }
+
+      let totalPayout = 0;
+      // Straight number bet
+      if (rouletteBets[String(winningNum)] > 0) {
+        totalPayout += rouletteBets[String(winningNum)] * straightMult;
+      }
+      // Outside bets
+      if (isRed && rouletteBets['red'] > 0) totalPayout += rouletteBets['red'] * 2.0;
+      if (isBlack && rouletteBets['black'] > 0) totalPayout += rouletteBets['black'] * 2.0;
+      if (isEven && rouletteBets['even'] > 0) totalPayout += rouletteBets['even'] * 2.0;
+      if (isOdd && rouletteBets['odd'] > 0) totalPayout += rouletteBets['odd'] * 2.0;
+      if (isLow && rouletteBets['1-18'] > 0) totalPayout += rouletteBets['1-18'] * 2.0;
+      if (isHigh && rouletteBets['19-36'] > 0) totalPayout += rouletteBets['19-36'] * 2.0;
+      if (is1st12 && rouletteBets['1st12'] > 0) totalPayout += rouletteBets['1st12'] * 3.0;
+      if (is2nd12 && rouletteBets['2nd12'] > 0) totalPayout += rouletteBets['2nd12'] * 3.0;
+      if (is3rd12 && rouletteBets['3rd12'] > 0) totalPayout += rouletteBets['3rd12'] * 3.0;
+
+      if (totalPayout > 0) {
+        playWinFanfare();
+        const celebrationTitle = luckyHit ? `⚡ LIGHTNING ROULETTE (${luckyHit.mult}x!)` : `ROULETTE (${winningNum})`;
+        triggerWinCelebration(celebrationTitle, totalPayout, '⚡');
+        fetch('/api/casino/settle', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ game_id: 'lightning-roulette', outcome: 'WIN', stake: totalStake, payout: totalPayout })
+        }).then(r => r.json()).then(d => { if (d.new_balance) updateBalanceDisplay(d.new_balance); });
+      } else {
+        fetch('/api/casino/settle', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ game_id: 'lightning-roulette', outcome: 'LOSS', stake: totalStake, payout: 0 })
+        }).then(r => r.json()).then(d => { if (d.new_balance) updateBalanceDisplay(d.new_balance); });
+      }
+
+      clearRouletteBets();
     }
 
     // 5. GENERIC TABLE GAME ENGINE
