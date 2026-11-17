@@ -861,9 +861,302 @@ async def match_detail(request: Request, match_id: str):
         }
     )
 
+# ============================================================================
+# CRICKNOVA CASINO 25-GAME ENGINE & REAL-TIME SYNCHRONIZED ROUNDS
+# ============================================================================
+
+GAME_ALIASES = {
+    "teen-patti-2020": "teen-patti",
+    "one-day-teen-patti": "teen-patti",
+    "super-andar-bahar": "andar-bahar",
+    "speed-andar-bahar": "andar-bahar",
+    "lightning-roulette": "european-roulette",
+    "speed-roulette": "european-roulette",
+    "crazy-time": "wheel-of-fortune",
+    "mega-wheel": "wheel-of-fortune",
+    "monopoly-live": "lucky-spin",
+    "speed-baccarat": "baccarat",
+    "lightning-baccarat": "baccarat",
+    "infinite-blackjack": "blackjack",
+    "super-sic-bo": "sic-bo",
+    "gates-of-olympus": "egyptian-slots",
+    "sweet-bonanza": "diamond-slots",
+    "amar-akbar-anthony": "teen-patti",
+    "spaceman": "aviator",
+    "jetx": "aviator"
+}
+
+# Zoo Roulette: 28 sectors around the wheel (Priority #1)
+ZOO_SECTORS = [
+    {"id": "lion", "name": "Lion", "mult": 12, "type": "beast", "icon": "🦁", "color": "#f59e0b"},
+    {"id": "eagle", "name": "Eagle", "mult": 12, "type": "bird", "icon": "🦅", "color": "#3b82f6"},
+    {"id": "monkey", "name": "Monkey", "mult": 8, "type": "beast", "icon": "🐒", "color": "#10b981"},
+    {"id": "pigeon", "name": "Pigeon", "mult": 8, "type": "bird", "icon": "🕊️", "color": "#8b5cf6"},
+    {"id": "golden_shark", "name": "Golden Shark", "mult": 50, "type": "shark", "icon": "🦈", "color": "#fbbf24"},
+    {"id": "panda", "name": "Panda", "mult": 12, "type": "beast", "icon": "🐼", "color": "#ec4899"},
+    {"id": "peacock", "name": "Peacock", "mult": 12, "type": "bird", "icon": "🦚", "color": "#06b6d4"},
+    {"id": "tiger", "name": "Tiger", "mult": 8, "type": "beast", "icon": "🐯", "color": "#f97316"},
+    {"id": "swallow", "name": "Swallow", "mult": 8, "type": "bird", "icon": "🐦", "color": "#14b8a6"},
+    {"id": "silver_shark", "name": "Silver Shark", "mult": 24, "type": "shark", "icon": "🦈", "color": "#94a3b8"},
+    {"id": "lion", "name": "Lion", "mult": 12, "type": "beast", "icon": "🦁", "color": "#f59e0b"},
+    {"id": "eagle", "name": "Eagle", "mult": 12, "type": "bird", "icon": "🦅", "color": "#3b82f6"},
+    {"id": "monkey", "name": "Monkey", "mult": 8, "type": "beast", "icon": "🐒", "color": "#10b981"},
+    {"id": "pigeon", "name": "Pigeon", "mult": 8, "type": "bird", "icon": "🕊️", "color": "#8b5cf6"},
+    {"id": "panda", "name": "Panda", "mult": 12, "type": "beast", "icon": "🐼", "color": "#ec4899"},
+    {"id": "peacock", "name": "Peacock", "mult": 12, "type": "bird", "icon": "🦚", "color": "#06b6d4"},
+    {"id": "tiger", "name": "Tiger", "mult": 8, "type": "beast", "icon": "🐯", "color": "#f97316"},
+    {"id": "swallow", "name": "Swallow", "mult": 8, "type": "bird", "icon": "🐦", "color": "#14b8a6"},
+    {"id": "monkey", "name": "Monkey", "mult": 8, "type": "beast", "icon": "🐒", "color": "#10b981"},
+    {"id": "pigeon", "name": "Pigeon", "mult": 8, "type": "bird", "icon": "🕊️", "color": "#8b5cf6"},
+    {"id": "lion", "name": "Lion", "mult": 12, "type": "beast", "icon": "🦁", "color": "#f59e0b"},
+    {"id": "eagle", "name": "Eagle", "mult": 12, "type": "bird", "icon": "🦅", "color": "#3b82f6"},
+    {"id": "panda", "name": "Panda", "mult": 12, "type": "beast", "icon": "🐼", "color": "#ec4899"},
+    {"id": "peacock", "name": "Peacock", "mult": 12, "type": "bird", "icon": "🦚", "color": "#06b6d4"},
+    {"id": "tiger", "name": "Tiger", "mult": 8, "type": "beast", "icon": "🐯", "color": "#f97316"},
+    {"id": "swallow", "name": "Swallow", "mult": 8, "type": "bird", "icon": "🐦", "color": "#14b8a6"},
+    {"id": "monkey", "name": "Monkey", "mult": 8, "type": "beast", "icon": "🐒", "color": "#10b981"},
+    {"id": "pigeon", "name": "Pigeon", "mult": 8, "type": "bird", "icon": "🕊️", "color": "#8b5cf6"}
+]
+
+# Car Roulette: 32 sectors around the wheel (Priority #1)
+CAR_SECTORS = [
+    {"id": "ferrari", "name": "Ferrari", "mult": 40, "type": "supercar", "icon": "🏎️", "color": "#ef4444"},
+    {"id": "bmw", "name": "BMW", "mult": 5, "type": "luxury", "icon": "🚘", "color": "#0ea5e9"},
+    {"id": "mercedes", "name": "Mercedes", "mult": 5, "type": "luxury", "icon": "⭐", "color": "#94a3b8"},
+    {"id": "audi", "name": "Audi", "mult": 5, "type": "luxury", "icon": "⭕", "color": "#ec4899"},
+    {"id": "volkswagen", "name": "Volkswagen", "mult": 5, "type": "luxury", "icon": "🚙", "color": "#10b981"},
+    {"id": "lamborghini", "name": "Lamborghini", "mult": 30, "type": "supercar", "icon": "🐂", "color": "#f59e0b"},
+    {"id": "bmw", "name": "BMW", "mult": 5, "type": "luxury", "icon": "🚘", "color": "#0ea5e9"},
+    {"id": "mercedes", "name": "Mercedes", "mult": 5, "type": "luxury", "icon": "⭐", "color": "#94a3b8"},
+    {"id": "audi", "name": "Audi", "mult": 5, "type": "luxury", "icon": "⭕", "color": "#ec4899"},
+    {"id": "volkswagen", "name": "Volkswagen", "mult": 5, "type": "luxury", "icon": "🚙", "color": "#10b981"},
+    {"id": "porsche", "name": "Porsche", "mult": 20, "type": "supercar", "icon": "🏎️", "color": "#eab308"},
+    {"id": "bmw", "name": "BMW", "mult": 5, "type": "luxury", "icon": "🚘", "color": "#0ea5e9"},
+    {"id": "mercedes", "name": "Mercedes", "mult": 5, "type": "luxury", "icon": "⭐", "color": "#94a3b8"},
+    {"id": "audi", "name": "Audi", "mult": 5, "type": "luxury", "icon": "⭕", "color": "#ec4899"},
+    {"id": "volkswagen", "name": "Volkswagen", "mult": 5, "type": "luxury", "icon": "🚙", "color": "#10b981"},
+    {"id": "maserati", "name": "Maserati", "mult": 10, "type": "supercar", "icon": "🔱", "color": "#3b82f6"},
+    {"id": "bmw", "name": "BMW", "mult": 5, "type": "luxury", "icon": "🚘", "color": "#0ea5e9"},
+    {"id": "mercedes", "name": "Mercedes", "mult": 5, "type": "luxury", "icon": "⭐", "color": "#94a3b8"},
+    {"id": "audi", "name": "Audi", "mult": 5, "type": "luxury", "icon": "⭕", "color": "#ec4899"},
+    {"id": "volkswagen", "name": "Volkswagen", "mult": 5, "type": "luxury", "icon": "🚙", "color": "#10b981"},
+    {"id": "porsche", "name": "Porsche", "mult": 20, "type": "supercar", "icon": "🏎️", "color": "#eab308"},
+    {"id": "bmw", "name": "BMW", "mult": 5, "type": "luxury", "icon": "🚘", "color": "#0ea5e9"},
+    {"id": "mercedes", "name": "Mercedes", "mult": 5, "type": "luxury", "icon": "⭐", "color": "#94a3b8"},
+    {"id": "audi", "name": "Audi", "mult": 5, "type": "luxury", "icon": "⭕", "color": "#ec4899"},
+    {"id": "volkswagen", "name": "Volkswagen", "mult": 5, "type": "luxury", "icon": "🚙", "color": "#10b981"},
+    {"id": "maserati", "name": "Maserati", "mult": 10, "type": "supercar", "icon": "🔱", "color": "#3b82f6"},
+    {"id": "bmw", "name": "BMW", "mult": 5, "type": "luxury", "icon": "🚘", "color": "#0ea5e9"},
+    {"id": "mercedes", "name": "Mercedes", "mult": 5, "type": "luxury", "icon": "⭐", "color": "#94a3b8"},
+    {"id": "audi", "name": "Audi", "mult": 5, "type": "luxury", "icon": "⭕", "color": "#ec4899"},
+    {"id": "volkswagen", "name": "Volkswagen", "mult": 5, "type": "luxury", "icon": "🚙", "color": "#10b981"},
+    {"id": "bmw", "name": "BMW", "mult": 5, "type": "luxury", "icon": "🚘", "color": "#0ea5e9"},
+    {"id": "mercedes", "name": "Mercedes", "mult": 5, "type": "luxury", "icon": "⭐", "color": "#94a3b8"}
+]
+
+EUROPEAN_ROULETTE_WHEEL = [
+    0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
+]
+
+AMERICAN_ROULETTE_WHEEL = [
+    0, 28, 9, 26, 30, 11, 7, 20, 32, 17, 5, 22, 34, 15, 3, 24, 36, 13, 1, "00", 27, 10, 25, 29, 12, 8, 19, 31, 18, 6, 21, 33, 16, 4, 23, 35, 14, 2
+]
+
+WHEEL_OF_FORTUNE_SECTORS = [
+    1, 2, 1, 5, 1, 2, 1, 10, 1, 2, 1, 5, 1, 2, 1, "2x", 1, 2, 1, 5, 1, 2, 1, 10, 1, 2, 1, 5, 1, 2, 1, 20, 1, 2, 1, 5, 1, 2, 1, 10, 1, 2, 1, 5, 1, 2, 1, "7x", 1, 2, 1, 5, 1, 40
+]
+
+LUCKY_SPIN_SECTORS = [
+    {"label": "2x Multiplier", "val": 2, "icon": "✨"},
+    {"label": "5x Multiplier", "val": 5, "icon": "💎"},
+    {"label": "Mystery Box", "val": 10, "icon": "🎁"},
+    {"label": "1.5x Multiplier", "val": 1.5, "icon": "⚡"},
+    {"label": "10x Mega", "val": 10, "icon": "🔥"},
+    {"label": "20x Super", "val": 20, "icon": "👑"},
+    {"label": "3x Boost", "val": 3, "icon": "⭐"},
+    {"label": "25x Grand", "val": 25, "icon": "💰"},
+    {"label": "50x Jackpot", "val": 50, "icon": "🏆"},
+    {"label": "100x Ultra", "val": 100, "icon": "🌟"},
+    {"label": "2x Win", "val": 2, "icon": "🎯"},
+    {"label": "500x Royal", "val": 500, "icon": "🦁"}
+]
+
+SLOT_THEMES = {
+    "egyptian-slots": ["🏺", "👑", "⚡", "🦅", "💎", "📜", "👁️"],
+    "diamond-slots": ["💎", "7️⃣", "🔔", "🍒", "⭐", "🍇", "👑"],
+    "dragon-slots": ["🐲", "🪙", "🐢", "🏮", "🪭", "🌸", "👑"],
+    "mega-jackpot-slots": ["🦁", "🐘", "🦏", "🦓", "🦒", "💰", "👑"],
+    "jungle-slots": ["🦍", "🦜", "🌺", "🍃", "🐍", "🌴", "👑"]
+}
+
+def get_game_round_outcome(game_id: str, round_id: int) -> Dict[str, Any]:
+    """Generates server-authoritative, deterministic outcome for synchronized rounds using cryptographic seed."""
+    seed_str = f"cricknova-{game_id}-round-{round_id}"
+    h = int(hashlib.sha256(seed_str.encode()).hexdigest()[:8], 16)
+    
+    if game_id == "zoo-roulette":
+        sec_idx = h % len(ZOO_SECTORS)
+        sector = ZOO_SECTORS[sec_idx]
+        deg = sec_idx * (360.0 / len(ZOO_SECTORS)) + (180.0 / len(ZOO_SECTORS))
+        return {
+            "round_id": round_id,
+            "sector_index": sec_idx,
+            "sector": sector,
+            "name": sector["name"],
+            "type": sector["type"],
+            "mult": sector["mult"],
+            "icon": sector["icon"],
+            "color": sector["color"],
+            "target_angle_deg": round(deg, 2)
+        }
+    elif game_id == "car-roulette":
+        sec_idx = h % len(CAR_SECTORS)
+        sector = CAR_SECTORS[sec_idx]
+        deg = sec_idx * (360.0 / len(CAR_SECTORS)) + (180.0 / len(CAR_SECTORS))
+        return {
+            "round_id": round_id,
+            "sector_index": sec_idx,
+            "sector": sector,
+            "name": sector["name"],
+            "type": sector["type"],
+            "mult": sector["mult"],
+            "icon": sector["icon"],
+            "color": sector["color"],
+            "target_angle_deg": round(deg, 2)
+        }
+    elif game_id == "european-roulette":
+        num_idx = h % len(EUROPEAN_ROULETTE_WHEEL)
+        num = EUROPEAN_ROULETTE_WHEEL[num_idx]
+        red_nums = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36}
+        color = "green" if num == 0 else ("red" if num in red_nums else "black")
+        deg = num_idx * (360.0 / len(EUROPEAN_ROULETTE_WHEEL))
+        return {
+            "round_id": round_id,
+            "sector_index": num_idx,
+            "number": num,
+            "color": color,
+            "target_angle_deg": round(deg, 2)
+        }
+    elif game_id == "american-roulette":
+        num_idx = h % len(AMERICAN_ROULETTE_WHEEL)
+        num = AMERICAN_ROULETTE_WHEEL[num_idx]
+        red_nums = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36}
+        color = "green" if num in [0, "00"] else ("red" if num in red_nums else "black")
+        deg = num_idx * (360.0 / len(AMERICAN_ROULETTE_WHEEL))
+        return {
+            "round_id": round_id,
+            "sector_index": num_idx,
+            "number": num,
+            "color": color,
+            "target_angle_deg": round(deg, 2)
+        }
+    elif game_id in ["wheel-of-fortune", "lucky-spin"]:
+        sectors = WHEEL_OF_FORTUNE_SECTORS if game_id == "wheel-of-fortune" else LUCKY_SPIN_SECTORS
+        sec_idx = h % len(sectors)
+        item = sectors[sec_idx]
+        deg = sec_idx * (360.0 / len(sectors))
+        return {
+            "round_id": round_id,
+            "sector_index": sec_idx,
+            "value": item.get("val") if isinstance(item, dict) else item,
+            "label": item.get("label") if isinstance(item, dict) else str(item),
+            "target_angle_deg": round(deg, 2)
+        }
+    elif game_id == "sic-bo":
+        d1 = 1 + (h % 6)
+        d2 = 1 + ((h >> 3) % 6)
+        d3 = 1 + ((h >> 6) % 6)
+        total = d1 + d2 + d3
+        is_triple = (d1 == d2 == d3)
+        return {
+            "round_id": round_id,
+            "dice": [d1, d2, d3],
+            "total": total,
+            "is_triple": is_triple,
+            "size": "Triple" if is_triple else ("Small" if total <= 10 else "Big"),
+            "odd_even": "Odd" if total % 2 == 1 else "Even"
+        }
+    else:
+        # Generic outcome fallback
+        return {
+            "round_id": round_id,
+            "result_code": h % 100
+        }
+
+def evaluate_bet_payout(game_id: str, outcome: Dict[str, Any], bet_type: str) -> float:
+    """Calculates the payout multiplier for a given bet type and round outcome."""
+    bet_type = bet_type.strip().lower()
+    
+    if game_id == "zoo-roulette":
+        sec = outcome.get("sector", {})
+        sec_id = sec.get("id", "").lower()
+        sec_type = sec.get("type", "").lower()
+        mult = float(sec.get("mult", 0.0))
+        
+        if bet_type == sec_id:
+            return mult
+        if bet_type in ["beasts", "mammals"] and sec_type == "beast":
+            return 2.0
+        if bet_type in ["birds", "avians"] and sec_type == "bird":
+            return 2.0
+        if bet_type in ["shark", "sharks"] and sec_type == "shark":
+            return mult
+        return 0.0
+
+    elif game_id == "car-roulette":
+        sec = outcome.get("sector", {})
+        sec_id = sec.get("id", "").lower()
+        sec_type = sec.get("type", "").lower()
+        mult = float(sec.get("mult", 0.0))
+        
+        if bet_type == sec_id:
+            return mult
+        if bet_type in ["supercars", "super"] and sec_type == "supercar":
+            return 2.5
+        if bet_type in ["luxury", "sedans"] and sec_type == "luxury":
+            return 2.0
+        return 0.0
+
+    elif "roulette" in game_id:
+        num = outcome.get("number")
+        if bet_type == str(num):
+            return 36.0
+        red_nums = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36}
+        if bet_type == "red" and num in red_nums: return 2.0
+        if bet_type == "black" and num not in red_nums and num not in [0, "00"]: return 2.0
+        if bet_type == "even" and num not in [0, "00"] and isinstance(num, int) and num % 2 == 0: return 2.0
+        if bet_type == "odd" and num not in [0, "00"] and isinstance(num, int) and num % 2 == 1: return 2.0
+        if bet_type == "low" and isinstance(num, int) and 1 <= num <= 18: return 2.0
+        if bet_type == "high" and isinstance(num, int) and 19 <= num <= 36: return 2.0
+        if bet_type in ["1st12", "dozen1"] and isinstance(num, int) and 1 <= num <= 12: return 3.0
+        if bet_type in ["2nd12", "dozen2"] and isinstance(num, int) and 13 <= num <= 24: return 3.0
+        if bet_type in ["3rd12", "dozen3"] and isinstance(num, int) and 25 <= num <= 36: return 3.0
+        return 0.0
+
+    elif game_id in ["wheel-of-fortune", "lucky-spin"]:
+        val = outcome.get("value")
+        if str(bet_type) == str(val):
+            return float(val) if isinstance(val, (int, float)) else 2.0
+        return 0.0
+
+    elif game_id == "sic-bo":
+        total = outcome.get("total", 0)
+        is_triple = outcome.get("is_triple", False)
+        if bet_type == "small" and 4 <= total <= 10 and not is_triple: return 2.0
+        if bet_type == "big" and 11 <= total <= 17 and not is_triple: return 2.0
+        if bet_type == "odd" and total % 2 == 1 and not is_triple: return 2.0
+        if bet_type == "even" and total % 2 == 0 and not is_triple: return 2.0
+        if bet_type == "triple" and is_triple: return 31.0
+        return 0.0
+
+    return 0.0
+
 @app.get("/casino", response_class=HTMLResponse)
 @app.get("/casino/{game_slug}", response_class=HTMLResponse)
-async def casino_arena(request: Request, game_slug: str = "aviator"):
+async def casino_arena(request: Request, game_slug: str = "zoo-roulette"):
+    if game_slug in GAME_ALIASES:
+        game_slug = GAME_ALIASES[game_slug]
+
     user = get_active_user(request)
     recalculate_user_exposure(user)
     save_all_user_data()
@@ -873,12 +1166,12 @@ async def casino_arena(request: Request, game_slug: str = "aviator"):
 
     game = games_dict.get(game_slug)
     if not game:
-        game = games_dict.get("aviator", games_list[0] if games_list else {})
+        game = games_dict.get("zoo-roulette", games_list[0] if games_list else {})
 
     all_data = load_all_user_data()
     payment_config = all_data.get("payment_config", {
-        "upi_id": "cricknova@upi",
-        "upi_name": "CrickNova Exchange",
+        "upi_id": "BHARATPE2S0W0C6I4D04292@unitype",
+        "upi_name": "MDSALEHEEN",
         "whatsapp_number": "919876543210"
     })
 
@@ -887,7 +1180,7 @@ async def casino_arena(request: Request, game_slug: str = "aviator"):
         name="casino_arena.html",
         context={
             "game": game,
-            "active_slug": game_slug,
+            "active_slug": game.get("id", game_slug),
             "all_games": games_list,
             "games_dict": games_dict,
             "user": user,
@@ -901,35 +1194,114 @@ async def casino_arena(request: Request, game_slug: str = "aviator"):
 async def get_casino_games_api():
     return JSONResponse(content={"status": "success", "games": get_casino_games_list()})
 
+@app.get("/api/casino/state/{game_id}")
+async def get_casino_game_state(game_id: str):
+    """Real-time synchronized round state ticker for multiplayer casino tables."""
+    if game_id in GAME_ALIASES:
+        game_id = GAME_ALIASES[game_id]
+
+    cycle_len = 25.0
+    now = time.time()
+    round_id = int(now // cycle_len)
+    time_in_cycle = now % cycle_len
+
+    if time_in_cycle < 15.0:
+        phase = "BETTING"
+        time_left = round(15.0 - time_in_cycle, 1)
+    elif time_in_cycle < 22.0:
+        phase = "SPINNING"
+        time_left = round(22.0 - time_in_cycle, 1)
+    else:
+        phase = "RESULT"
+        time_left = round(25.0 - time_in_cycle, 1)
+
+    outcome = get_game_round_outcome(game_id, round_id)
+    history = [get_game_round_outcome(game_id, round_id - i) for i in range(1, 16)]
+
+    base_players = 22400 if "roulette" in game_id else 14500
+    jitter = int(hashlib.sha256(f"{game_id}-{round_id}".encode()).hexdigest()[:4], 16) % 2500
+    players_count = base_players + jitter
+
+    return JSONResponse(content={
+        "status": "success",
+        "game_id": game_id,
+        "round_id": round_id,
+        "phase": phase,
+        "time_left": time_left,
+        "cycle_duration": cycle_len,
+        "betting_duration": 15.0,
+        "spinning_duration": 7.0,
+        "result_duration": 3.0,
+        "current_outcome": outcome,
+        "history": history,
+        "players_online": f"{players_count:,}"
+    })
+
 @app.post("/api/casino/bet")
 async def place_casino_bet(request: Request):
+    """Server-authoritative bet placement with integer paise ledgering."""
     user = get_active_user(request)
     if user.get("is_guest") or not user.get("mobile"):
         raise HTTPException(status_code=401, detail="Please login first to play live casino games.")
 
     data = await request.json()
-    game_id = data.get("game_id", "aviator")
-    stake = float(data.get("stake", 0.0))
-    bet_type = str(data.get("bet_type", "bet"))
+    game_id = data.get("game_id", "zoo-roulette")
+    if game_id in GAME_ALIASES:
+        game_id = GAME_ALIASES[game_id]
+
+    # Supports either single stake or batched bets array
+    bets = data.get("bets")
+    if bets and isinstance(bets, list):
+        stake = sum(float(b.get("stake", 0.0)) for b in bets if float(b.get("stake", 0.0)) > 0)
+        bet_desc = ", ".join([f"{b.get('type')}: ₹{b.get('stake')}" for b in bets[:3]])
+    else:
+        stake = float(data.get("stake", 0.0))
+        bet_type = str(data.get("bet_type", "bet"))
+        bet_desc = f"{bet_type}"
 
     if stake <= 0:
         raise HTTPException(status_code=400, detail="Invalid stake amount")
 
-    recalculate_user_exposure(user)
-    if user.get("balance", 0.0) < stake:
-        raise HTTPException(status_code=400, detail=f"Insufficient balance. Your balance is ₹{user.get('balance', 0.0):,.2f}")
+    all_data = load_all_user_data()
+    user_mobile = user.get("mobile")
+    db_user = all_data.get("users", {}).get(user_mobile, user)
 
-    user["balance"] = round(user.get("balance", 0.0) - stake, 2)
-    user.setdefault("transactions", []).insert(0, {
-        "id": f"CAS-{random.randint(100000, 999999)}",
+    stake_paise = to_paise(stake)
+    bal_paise = db_user.get("balance_paise", to_paise(db_user.get("balance", 0.0)))
+
+    if bal_paise < stake_paise:
+        raise HTTPException(status_code=400, detail=f"Insufficient balance. Your balance is ₹{from_paise(bal_paise):,.2f}")
+
+    new_bal_paise = bal_paise - stake_paise
+    db_user["balance_paise"] = new_bal_paise
+    db_user["balance"] = from_paise(new_bal_paise)
+
+    tx_id = f"CAS-{random.randint(100000, 999999)}"
+    db_user.setdefault("transactions", []).insert(0, {
+        "id": tx_id,
         "type": "CASINO_BET",
-        "method": f"{game_id.upper()} ({bet_type})",
+        "method": f"{game_id.upper()} ({bet_desc})",
         "amount": stake,
         "status": "COMPLETED",
         "date": time.strftime("%Y-%m-%d %H:%M:%S")
     })
 
+    record_ledger_entry(
+        all_data=all_data,
+        user_mobile=user_mobile,
+        entry_type="CASINO_BET",
+        amount_paise=-stake_paise,
+        balance_before_paise=bal_paise,
+        balance_after_paise=new_bal_paise,
+        ref_id=f"BET-{game_id}-{tx_id}",
+        actor="player",
+        notes=f"Bet on {game_id}"
+    )
+
     save_all_user_data()
+    user["balance_paise"] = new_bal_paise
+    user["balance"] = from_paise(new_bal_paise)
+
     return JSONResponse(content={
         "status": "success",
         "message": f"Bet of ₹{stake:,.2f} placed on {game_id}!",
@@ -937,30 +1309,140 @@ async def place_casino_bet(request: Request):
         "stake": stake
     })
 
+@app.post("/api/casino/claim-round")
+async def claim_casino_round(request: Request):
+    """Evaluates user bets for a finished synchronized round and credits payouts."""
+    user = get_active_user(request)
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login first.")
+
+    data = await request.json()
+    game_id = data.get("game_id", "zoo-roulette")
+    if game_id in GAME_ALIASES:
+        game_id = GAME_ALIASES[game_id]
+
+    round_id = int(data.get("round_id", 0))
+    bets = data.get("bets", [])
+    if not bets:
+        return JSONResponse(content={"status": "success", "payout": 0.0, "won": False})
+
+    outcome = get_game_round_outcome(game_id, round_id)
+    total_payout_paise = 0
+    winning_bets = []
+
+    for b in bets:
+        b_type = str(b.get("type", "")).lower()
+        b_stake = float(b.get("stake", 0.0))
+        if b_stake <= 0:
+            continue
+        mult = evaluate_bet_payout(game_id, outcome, b_type)
+        if mult > 0:
+            win_amt = b_stake * mult
+            total_payout_paise += to_paise(win_amt)
+            winning_bets.append({"type": b_type, "stake": b_stake, "mult": mult, "payout": win_amt})
+
+    payout_inr = from_paise(total_payout_paise)
+    all_data = load_all_user_data()
+    user_mobile = user.get("mobile")
+    db_user = all_data.get("users", {}).get(user_mobile, user)
+
+    if total_payout_paise > 0:
+        bal_before = db_user.get("balance_paise", to_paise(db_user.get("balance", 0.0)))
+        bal_after = bal_before + total_payout_paise
+        db_user["balance_paise"] = bal_after
+        db_user["balance"] = from_paise(bal_after)
+        db_user["total_winnings"] = round(db_user.get("total_winnings", 0.0) + payout_inr, 2)
+
+        tx_id = f"WIN-{random.randint(100000, 999999)}"
+        db_user.setdefault("transactions", []).insert(0, {
+            "id": tx_id,
+            "type": "CASINO_WIN",
+            "method": f"{game_id.upper()} (Round #{round_id})",
+            "amount": payout_inr,
+            "status": "COMPLETED",
+            "date": time.strftime("%Y-%m-%d %H:%M:%S")
+        })
+
+        record_ledger_entry(
+            all_data=all_data,
+            user_mobile=user_mobile,
+            entry_type="CASINO_WIN",
+            amount_paise=total_payout_paise,
+            balance_before_paise=bal_before,
+            balance_after_paise=bal_after,
+            ref_id=f"ROUND-{game_id}-{round_id}-{tx_id}",
+            actor="casino_engine",
+            notes=f"Winning payout for {game_id} round {round_id}"
+        )
+
+        save_all_user_data()
+        user["balance_paise"] = bal_after
+        user["balance"] = from_paise(bal_after)
+
+    return JSONResponse(content={
+        "status": "success",
+        "round_id": round_id,
+        "payout": payout_inr,
+        "won": payout_inr > 0,
+        "winning_bets": winning_bets,
+        "outcome": outcome,
+        "new_balance": db_user.get("balance", 0.0)
+    })
+
 @app.post("/api/casino/settle")
 async def settle_casino_bet(request: Request):
+    """Direct win credit endpoint for instant single-player casino games."""
     user = get_active_user(request)
     if user.get("is_guest") or not user.get("mobile"):
         raise HTTPException(status_code=401, detail="Please login first.")
 
     data = await request.json()
     game_id = data.get("game_id", "aviator")
+    if game_id in GAME_ALIASES:
+        game_id = GAME_ALIASES[game_id]
+
     outcome = data.get("outcome", "LOSS")
     stake = float(data.get("stake", 0.0))
     payout = float(data.get("payout", 0.0))
 
     if outcome == "WIN" and payout > 0:
-        user["balance"] = round(user.get("balance", 0.0) + payout, 2)
-        user["total_winnings"] = round(user.get("total_winnings", 0.0) + payout - stake, 2)
-        user.setdefault("transactions", []).insert(0, {
-            "id": f"WIN-{random.randint(100000, 999999)}",
+        all_data = load_all_user_data()
+        user_mobile = user.get("mobile")
+        db_user = all_data.get("users", {}).get(user_mobile, user)
+
+        payout_paise = to_paise(payout)
+        bal_before = db_user.get("balance_paise", to_paise(db_user.get("balance", 0.0)))
+        bal_after = bal_before + payout_paise
+
+        db_user["balance_paise"] = bal_after
+        db_user["balance"] = from_paise(bal_after)
+        db_user["total_winnings"] = round(db_user.get("total_winnings", 0.0) + payout - stake, 2)
+
+        tx_id = f"WIN-{random.randint(100000, 999999)}"
+        db_user.setdefault("transactions", []).insert(0, {
+            "id": tx_id,
             "type": "CASINO_WIN",
             "method": f"{game_id.upper()} Payout",
             "amount": payout,
             "status": "COMPLETED",
             "date": time.strftime("%Y-%m-%d %H:%M:%S")
         })
+
+        record_ledger_entry(
+            all_data=all_data,
+            user_mobile=user_mobile,
+            entry_type="CASINO_WIN",
+            amount_paise=payout_paise,
+            balance_before_paise=bal_before,
+            balance_after_paise=bal_after,
+            ref_id=f"INSTANT-{game_id}-{tx_id}",
+            actor="casino_engine",
+            notes=f"Instant win on {game_id}"
+        )
+
         save_all_user_data()
+        user["balance_paise"] = bal_after
+        user["balance"] = from_paise(bal_after)
 
     return JSONResponse(content={
         "status": "success",
@@ -968,6 +1450,213 @@ async def settle_casino_bet(request: Request):
         "payout": payout,
         "new_balance": user.get("balance", 0.0)
     })
+
+@app.post("/api/casino/action")
+async def execute_casino_action(request: Request):
+    """Server-authoritative game action handler for Plinko, Mines, Dice, Limbo, Keno, Slots, and Cards."""
+    user = get_active_user(request)
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login first.")
+
+    data = await request.json()
+    game_id = data.get("game_id", "")
+    if game_id in GAME_ALIASES:
+        game_id = GAME_ALIASES[game_id]
+
+    action = data.get("action", "")
+    stake = float(data.get("stake", 0.0))
+    all_data = load_all_user_data()
+    user_mobile = user.get("mobile")
+    db_user = all_data.get("users", {}).get(user_mobile, user)
+
+    # 1. PLINKO 3D
+    if game_id == "plinko":
+        stake_paise = to_paise(stake)
+        bal_paise = db_user.get("balance_paise", to_paise(db_user.get("balance", 0.0)))
+        if bal_paise < stake_paise:
+            raise HTTPException(status_code=400, detail="Insufficient balance")
+
+        # 10 rows: ball bounces left(0) or right(1)
+        path = [random.choice([0, 1]) for _ in range(10)]
+        bucket = sum(path)
+        plinko_mults = [16.0, 9.0, 2.0, 1.4, 0.4, 0.2, 0.4, 1.4, 2.0, 9.0, 16.0]
+        mult = plinko_mults[bucket]
+        payout = round(stake * mult, 2)
+        payout_paise = to_paise(payout)
+
+        new_bal_paise = bal_paise - stake_paise + payout_paise
+        db_user["balance_paise"] = new_bal_paise
+        db_user["balance"] = from_paise(new_bal_paise)
+
+        tx_id = f"PLK-{random.randint(100000, 999999)}"
+        db_user.setdefault("transactions", []).insert(0, {
+            "id": tx_id,
+            "type": "CASINO_WIN" if payout > stake else "CASINO_BET",
+            "method": f"Plinko ({mult}x)",
+            "amount": payout if payout > stake else stake,
+            "status": "COMPLETED",
+            "date": time.strftime("%Y-%m-%d %H:%M:%S")
+        })
+
+        save_all_user_data()
+        user["balance_paise"] = new_bal_paise
+        user["balance"] = from_paise(new_bal_paise)
+
+        return JSONResponse(content={
+            "status": "success",
+            "path": path,
+            "bucket": bucket,
+            "mult": mult,
+            "payout": payout,
+            "new_balance": user["balance"]
+        })
+
+    # 2. ULTIMATE DICE
+    elif game_id == "dice":
+        target = float(data.get("target", 50.0))
+        condition = data.get("condition", "under")
+        stake_paise = to_paise(stake)
+        bal_paise = db_user.get("balance_paise", to_paise(db_user.get("balance", 0.0)))
+        if bal_paise < stake_paise:
+            raise HTTPException(status_code=400, detail="Insufficient balance")
+
+        roll = round(random.uniform(0.0, 99.99), 2)
+        win_chance = target if condition == "under" else (99.99 - target)
+        if win_chance <= 0: win_chance = 1.0
+        mult = round(98.0 / win_chance, 2)
+        won = (roll < target) if condition == "under" else (roll > target)
+        payout = round(stake * mult, 2) if won else 0.0
+        payout_paise = to_paise(payout)
+
+        new_bal_paise = bal_paise - stake_paise + payout_paise
+        db_user["balance_paise"] = new_bal_paise
+        db_user["balance"] = from_paise(new_bal_paise)
+        save_all_user_data()
+        user["balance"] = from_paise(new_bal_paise)
+
+        return JSONResponse(content={
+            "status": "success",
+            "roll": roll,
+            "won": won,
+            "mult": mult,
+            "payout": payout,
+            "new_balance": user["balance"]
+        })
+
+    # 3. LIMBO ROCKET
+    elif game_id == "limbo":
+        target_mult = float(data.get("target_mult", 2.0))
+        stake_paise = to_paise(stake)
+        bal_paise = db_user.get("balance_paise", to_paise(db_user.get("balance", 0.0)))
+        if bal_paise < stake_paise:
+            raise HTTPException(status_code=400, detail="Insufficient balance")
+
+        r = random.random()
+        crash_mult = round(0.97 / (1.0 - r), 2) if r < 0.99 else 100.0
+        won = crash_mult >= target_mult
+        payout = round(stake * target_mult, 2) if won else 0.0
+        payout_paise = to_paise(payout)
+
+        new_bal_paise = bal_paise - stake_paise + payout_paise
+        db_user["balance_paise"] = new_bal_paise
+        db_user["balance"] = from_paise(new_bal_paise)
+        save_all_user_data()
+        user["balance"] = from_paise(new_bal_paise)
+
+        return JSONResponse(content={
+            "status": "success",
+            "crash_mult": crash_mult,
+            "won": won,
+            "payout": payout,
+            "new_balance": user["balance"]
+        })
+
+    # 4. MEGA KENO
+    elif game_id == "keno":
+        chosen = data.get("chosen_numbers", [])
+        stake_paise = to_paise(stake)
+        bal_paise = db_user.get("balance_paise", to_paise(db_user.get("balance", 0.0)))
+        if bal_paise < stake_paise:
+            raise HTTPException(status_code=400, detail="Insufficient balance")
+
+        draw = sorted(random.sample(range(1, 81), 20))
+        matches = len(set(chosen).intersection(set(draw)))
+        paytable = {0: 0, 1: 0, 2: 0, 3: 0, 4: 1.0, 5: 3.0, 6: 15.0, 7: 80.0, 8: 400.0, 9: 2500.0, 10: 10000.0}
+        mult = paytable.get(matches, 0.0)
+        payout = round(stake * mult, 2)
+        payout_paise = to_paise(payout)
+
+        new_bal_paise = bal_paise - stake_paise + payout_paise
+        db_user["balance_paise"] = new_bal_paise
+        db_user["balance"] = from_paise(new_bal_paise)
+        save_all_user_data()
+        user["balance"] = from_paise(new_bal_paise)
+
+        return JSONResponse(content={
+            "status": "success",
+            "draw": draw,
+            "matches": matches,
+            "mult": mult,
+            "payout": payout,
+            "new_balance": user["balance"]
+        })
+
+    # 5. VEGAS SLOTS (5 Themes)
+    elif "slots" in game_id:
+        stake_paise = to_paise(stake)
+        bal_paise = db_user.get("balance_paise", to_paise(db_user.get("balance", 0.0)))
+        if bal_paise < stake_paise:
+            raise HTTPException(status_code=400, detail="Insufficient balance")
+
+        theme_syms = SLOT_THEMES.get(game_id, SLOT_THEMES["diamond-slots"])
+        grid = [random.choice(theme_syms) for _ in range(15)]
+        paylines = [
+            [0, 1, 2, 3, 4],
+            [5, 6, 7, 8, 9],
+            [10, 11, 12, 13, 14],
+            [0, 6, 12, 8, 4],
+            [10, 6, 2, 8, 14]
+        ]
+        total_mult = 0.0
+        winning_lines = []
+        for idx, line in enumerate(paylines):
+            line_syms = [grid[pos] for pos in line]
+            if line_syms[0] == line_syms[1] == line_syms[2]:
+                cnt = 3
+                if line_syms[3] == line_syms[0]:
+                    cnt = 4
+                    if line_syms[4] == line_syms[0]:
+                        cnt = 5
+                m = {3: 2.0, 4: 8.0, 5: 35.0}[cnt]
+                total_mult += m
+                winning_lines.append({"line": idx, "symbol": line_syms[0], "matches": cnt, "mult": m})
+
+        scatters = grid.count("👑")
+        if scatters >= 3:
+            total_mult += 10.0
+            winning_lines.append({"line": "scatter", "symbol": "👑", "matches": scatters, "mult": 10.0})
+
+        payout = round(stake * total_mult, 2)
+        payout_paise = to_paise(payout)
+
+        new_bal_paise = bal_paise - stake_paise + payout_paise
+        db_user["balance_paise"] = new_bal_paise
+        db_user["balance"] = from_paise(new_bal_paise)
+        save_all_user_data()
+        user["balance"] = from_paise(new_bal_paise)
+
+        return JSONResponse(content={
+            "status": "success",
+            "grid": grid,
+            "mult": total_mult,
+            "payout": payout,
+            "winning_lines": winning_lines,
+            "new_balance": user["balance"]
+        })
+
+    # Default action
+    return JSONResponse(content={"status": "success", "new_balance": db_user.get("balance", 0.0)})
+
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_portal(request: Request):
