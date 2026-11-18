@@ -4,8 +4,10 @@ import asyncio
 import time
 import urllib.request
 import urllib.error
+import urllib.parse
 import re
 import hashlib
+import hmac
 import random
 import base64
 import shutil
@@ -2558,6 +2560,212 @@ async def get_user_state_api(request: Request):
         "transactions": user.get("transactions", [])
     })
 
+# ==================== YOUPI SLICE MANUAL REVIEW GATEWAY ====================
+YOUPI_GATEWAY_URL = os.environ.get("YOUPI_GATEWAY_URL", "https://youpi-slice-gateway.onrender.com").rstrip("/")
+YOUPI_MERCHANT_ID = os.environ.get("YOUPI_MERCHANT_ID", "00000000-0000-0000-0000-000000000001")
+YOUPI_MERCHANT_API_KEY = os.environ.get("YOUPI_MERCHANT_API_KEY", "")
+YOUPI_WEBHOOK_SECRET = os.environ.get("YOUPI_WEBHOOK_SECRET", "")
+YOUPI_RECEIVING_VPA = os.environ.get("YOUPI_RECEIVING_VPA", "9693554087@slc")
+YOUPI_RECEIVING_PAYEE = os.environ.get("YOUPI_RECEIVING_PAYEE", "Tarana Nasreen")
+YOUPI_RECEIVING_ACCOUNT_ID = os.environ.get("YOUPI_RECEIVING_ACCOUNT_ID", "da864feb-15d4-47cd-8afa-e64d05ad8e91")
+
+def verify_youpi_signature(payload_bytes: bytes, signature_header: str, secret: str) -> bool:
+    if not signature_header or not secret:
+        return False
+    parts = signature_header.split("=", 1)
+    if len(parts) != 2 or parts[0].lower() != "sha256":
+        return False
+    expected = hmac.new(secret.encode("utf-8"), payload_bytes, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected.lower(), parts[1].lower())
+
+def verify_youpi_v2_signature(timestamp: str, payload_bytes: bytes, signature_v2_header: str, secret: str) -> bool:
+    if not signature_v2_header or not secret or not timestamp:
+        return False
+    parts = signature_v2_header.split("=", 1)
+    if len(parts) != 2 or parts[0].lower() != "sha256":
+        return False
+    message = f"{timestamp}.".encode("utf-8") + payload_bytes
+    expected = hmac.new(secret.encode("utf-8"), message, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected.lower(), parts[1].lower())
+
+def is_timestamp_fresh(timestamp_str: str, max_skew_seconds: int = 300) -> bool:
+    try:
+        ts_ms = int(timestamp_str)
+        now_ms = int(time.time() * 1000)
+        return abs(now_ms - ts_ms) <= (max_skew_seconds * 1000)
+    except (ValueError, TypeError):
+        return False
+
+@app.post("/api/user/youpi/create-session")
+async def create_youpi_deposit_session(request: Request):
+    user = get_active_user(request)
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login to your account to deposit.")
+
+    try:
+        data = await request.json()
+        amount = float(data.get("amount", 500.0))
+    except Exception:
+        amount = 500.0
+
+    if amount < 100.0 or amount > 100000.0:
+        raise HTTPException(status_code=400, detail="Deposit amount must be between ₹100 and ₹1,00,000")
+
+    amount_paise = to_paise(amount)
+    req_id = f"DEP-{time.strftime('%Y%m%d')}-{random.randint(10000, 99999)}"
+
+    # 1. Persist pending deposit request BEFORE calling gateway
+    all_data = load_all_user_data()
+    req = {
+        "id": req_id,
+        "order_id": req_id,
+        "user_mobile": user["mobile"],
+        "mobile": user["mobile"],
+        "user_name": user.get("name", f"Player {user['mobile'][-4:]}"),
+        "amount": amount,
+        "amount_paise": amount_paise,
+        "method": "MANUAL_UPI",
+        "utr": "",
+        "gateway": "YOUPI_SLICE",
+        "receiving_vpa": YOUPI_RECEIVING_VPA,
+        "receiving_payee": YOUPI_RECEIVING_PAYEE,
+        "receiving_account_id": YOUPI_RECEIVING_ACCOUNT_ID,
+        "screenshot_url": "",
+        "notes": "YouPI Slice Manual Review UPI Claim",
+        "status": "PENDING",
+        "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "created_timestamp": int(time.time()),
+        "approved_at": None,
+        "approved_by": None,
+        "declined_at": None,
+        "declined_by": None,
+        "decline_reason": None,
+        "idempotency_key": f"{req_id}-APPROVE"
+    }
+
+    all_data.setdefault("deposit_requests", []).insert(0, req)
+    save_all_user_data(all_data)
+
+    # 2. Server-to-server call to YouPI POST /api/v1/payments
+    checkout_url = f"{YOUPI_GATEWAY_URL}/checkout/{req_id}"
+    gateway_payment_id = None
+    upi_intent_uri = f"upi://pay?pa={YOUPI_RECEIVING_VPA}&pn={urllib.parse.quote(YOUPI_RECEIVING_PAYEE)}&am={amount:.2f}&cu=INR&tn={req_id}"
+
+    try:
+        gateway_endpoint = f"{YOUPI_GATEWAY_URL}/api/v1/payments"
+        payload = json.dumps({
+            "orderId": req_id,
+            "amount": f"{amount:.2f}",
+            "currency": "INR",
+            "method": "MANUAL_UPI",
+            "returnUrl": "https://cricknova.buzz/user/deposit/callback",
+            "metadata": {
+                "user_mobile": user["mobile"],
+                "site_req_id": req_id
+            }
+        }).encode("utf-8")
+
+        headers = {
+            "Content-Type": "application/json",
+            "X-Merchant-Id": YOUPI_MERCHANT_ID,
+            "Idempotency-Key": req_id,
+            "User-Agent": "CrickNova-Payment-Client/1.0"
+        }
+        if YOUPI_MERCHANT_API_KEY:
+            headers["X-Merchant-Key"] = YOUPI_MERCHANT_API_KEY
+
+        http_req = urllib.request.Request(gateway_endpoint, data=payload, headers=headers, method="POST")
+        with urllib.request.urlopen(http_req, timeout=10) as resp:
+            resp_body = json.loads(resp.read().decode("utf-8"))
+            if "checkoutUrl" in resp_body:
+                checkout_url = resp_body["checkoutUrl"]
+            if "paymentId" in resp_body:
+                gateway_payment_id = resp_body["paymentId"]
+                req["gateway_payment_id"] = gateway_payment_id
+                save_all_user_data(all_data)
+    except Exception as e:
+        print(f"[YouPI] Notice: gateway session creation fallback (active: {e})")
+
+    asyncio.create_task(broadcast_admin_alert("NEW_DEPOSIT", {"request_id": req_id, "amount": amount}))
+
+    return JSONResponse(content={
+        "status": "success",
+        "request_id": req_id,
+        "order_id": req_id,
+        "amount": amount,
+        "amount_paise": amount_paise,
+        "payee_name": YOUPI_RECEIVING_PAYEE,
+        "payee_vpa": YOUPI_RECEIVING_VPA,
+        "upi_intent_uri": upi_intent_uri,
+        "checkout_url": checkout_url,
+        "gateway_payment_id": gateway_payment_id,
+        "static_qr_fallback": "/static/img/slice-qr.jpg",
+        "instructions": f"Pay exactly ₹{amount:.2f} to {YOUPI_RECEIVING_PAYEE} ({YOUPI_RECEIVING_VPA}) in your UPI app, then submit the 12-digit UTR."
+    })
+
+@app.post("/api/webhook/youpi")
+async def youpi_webhook_handler(request: Request):
+    raw_body = await request.body()
+    headers = request.headers
+
+    sig_v1 = headers.get("X-Gateway-Signature", "")
+    sig_v2 = headers.get("X-Gateway-Signature-V2", "")
+    delivery_id = headers.get("X-Gateway-Delivery-Id", "")
+    timestamp = headers.get("X-Gateway-Timestamp", "")
+
+    # 1. Replay attack check (< 300 seconds)
+    if timestamp and not is_timestamp_fresh(timestamp, 300):
+        raise HTTPException(status_code=400, detail="Webhook timestamp is too old or expired.")
+
+    # 2. Timing-safe HMAC verification if secret configured
+    if YOUPI_WEBHOOK_SECRET:
+        valid_v2 = verify_youpi_v2_signature(timestamp, raw_body, sig_v2, YOUPI_WEBHOOK_SECRET)
+        valid_v1 = verify_youpi_signature(raw_body, sig_v1, YOUPI_WEBHOOK_SECRET)
+        if not (valid_v2 or valid_v1):
+            raise HTTPException(status_code=401, detail="Invalid webhook HMAC signature.")
+
+    try:
+        payload = json.loads(raw_body.decode("utf-8"))
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload.")
+
+    all_data = load_all_user_data()
+
+    # 3. Durable delivery ID deduplication
+    processed_deliveries = all_data.setdefault("webhook_processed_deliveries", {})
+    if delivery_id and delivery_id in processed_deliveries:
+        return JSONResponse(status_code=200, content={"status": "already_processed", "deliveryId": delivery_id})
+
+    # 4. Process event: NEVER credit from webhook; store UTR claim as pending manual review
+    order_id = payload.get("orderId")
+    payment_id = payload.get("paymentId")
+    event = payload.get("event", "MANUAL_REVIEW")
+    utr = str(payload.get("utr", "")).strip()
+
+    reqs = all_data.get("deposit_requests", [])
+    target = next((r for r in reqs if r.get("id") == order_id or r.get("order_id") == order_id or r.get("gateway_payment_id") == payment_id), None)
+    if target:
+        if utr and not target.get("utr"):
+            target["utr"] = utr
+        target["gateway_payment_id"] = payment_id or target.get("gateway_payment_id")
+        target["gateway_event"] = event
+        target["gateway_timestamp"] = timestamp
+        # Important: Status remains PENDING awaiting manual admin review against Slice app!
+        if target.get("status") != "APPROVED":
+            target["status"] = "PENDING"
+            target["notes"] = f"Slice UTR claim: {utr or 'Submitted via YouPI'}"
+
+    # Mark delivery as processed
+    if delivery_id:
+        processed_deliveries[delivery_id] = {
+            "processed_at": int(time.time()),
+            "event": event,
+            "orderId": order_id
+        }
+
+    save_all_user_data(all_data)
+    return JSONResponse(status_code=200, content={"received": True, "deliveryId": delivery_id})
+
 @app.post("/api/user/deposit-request")
 async def submit_deposit_request(request: Request):
     user = get_active_user(request)
@@ -2567,9 +2775,10 @@ async def submit_deposit_request(request: Request):
     content_type = request.headers.get("content-type", "")
     amount = 500.0
     utr = ""
-    method = "BharatPe Static QR"
+    method = "YouPI Slice UPI"
     notes = "Customer deposit claim"
     screenshot_url = ""
+    req_id_param = ""
 
     if "multipart/form-data" in content_type:
         form = await request.form()
@@ -2578,8 +2787,9 @@ async def submit_deposit_request(request: Request):
         except (ValueError, TypeError):
             amount = 500.0
         utr = str(form.get("utr", "")).strip()
-        method = str(form.get("method", "BharatPe Static QR")).strip()
+        method = str(form.get("method", "YouPI Slice UPI")).strip()
         notes = str(form.get("notes", "Customer deposit claim")).strip()
+        req_id_param = str(form.get("request_id", "")).strip()
 
         proof_file = form.get("proof_image")
         if proof_file and hasattr(proof_file, "filename") and proof_file.filename:
@@ -2600,9 +2810,10 @@ async def submit_deposit_request(request: Request):
         except (ValueError, TypeError):
             amount = 500.0
         utr = str(data.get("utr", "")).strip()
-        method = str(data.get("method", "BharatPe Static QR")).strip()
+        method = str(data.get("method", "YouPI Slice UPI")).strip()
         notes = str(data.get("notes", "Customer deposit claim")).strip()
         screenshot_url = str(data.get("screenshot_url", "")).strip()
+        req_id_param = str(data.get("request_id", "")).strip()
 
     if amount < 100.0 or amount > 100000.0:
         raise HTTPException(status_code=400, detail="Deposit amount must be between ₹100 and ₹1,00,000")
@@ -2616,36 +2827,53 @@ async def submit_deposit_request(request: Request):
 
     # Strict Duplicate UTR check across all active/approved requests
     for r in existing_requests:
-        if r.get("utr") == clean_utr and r.get("status") in ["PENDING", "APPROVED"]:
+        if r.get("utr") == clean_utr and r.get("status") in ["PENDING", "APPROVED"] and r.get("id") != req_id_param:
             raise HTTPException(
                 status_code=400,
                 detail=f"This UTR / Transaction Reference ({clean_utr}) has already been submitted or credited."
             )
 
-    req_id = f"DEP-{time.strftime('%Y%m%d')}-{random.randint(10000, 99999)}"
-    req = {
-        "id": req_id,
-        "user_mobile": user["mobile"],
-        "mobile": user["mobile"],
-        "user_name": user.get("name", f"Player {user['mobile'][-4:]}"),
-        "amount": amount,
-        "amount_paise": to_paise(amount),
-        "method": method,
-        "utr": clean_utr,
-        "screenshot_url": screenshot_url,
-        "notes": notes,
-        "status": "PENDING",
-        "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "created_timestamp": int(time.time()),
-        "approved_at": None,
-        "approved_by": None,
-        "declined_at": None,
-        "declined_by": None,
-        "decline_reason": None,
-        "idempotency_key": f"{req_id}-APPROVE"
-    }
+    target_req = None
+    if req_id_param:
+        target_req = next((r for r in existing_requests if r.get("id") == req_id_param and r.get("status") == "PENDING"), None)
 
-    all_data.setdefault("deposit_requests", []).insert(0, req)
+    if target_req:
+        target_req["utr"] = clean_utr
+        if screenshot_url:
+            target_req["screenshot_url"] = screenshot_url
+        target_req["notes"] = notes
+        req = target_req
+        req_id = target_req["id"]
+    else:
+        req_id = f"DEP-{time.strftime('%Y%m%d')}-{random.randint(10000, 99999)}"
+        req = {
+            "id": req_id,
+            "order_id": req_id,
+            "user_mobile": user["mobile"],
+            "mobile": user["mobile"],
+            "user_name": user.get("name", f"Player {user['mobile'][-4:]}"),
+            "amount": amount,
+            "amount_paise": to_paise(amount),
+            "method": method,
+            "utr": clean_utr,
+            "gateway": "YOUPI_SLICE",
+            "receiving_vpa": YOUPI_RECEIVING_VPA,
+            "receiving_payee": YOUPI_RECEIVING_PAYEE,
+            "receiving_account_id": YOUPI_RECEIVING_ACCOUNT_ID,
+            "screenshot_url": screenshot_url,
+            "notes": notes,
+            "status": "PENDING",
+            "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "created_timestamp": int(time.time()),
+            "approved_at": None,
+            "approved_by": None,
+            "declined_at": None,
+            "declined_by": None,
+            "decline_reason": None,
+            "idempotency_key": f"{req_id}-APPROVE"
+        }
+        all_data.setdefault("deposit_requests", []).insert(0, req)
+
     save_all_user_data(all_data)
 
     # Generic lock-screen push notification to admin phone (NO financial details on lock screen)
@@ -2653,7 +2881,7 @@ async def submit_deposit_request(request: Request):
 
     return JSONResponse(content={
         "status": "success",
-        "message": f"Deposit claim of ₹{amount:,.2f} submitted! Admin will verify against BharatPe merchant account and credit your wallet.",
+        "message": f"Deposit claim of ₹{amount:,.2f} submitted! Admin will verify against Slice UPI account (Tarana Nasreen) and credit your wallet.",
         "request": req
     })
 
@@ -3189,14 +3417,14 @@ async def admin_deposit_action(request: Request):
                 balance_after_paise=after_paise,
                 ref_id=req_id,
                 actor="admin_master",
-                notes=f"Deposit verified on BharatPe. UTR: {target_req.get('utr')}"
+                notes=f"Deposit verified on Slice UPI ({target_req.get('receiving_payee', 'Tarana Nasreen')}). UTR: {target_req.get('utr')}"
             )
 
             # User transaction history entry
             u.setdefault("transactions", []).insert(0, {
                 "id": req_id,
                 "type": "DEPOSIT",
-                "method": target_req.get("method", "BharatPe QR"),
+                "method": target_req.get("method", "Slice UPI"),
                 "utr": target_req.get("utr", ""),
                 "amount": from_paise(amount_paise),
                 "status": "COMPLETED",

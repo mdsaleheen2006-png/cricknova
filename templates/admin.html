@@ -319,8 +319,9 @@
                 <th>REQ ID</th>
                 <th>CUSTOMER PHONE</th>
                 <th>AMOUNT</th>
-                <th>METHOD</th>
-                <th>UTR / NOTE</th>
+                <th>GATEWAY / METHOD</th>
+                <th>RECEIVING ACCOUNT</th>
+                <th>UTR CLAIM</th>
                 <th>DATE</th>
                 <th>ACTION</th>
               </tr>
@@ -331,17 +332,23 @@
                 <td style="font-family: monospace; font-size: 10px;">{{ d.id }}</td>
                 <td><strong style="color: #fff;">{{ d.user_mobile }}</strong></td>
                 <td><strong style="color: var(--color-green);">₹{{ "{:,.2f}".format(d.amount) }}</strong></td>
-                <td><span style="font-size: 10px; color: var(--winbuzz-gold);">{{ d.method }}</span></td>
-                <td style="font-size: 10px; color: var(--text-muted);">{{ d.utr or d.notes or '-' }}</td>
-                <td style="font-size: 10px; color: var(--text-dim);">{{ d.date }}</td>
+                <td><span style="font-size: 10px; color: var(--winbuzz-gold);">{{ d.method or 'YouPI Slice UPI' }}</span></td>
+                <td><span style="font-size: 10px; color: #c084fc; font-weight: 700;">{{ d.receiving_payee or 'Tarana Nasreen' }}<br><code style="font-size: 9px; color: #cbd5e1;">{{ d.receiving_vpa or '9693554087@slc' }}</code></span></td>
+                <td>
+                  <strong style="color: #fff; font-family: monospace; font-size: 11px;">{{ d.utr or '-' }}</strong>
+                  {% if d.screenshot_url %}
+                    <br><a href="{{ d.screenshot_url }}" target="_blank" style="font-size: 9.5px; color: #00b0ff; text-decoration: underline;">📷 View Receipt</a>
+                  {% endif %}
+                </td>
+                <td style="font-size: 10px; color: var(--text-dim);">{{ d.date or d.created_at }}</td>
                 <td style="white-space: nowrap;">
-                  <button class="btn-approve" onclick="handleDepositAction('{{ d.id }}', 'APPROVE')">✓ APPROVE</button>
-                  <button class="btn-reject" onclick="handleDepositAction('{{ d.id }}', 'REJECT')">✕ REJECT</button>
+                  <button class="btn-approve" onclick="handleDepositAction('{{ d.id }}', 'APPROVE', '{{ d.amount }}')">✓ APPROVE</button>
+                  <button class="btn-reject" onclick="handleDepositAction('{{ d.id }}', 'REJECT', '{{ d.amount }}')">✕ REJECT</button>
                 </td>
               </tr>
               {% else %}
               <tr>
-                <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 24px;">
+                <td colspan="8" style="text-align: center; color: var(--text-dim); padding: 24px;">
                   No pending customer deposit requests at this time.
                 </td>
               </tr>
@@ -680,9 +687,13 @@
       }
     }
 
-    async function handleDepositAction(reqId, action) {
-      const verb = action === 'APPROVE' ? 'Approve & Credit' : 'Reject';
-      if (!confirm(`Are you sure you want to ${verb} request ${reqId}?`)) return;
+    async function handleDepositAction(reqId, action, amount) {
+      if (action === 'APPROVE') {
+        const confirmMsg = `ATTENTION ADMIN:\nPlease open your Slice App and verify that ₹${amount || ''} was actually received under Tarana Nasreen (9693554087@slc).\n\nA customer UTR is only a claim, not proof of payment.\n\nDid you confirm the credit in your Slice transaction history?`;
+        if (!confirm(confirmMsg)) return;
+      } else {
+        if (!confirm(`Are you sure you want to REJECT deposit claim ${reqId}?`)) return;
+      }
 
       try {
         const res = await fetch('/api/admin/deposit/action', {

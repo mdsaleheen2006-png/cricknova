@@ -1203,28 +1203,46 @@
         <button class="modal-close" onclick="closeDepositModal()">✕</button>
       </div>
       <div class="modal-body">
-        <div style="background: rgba(245, 166, 35, 0.08); border: 1px solid var(--winbuzz-gold); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 14px;">
-          <div style="font-size: 11px; color: var(--winbuzz-gold); font-weight: 800; margin-bottom: 6px;">⚡ OFFICIAL BHARATPE MERCHANT QR</div>
+        <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid #a855f7; border-radius: var(--radius-sm); padding: 12px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <div style="font-size: 11px; color: #c084fc; font-weight: 800;">⚡ OFFICIAL SLICE UPI DESK (MANUAL REVIEW)</div>
+            <span style="font-size: 9.5px; background: rgba(168, 85, 247, 0.2); color: #e9d5ff; padding: 2px 6px; border-radius: 4px; font-weight: 700;">SLICE PAYEE</span>
+          </div>
+
           <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-darkest); padding: 8px 10px; border-radius: 4px; border: 1px dashed var(--border-light); margin-bottom: 8px;">
             <div>
-              <div style="font-size: 9.5px; color: var(--text-dim);">Merchant Payee: <strong style="color: #fff;">MDSALEHEEN</strong></div>
-              <strong id="deposit-upi-val" style="color: var(--winbuzz-gold); font-size: 12px; font-family: monospace;">BHARATPE2S0W0C6I4D04292@unitype</strong>
+              <div style="font-size: 9.5px; color: var(--text-dim);">Payee Name: <strong style="color: #fff;">Tarana Nasreen</strong></div>
+              <strong id="deposit-upi-val" style="color: #c084fc; font-size: 13px; font-family: monospace;">9693554087@slc</strong>
             </div>
-            <button type="button" class="btn-quick-credit" onclick="copyUpiId('BHARATPE2S0W0C6I4D04292@unitype')" style="padding: 6px 10px; font-size: 11px;">
+            <button type="button" class="btn-quick-credit" onclick="copyUpiId('9693554087@slc')" style="padding: 6px 10px; font-size: 11px; background: #7c3aed; color: #fff;">
               📋 COPY UPI
             </button>
           </div>
 
-          <!-- Supplied Static BharatPe Merchant QR -->
+          <!-- Slice Dynamic / Static QR Code Fallback Container -->
           <div style="text-align: center; margin: 10px 0;">
-            <img src="/static/images/BharatPe-QR.jpeg"
-                 alt="BharatPe QR Code" style="width: 170px; height: 220px; object-fit: contain; border-radius: 8px; border: 2px solid #fff; background: #fff; padding: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-            <div style="font-size: 10.5px; color: #cbd5e1; font-weight: 700; margin-top: 6px;">
-              Scan with PhonePe / GPay / Paytm / BHIM UPI
+            <div id="slice-dynamic-qr-container" style="display: inline-block;">
+              <img id="slice-qr-img" src="/static/img/slice-qr.jpg"
+                   alt="Slice UPI QR Code" style="width: 175px; height: 215px; object-fit: contain; border-radius: 8px; border: 2px solid #a855f7; background: #fff; padding: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
             </div>
-            <div style="font-size: 9.5px; color: var(--text-muted);">
-              Pay the exact deposit amount selected below
+            <div id="slice-amount-banner" style="font-size: 12px; color: #fff; font-weight: 800; margin-top: 6px;">
+              Pay exact amount: <span id="display-deposit-amount" style="color: #a855f7;">₹1,000</span>
             </div>
+            <div style="font-size: 9.5px; color: var(--text-muted); margin-top: 3px;">
+              Scan with PhonePe / GPay / Paytm / Slice / BHIM UPI
+            </div>
+          </div>
+
+          <!-- Direct App Intent / Hosted Checkout Link -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+            <a id="btn-upi-app-intent" href="upi://pay?pa=9693554087@slc&pn=Tarana%20Nasreen&am=1000.00&cu=INR"
+               class="btn-header" style="text-decoration: none; justify-content: center; font-size: 11px; background: #7c3aed; color: #fff; border: none; padding: 7px;">
+              📱 PAY VIA UPI APP
+            </a>
+            <a id="btn-hosted-checkout" href="https://youpi-slice-gateway.onrender.com" target="_blank"
+               class="btn-header" style="text-decoration: none; justify-content: center; font-size: 11px; background: #334155; color: #e2e8f0; border: 1px solid #475569; padding: 7px;">
+              🌐 HOSTED PORTAL
+            </a>
           </div>
         </div>
 

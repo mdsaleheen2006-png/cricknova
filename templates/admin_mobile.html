@@ -651,20 +651,20 @@
 
     <!-- SECTION 4: SETTINGS & BHARATPE QR DETAILS -->
     <section id="view-settings" style="display: none;">
-      <h3 style="font-size: 14px; font-weight: 800; margin-bottom: 12px; color: #fff;">⚙️ BharatPe Merchant & Push Settings</h3>
+      <h3 style="font-size: 14px; font-weight: 800; margin-bottom: 12px; color: #fff;">⚙️ Slice UPI Manual Review & Push Settings</h3>
       
-      <!-- Static QR Card -->
+      <!-- Slice UPI QR Card -->
       <div class="request-card" style="border-left: none;">
-        <div style="font-size: 12px; font-weight: 800; color: var(--gold-primary); margin-bottom: 8px;">
-          Official BharatPe Deposit QR
+        <div style="font-size: 12px; font-weight: 800; color: #c084fc; margin-bottom: 8px;">
+          Official Slice UPI Deposit QR (Manual Review)
         </div>
         <div style="display: flex; gap: 12px; align-items: center;">
-          <img src="/static/images/BharatPe-QR.jpeg" alt="BharatPe QR" style="width: 100px; height: 130px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-accent);">
+          <img src="/static/img/slice-qr.jpg" alt="Slice UPI QR" style="width: 100px; height: 130px; object-fit: contain; border-radius: 6px; border: 1px solid #a855f7; background: #fff; padding: 2px;">
           <div style="font-size: 11.5px; line-height: 1.6;">
-            <div><strong>Payee:</strong> MDSALEHEEN</div>
-            <div><strong>UPI VPA:</strong> <code style="color: var(--gold-primary); font-size: 10.5px;">BHARATPE2S0W0C6I4D04292@unitype</code></div>
-            <div><strong>Bank:</strong> Unity Small Finance Bank</div>
-            <div><strong>Route:</strong> 100% Static BharatPe Merchant QR</div>
+            <div><strong>Payee:</strong> Tarana Nasreen</div>
+            <div><strong>UPI VPA:</strong> <code style="color: #c084fc; font-size: 10.5px;">9693554087@slc</code></div>
+            <div><strong>Account ID:</strong> <code style="font-size: 9.5px; color: var(--text-dim);">da864feb-15d4-47cd-8afa-e64d05ad8e91</code></div>
+            <div><strong>Gateway:</strong> YouPI Slice Gateway (Manual Review)</div>
           </div>
         </div>
       </div>
@@ -1021,6 +1021,11 @@
       const modal = document.getElementById('confirm-modal');
       document.getElementById('modal-title').innerText = 'Confirm Deposit Approval';
       document.getElementById('modal-desc').innerHTML = `
+        <div style="background: rgba(168, 85, 247, 0.15); border: 1px solid #a855f7; border-radius: 6px; padding: 10px; margin-bottom: 12px; font-size: 11px; text-align: left;">
+          <strong style="color: #c084fc;">⚠️ MANUAL SLICE CHECK REQUIRED:</strong><br>
+          Please check your Slice App to confirm that <strong>₹${amt.toLocaleString('en-IN')}</strong> was actually received under <strong>Tarana Nasreen (9693554087@slc)</strong>.<br>
+          <em>A customer UTR is only a claim, not proof of payment.</em>
+        </div>
         Are you sure you want to approve <strong>₹${amt.toLocaleString('en-IN')}</strong> for customer <strong>+91 ${mobile}</strong>?<br><br>
         <span style="color: var(--green-success);">✓ This will credit ₹${amt.toLocaleString('en-IN')} to the customer's balance exactly once and record an immutable ledger entry.</span>
       `;

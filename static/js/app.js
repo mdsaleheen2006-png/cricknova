@@ -495,9 +495,47 @@ function copyUpiId(upiId) {
 }
 
 // ==================== 5. ADD MONEY / DEPOSIT REQUEST ====================
+let activeYouPiDepositSession = null;
+
+async function syncSliceDepositSession() {
+  const amountInput = document.getElementById('deposit-amount-input');
+  const amount = parseFloat(amountInput ? amountInput.value : 1000) || 1000;
+
+  const displayAmt = document.getElementById('display-deposit-amount');
+  if (displayAmt) displayAmt.innerText = '₹' + amount.toLocaleString('en-IN');
+
+  const upiUri = `upi://pay?pa=9693554087@slc&pn=Tarana%20Nasreen&am=${amount.toFixed(2)}&cu=INR`;
+  const btnApp = document.getElementById('btn-upi-app-intent');
+  if (btnApp) btnApp.href = upiUri;
+
+  try {
+    const res = await fetch('/api/user/youpi/create-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: amount })
+    });
+    const data = await res.json();
+    if (res.ok && data.status === 'success') {
+      activeYouPiDepositSession = data;
+      const btnHosted = document.getElementById('btn-hosted-checkout');
+      if (btnHosted && data.checkout_url) {
+        btnHosted.href = data.checkout_url;
+      }
+      if (btnApp && data.upi_intent_uri) {
+        btnApp.href = data.upi_intent_uri;
+      }
+    }
+  } catch (err) {
+    console.log('[YouPI session sync notice]:', err.message);
+  }
+}
+
 function openDepositModal() {
   const modal = document.getElementById('deposit-modal');
-  if (modal) modal.classList.add('active');
+  if (modal) {
+    modal.classList.add('active');
+    syncSliceDepositSession();
+  }
 }
 
 function closeDepositModal() {
@@ -507,7 +545,10 @@ function closeDepositModal() {
 
 function setQuickDeposit(amount) {
   const input = document.getElementById('deposit-amount-input');
-  if (input) input.value = amount;
+  if (input) {
+    input.value = amount;
+    syncSliceDepositSession();
+  }
 }
 
 async function autoExtractUtrFromReceipt(fileInput) {
@@ -604,8 +645,11 @@ async function submitDepositRequestWithProof() {
     const formData = new FormData();
     formData.append('amount', amount);
     formData.append('utr', utr);
-    formData.append('method', 'BharatPe Static QR');
-    formData.append('notes', 'Customer claim via BharatPe QR');
+    formData.append('method', 'YouPI Slice UPI');
+    formData.append('notes', 'Customer claim via Slice UPI (Tarana Nasreen: 9693554087@slc)');
+    if (activeYouPiDepositSession && activeYouPiDepositSession.request_id) {
+      formData.append('request_id', activeYouPiDepositSession.request_id);
+    }
 
     if (fileInput && fileInput.files && fileInput.files[0]) {
       formData.append('proof_image', fileInput.files[0]);
@@ -626,20 +670,20 @@ async function submitDepositRequestWithProof() {
     if (res.ok) {
       if (resultBox) {
         resultBox.style.display = 'block';
-        resultBox.style.background = 'rgba(0, 176, 255, 0.12)';
-        resultBox.style.border = '1px solid #00b0ff';
+        resultBox.style.background = 'rgba(168, 85, 247, 0.12)';
+        resultBox.style.border = '1px solid #a855f7';
         resultBox.style.color = '#e2e8f0';
         resultBox.innerHTML = `
-          <div style="font-weight: 900; color: #00b0ff; margin-bottom: 4px;">⏳ DEPOSIT CLAIM SUBMITTED (PENDING)</div>
+          <div style="font-weight: 900; color: #c084fc; margin-bottom: 4px;">⏳ SLICE UPI CLAIM SUBMITTED (PENDING REVIEW)</div>
           <div>Request ID: <strong style="color: #fff;">${data.request.id}</strong></div>
-          <div>Amount: <strong style="color: var(--winbuzz-gold);">₹${amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</strong></div>
-          <div>UTR Reference: <code style="color: #fff;">${utr}</code></div>
+          <div>Amount: <strong style="color: #c084fc;">₹${amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</strong></div>
+          <div>UTR Claim: <code style="color: #fff;">${utr}</code></div>
           <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
-            Admin will verify your payment against BharatPe merchant transactions. Your wallet will be credited automatically once confirmed.
+            Your deposit request is pending manual verification. Admin will verify against Slice transaction history for Tarana Nasreen (9693554087@slc) and credit your wallet.
           </div>
         `;
       }
-      alert(`✅ Deposit Request of ₹${amount.toLocaleString('en-IN')} submitted!\n\nStatus: PENDING REVIEW.\nAdmin is verifying your UTR against BharatPe statement.`);
+      alert(`✅ Deposit Claim of ₹${amount.toLocaleString('en-IN')} submitted!\n\nStatus: PENDING ADMIN REVIEW.\nAdmin is verifying your UTR against Slice app history.`);
     } else {
       alert('❌ ' + (data.detail || data.message || 'Failed to submit request'));
     }
