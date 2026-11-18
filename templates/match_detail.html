@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>{{ match.name }} | CrickNova Live Exchange & Odds</title>
+  <title>{{ match.name }} | CrickNova Live Exchange & Player Markets</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="icon" type="image/png" href="/static/icon-192.png">
   <link rel="manifest" href="/static/manifest.json">
@@ -24,6 +24,80 @@
       window.addEventListener('resize', checkDevice);
     })();
   </script>
+  <style>
+    .market-tabs-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 6px 0 10px;
+      margin-bottom: 8px;
+      scrollbar-width: none;
+    }
+    .market-tabs-bar::-webkit-scrollbar { display: none; }
+    .m-tab-btn {
+      padding: 6px 13px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 215, 0, 0.25);
+      background: #111827;
+      color: #cbd5e1;
+      font-size: 11.5px;
+      font-weight: 800;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .m-tab-btn:hover {
+      border-color: #ffd700;
+      color: #fff;
+    }
+    .m-tab-btn.active {
+      background: linear-gradient(135deg, #f59e0b, #b45309);
+      border-color: #ffd700;
+      color: #000;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+    }
+    .player-role-badge {
+      font-size: 10px;
+      color: #94a3b8;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    .pitch-badge {
+      background: #0284c7;
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+    .fancy-line-pill {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: #facc15;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 5px;
+      display: inline-block;
+    }
+    .odds-box.lay.fancy-no {
+      background: #fecdd3 !important;
+      color: #9f1239 !important;
+      border-color: #fda4af !important;
+    }
+    .odds-box.back.fancy-yes {
+      background: #bae6fd !important;
+      color: #0369a1 !important;
+      border-color: #7dd3fc !important;
+    }
+    .odds-box:active {
+      transform: scale(0.96);
+    }
+    .market-category-section {
+      margin-bottom: 14px;
+    }
+  </style>
 </head>
 <body>
 
@@ -32,7 +106,7 @@
     <span class="ticker-badge">LIVE MATCH</span>
     <div class="ticker-content">
       <div class="ticker-text">
-        🏏 <span>{{ match.name }}</span> ({{ match.competition }}) In-Play • ⚡ <span>Live Odds Stream:</span> zplay1.co Active • 💰 <span>Turbo Cash-Out:</span> Active • 1-Click Bet Slip
+        🏏 <span>{{ match.name }}</span> ({{ match.competition }}) In-Play • ⚡ <span>Live Score:</span> {{ match.score }} • 🎯 <span>Player Markets & Odds:</span> ACTIVE • 1-Click Bet Slip
       </div>
     </div>
   </div>
@@ -108,31 +182,24 @@
         <a href="/" class="nav-item active">🏏 CRICKET LIVE</a>
         <a href="/casino" class="nav-item" style="color: var(--winbuzz-gold);">✈️ AVIATOR</a>
         <a href="/casino" class="nav-item">🎰 LIVE CASINO</a>
-        <a href="/admin" class="nav-item" style="margin-left: auto; color: var(--winbuzz-gold);">⚙️ ADMIN PORTAL</a>
       </div>
     </nav>
   </header>
 
-  <!-- MATCH VIEW WRAPPER -->
+  <!-- MAIN VIEWPORT CONTAINER -->
   <main class="main-wrapper full-match">
-    <!-- CENTER CONTENT: LIVE SCORECARD, STREAM & ALL MARKETS -->
     <section class="content-center">
 
-      <!-- LIVE TV STREAM / RADAR PLAYER -->
-      <div class="live-stream-container">
-        <div style="position: absolute; top: 8px; left: 8px; display: flex; gap: 6px; z-index: 10;">
-          <span style="background: rgba(220, 38, 38, 0.9); color: #fff; font-size: 9px; font-weight: 900; padding: 2px 6px; border-radius: 3px;">● LIVE STREAM</span>
-          <span style="background: rgba(0,0,0,0.6); color: #fff; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px;">{{ match.competition }}</span>
-        </div>
-        <iframe src="{{ match.tv_url }}" allow="autoplay; fullscreen" loading="lazy"></iframe>
-      </div>
-
       <!-- CRICBUZZ REAL SCORECARD & BATTERS AT CREASE -->
-      <div class="exchange-card" style="padding: 10px 14px;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div class="exchange-card" style="padding: 12px 16px; margin-bottom: 12px; border: 1px solid rgba(255,215,0,0.25);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
           <div>
-            <div style="font-size: 16px; font-weight: 900; color: #fff;" class="match-score-{{ match.id }}">{{ match.score }}</div>
-            <div style="font-size: 11px; color: var(--winbuzz-gold); font-weight: 600; margin-top: 2px;">{{ match.competition }} • {{ match.name }}</div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+              <span class="android-live-pill" style="font-size: 10px; padding: 2px 7px;">● LIVE IN-PLAY</span>
+              <span style="font-size: 11px; color: var(--winbuzz-gold); font-weight: 700;">{{ match.competition }}</span>
+            </div>
+            <div style="font-size: 18px; font-weight: 900; color: #fff;" class="match-score-{{ match.id }}">{{ match.score }}</div>
+            <div style="font-size: 12px; color: #cbd5e1; font-weight: 700; margin-top: 3px;">{{ match.name }}</div>
           </div>
           <div style="text-align: right;">
             <div style="font-size: 10px; color: var(--text-dim); font-weight: 800; margin-bottom: 4px;">CURRENT OVER BALLS</div>
@@ -146,11 +213,14 @@
 
         <!-- BATSMEN AT CREASE TABLE -->
         {% if match.batters and match.batters|length > 0 %}
-        <div style="margin-top: 10px; border-top: 1px solid var(--border-dark); padding-top: 8px; overflow-x: auto;">
+        <div style="margin-top: 12px; border-top: 1px solid var(--border-dark); padding-top: 10px; overflow-x: auto;">
+          <div style="font-size: 10.5px; font-weight: 800; color: var(--winbuzz-gold); margin-bottom: 6px; letter-spacing: 0.5px;">
+            🏏 BATSMEN CURRENTLY AT CREASE (LIVE)
+          </div>
           <table class="batters-table" style="width: 100%;">
             <thead>
               <tr>
-                <th>BATSMAN (ON PITCH)</th>
+                <th>BATSMAN</th>
                 <th style="text-align: center;">RUNS</th>
                 <th style="text-align: center;">BALLS</th>
                 <th style="text-align: center;">SR</th>
@@ -159,10 +229,10 @@
             <tbody>
               {% for b in match.batters %}
               <tr id="batter-row-{{ loop.index0 }}" class="batters-row-{{ match.id }}">
-                <td style="font-weight: 700;">{{ b.name }} 🏏</td>
-                <td style="text-align: center; font-weight: 900;" class="bat-runs">{{ b.runs }}</td>
+                <td style="font-weight: 800; color: #fff;">{{ b.name }} <span style="color: #00e701; font-size: 12px;">*</span></td>
+                <td style="text-align: center; font-weight: 900; color: #facc15;" class="bat-runs">{{ b.runs }}</td>
                 <td style="text-align: center; color: var(--text-muted);" class="bat-balls">{{ b.balls }}</td>
-                <td style="text-align: center;" class="sr-col bat-sr">{{ b.sr }}</td>
+                <td style="text-align: center; color: #38bdf8; font-weight: 700;" class="sr-col bat-sr">{{ b.sr }}</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -171,8 +241,234 @@
         {% endif %}
       </div>
 
-      <!-- MARKET 1: MATCH ODDS (GENUINE PROVIDER FEED) -->
-      <div class="market-section">
+      <!-- MARKET CATEGORY FILTER TABS -->
+      <div class="market-tabs-bar">
+        <button type="button" class="m-tab-btn active" onclick="filterMarketCategory('all', this)">⚡ All Markets</button>
+        <button type="button" class="m-tab-btn" onclick="filterMarketCategory('player_runs', this)" style="border-color: #ffd700; color: #ffd700;">🏏 Player Runs ({{ match.player_runs|length if match.player_runs else 0 }})</button>
+        <button type="button" class="m-tab-btn" onclick="filterMarketCategory('top_batsmen', this)">⭐ Top Batsman ({{ match.top_batsmen|length if match.top_batsmen else 0 }})</button>
+        <button type="button" class="m-tab-btn" onclick="filterMarketCategory('top_bowlers', this)">🎯 Top Bowler ({{ match.top_bowlers|length if match.top_bowlers else 0 }})</button>
+        <button type="button" class="m-tab-btn" onclick="filterMarketCategory('match_odds', this)">🏆 Match Odds</button>
+        <button type="button" class="m-tab-btn" onclick="filterMarketCategory('bookmaker', this)">📈 Bookmaker</button>
+        <button type="button" class="m-tab-btn" onclick="filterMarketCategory('fancy', this)">⚡ Session / Fancy</button>
+      </div>
+
+      <!-- ==================== MARKET 1: PLAYER RUNS (FANCY OVER / UNDER) ==================== -->
+      {% if match.player_runs and match.player_runs|length > 0 %}
+      <div class="market-section market-category-section" data-cat="player_runs">
+        <div class="market-header-row" style="background: linear-gradient(90deg, #1e293b, #0f172a); border-left: 3px solid #f59e0b;">
+          <div>
+            <div class="market-title" style="color: #f59e0b;">🏏 PLAYER TOTAL RUNS • LIVE FANCY ODDS</div>
+            <div style="font-size: 9.5px; color: #94a3b8; font-weight: 600;">Bet on batsman to score Over or Under the set run line</div>
+          </div>
+          <div class="odds-labels" style="width: 150px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 10px; font-weight: 900;">
+            <span style="color: #fda4af;">NO (UNDER)</span>
+            <span style="color: #7dd3fc;">YES (OVER)</span>
+          </div>
+        </div>
+
+        {% for pr in match.player_runs %}
+        {% set pr_clean = pr.name.replace(' ', '_').replace('.', '_').replace('-', '_') %}
+        <div class="market-runner-row">
+          <div class="runner-meta">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="runner-name" style="font-weight: 800; color: #fff;">{{ pr.name }}</span>
+              <span class="pitch-badge">{{ pr.team }}</span>
+            </div>
+            <div class="player-role-badge">
+              {{ pr.role }} • <span class="fancy-line-pill">Line: {{ pr.line }} Runs</span>
+            </div>
+          </div>
+
+          <div class="odds-pair" style="width: 150px;">
+            <!-- NO (Under) -->
+            <div class="odds-box lay fancy-no"
+                 id="box-pr-no-{{ match.id }}-{{ pr_clean }}"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ pr.name }} Runs (Under {{ pr.no_runs }})"
+                 data-type="lay"
+                 data-odds="2.00"
+                 data-market-type="player_runs"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ pr.name }} Runs (Under {{ pr.no_runs }})', 'lay', 2.00, 'player_runs')">
+              <span class="odds-price" style="font-size: 13px; font-weight: 900;">{{ pr.no_runs }}</span>
+              <span class="odds-size" style="font-size: 9px; font-weight: 700;">Rate {{ pr.no_rate }}</span>
+            </div>
+
+            <!-- YES (Over) -->
+            <div class="odds-box back fancy-yes"
+                 id="box-pr-yes-{{ match.id }}-{{ pr_clean }}"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ pr.name }} Runs (Over {{ pr.yes_runs }})"
+                 data-type="back"
+                 data-odds="2.00"
+                 data-market-type="player_runs"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ pr.name }} Runs (Over {{ pr.yes_runs }})', 'back', 2.00, 'player_runs')">
+              <span class="odds-price" style="font-size: 13px; font-weight: 900;">{{ pr.yes_runs }}</span>
+              <span class="odds-size" style="font-size: 9px; font-weight: 700;">Rate {{ pr.yes_rate }}</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- ==================== MARKET 2: TOP BATSMAN (DECIMAL EXCHANGE ODDS) ==================== -->
+      {% if match.top_batsmen and match.top_batsmen|length > 0 %}
+      <div class="market-section market-category-section" data-cat="top_batsmen">
+        <div class="market-header-row" style="background: linear-gradient(90deg, #1e293b, #0f172a); border-left: 3px solid #38bdf8;">
+          <div>
+            <div class="market-title" style="color: #38bdf8;">⭐ TOP BATSMAN OF MATCH • EXCHANGE BACK / LAY</div>
+            <div style="font-size: 9.5px; color: #94a3b8; font-weight: 600;">Player to finish with highest individual score</div>
+          </div>
+          <div class="odds-labels" style="width: 150px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 10px; font-weight: 900;">
+            <span style="color: var(--back-bg);">BACK</span>
+            <span style="color: var(--lay-bg);">LAY</span>
+          </div>
+        </div>
+
+        {% for tb in match.top_batsmen %}
+        {% set tb_clean = tb.runner.replace(' ', '_').replace('.', '_').replace('-', '_') %}
+        <div class="market-runner-row">
+          <div class="runner-meta">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="runner-name" style="font-weight: 800; color: #fff;">{{ tb.runner }}</span>
+              <span class="pitch-badge" style="background: #334155;">{{ tb.team }}</span>
+            </div>
+            <div class="player-role-badge">{{ tb.role }}</div>
+          </div>
+
+          <div class="odds-pair" style="width: 150px;">
+            <div class="odds-box back"
+                 id="box-tb-back-{{ match.id }}-{{ tb_clean }}"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ tb.runner }} (Top Batsman)"
+                 data-type="back"
+                 data-odds="{{ tb.back[0].price }}"
+                 data-market-type="top_batsman"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ tb.runner }} (Top Batsman)', 'back', {{ tb.back[0].price }}, 'top_batsman')">
+              <span class="odds-price">{{ "{:.2f}".format(tb.back[0].price) }}</span>
+              <span class="odds-size">{{ (tb.back[0].size / 1000)|round|int }}k</span>
+            </div>
+            <div class="odds-box lay"
+                 id="box-tb-lay-{{ match.id }}-{{ tb_clean }}"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ tb.runner }} (Top Batsman)"
+                 data-type="lay"
+                 data-odds="{{ tb.lay[0].price }}"
+                 data-market-type="top_batsman"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ tb.runner }} (Top Batsman)', 'lay', {{ tb.lay[0].price }}, 'top_batsman')">
+              <span class="odds-price">{{ "{:.2f}".format(tb.lay[0].price) }}</span>
+              <span class="odds-size">{{ (tb.lay[0].size / 1000)|round|int }}k</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- ==================== MARKET 3: TOP BOWLER (DECIMAL EXCHANGE ODDS) ==================== -->
+      {% if match.top_bowlers and match.top_bowlers|length > 0 %}
+      <div class="market-section market-category-section" data-cat="top_bowlers">
+        <div class="market-header-row" style="background: linear-gradient(90deg, #1e293b, #0f172a); border-left: 3px solid #10b981;">
+          <div>
+            <div class="market-title" style="color: #10b981;">🎯 TOP BOWLER OF MATCH • EXCHANGE BACK / LAY</div>
+            <div style="font-size: 9.5px; color: #94a3b8; font-weight: 600;">Bowler to take the most wickets in match/innings</div>
+          </div>
+          <div class="odds-labels" style="width: 150px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 10px; font-weight: 900;">
+            <span style="color: var(--back-bg);">BACK</span>
+            <span style="color: var(--lay-bg);">LAY</span>
+          </div>
+        </div>
+
+        {% for tbw in match.top_bowlers %}
+        {% set tbw_clean = tbw.runner.replace(' ', '_').replace('.', '_').replace('-', '_') %}
+        <div class="market-runner-row">
+          <div class="runner-meta">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="runner-name" style="font-weight: 800; color: #fff;">{{ tbw.runner }}</span>
+              <span class="pitch-badge" style="background: #1e3a5f;">{{ tbw.team }}</span>
+            </div>
+            <div class="player-role-badge">{{ tbw.role }}</div>
+          </div>
+
+          <div class="odds-pair" style="width: 150px;">
+            <div class="odds-box back"
+                 id="box-tbw-back-{{ match.id }}-{{ tbw_clean }}"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ tbw.runner }} (Top Bowler)"
+                 data-type="back"
+                 data-odds="{{ tbw.back[0].price }}"
+                 data-market-type="top_bowler"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ tbw.runner }} (Top Bowler)', 'back', {{ tbw.back[0].price }}, 'top_bowler')">
+              <span class="odds-price">{{ "{:.2f}".format(tbw.back[0].price) }}</span>
+              <span class="odds-size">{{ (tbw.back[0].size / 1000)|round|int }}k</span>
+            </div>
+            <div class="odds-box lay"
+                 id="box-tbw-lay-{{ match.id }}-{{ tbw_clean }}"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ tbw.runner }} (Top Bowler)"
+                 data-type="lay"
+                 data-odds="{{ tbw.lay[0].price }}"
+                 data-market-type="top_bowler"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ tbw.runner }} (Top Bowler)', 'lay', {{ tbw.lay[0].price }}, 'top_bowler')">
+              <span class="odds-price">{{ "{:.2f}".format(tbw.lay[0].price) }}</span>
+              <span class="odds-size">{{ (tbw.lay[0].size / 1000)|round|int }}k</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- ==================== MARKET 4: PLAYER PROPOSITIONS & MILESTONES ==================== -->
+      {% if match.player_props and match.player_props|length > 0 %}
+      <div class="market-section market-category-section" data-cat="player_runs">
+        <div class="market-header-row" style="background: linear-gradient(90deg, #1e293b, #0f172a); border-left: 3px solid #a855f7;">
+          <div>
+            <div class="market-title" style="color: #c084fc;">⚡ PLAYER MILESTONES & SPECIAL PROPOSITIONS</div>
+            <div style="font-size: 9.5px; color: #94a3b8; font-weight: 600;">Fifty, Century & Wicket milestones</div>
+          </div>
+          <div class="odds-labels" style="width: 150px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 10px; font-weight: 900;">
+            <span style="color: var(--back-bg);">YES</span>
+            <span style="color: var(--lay-bg);">NO</span>
+          </div>
+        </div>
+
+        {% for pp in match.player_props %}
+        <div class="market-runner-row">
+          <div class="runner-meta">
+            <span class="runner-name" style="font-weight: 800; color: #fff;">{{ pp.title }}</span>
+            <div class="player-role-badge">{{ pp.category }}</div>
+          </div>
+
+          <div class="odds-pair" style="width: 150px;">
+            <div class="odds-box back"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ pp.title }}"
+                 data-type="back"
+                 data-odds="{{ pp.back[0].price }}"
+                 data-market-type="player_props"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ pp.title }}', 'back', {{ pp.back[0].price }}, 'player_props')">
+              <span class="odds-price">{{ "{:.2f}".format(pp.back[0].price) }}</span>
+              <span class="odds-size">YES</span>
+            </div>
+            <div class="odds-box lay"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ pp.title }}"
+                 data-type="lay"
+                 data-odds="{{ pp.lay[0].price }}"
+                 data-market-type="player_props"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ pp.title }}', 'lay', {{ pp.lay[0].price }}, 'player_props')">
+              <span class="odds-price">{{ "{:.2f}".format(pp.lay[0].price) }}</span>
+              <span class="odds-size">NO</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- ==================== MARKET 5: MATCH ODDS (GENUINE PROVIDER FEED) ==================== -->
+      <div class="market-section market-category-section" data-cat="match_odds">
         <div class="market-header-row">
           <div class="market-title">MATCH ODDS • 1-CLICK EXCHANGE</div>
           <div class="odds-labels" style="width: 140px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 10px; font-weight: 800;">
@@ -199,7 +495,9 @@
                  data-match-id="{{ match.id }}"
                  data-runner="{{ r.runner }}"
                  data-type="back"
-                 data-market-type="match_odds">
+                 data-odds="{{ r.back[0].price }}"
+                 data-market-type="match_odds"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ r.runner }}', 'back', {{ r.back[0].price }}, 'match_odds')">
               <span class="odds-price">{% if is_susp %}SUSP{% elif r.back[0].price > 0 %}{{ "{:.2f}".format(r.back[0].price) }}{% else %}-{% endif %}</span>
               <span class="odds-size">{% if not is_susp and r.back[0].size > 0 %}{{ (r.back[0].size / 1000)|round|int }}k{% endif %}</span>
             </div>
@@ -208,7 +506,9 @@
                  data-match-id="{{ match.id }}"
                  data-runner="{{ r.runner }}"
                  data-type="lay"
-                 data-market-type="match_odds">
+                 data-odds="{{ r.lay[0].price }}"
+                 data-market-type="match_odds"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ r.runner }}', 'lay', {{ r.lay[0].price }}, 'match_odds')">
               <span class="odds-price">{% if is_susp %}SUSP{% elif r.lay[0].price > 0 %}{{ "{:.2f}".format(r.lay[0].price) }}{% else %}-{% endif %}</span>
               <span class="odds-size">{% if not is_susp and r.lay[0].size > 0 %}{{ (r.lay[0].size / 1000)|round|int }}k{% endif %}</span>
             </div>
@@ -217,9 +517,9 @@
         {% endfor %}
       </div>
 
-      <!-- MARKET 2: BOOKMAKER 0% COMMISSION -->
+      <!-- ==================== MARKET 6: BOOKMAKER 0% COMMISSION ==================== -->
       {% if match.bookmaker and match.bookmaker|length > 0 %}
-      <div class="market-section">
+      <div class="market-section market-category-section" data-cat="bookmaker">
         <div class="market-header-row">
           <div class="market-title">BOOKMAKER 0% COMMISSION</div>
           <div class="odds-labels" style="width: 140px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 10px; font-weight: 800;">
@@ -246,18 +546,22 @@
                  data-match-id="{{ match.id }}"
                  data-runner="{{ bm.runner }}"
                  data-type="back"
-                 data-market-type="bookmaker">
-              <span class="odds-price">{% if is_susp %}SUSP{% elif bm.back[0].price > 0 %}{{ "{:.2f}".format(bm.back[0].price) }}{% else %}-{% endif %}</span>
-              <span class="odds-size">{% if not is_susp and bm.back[0].size > 0 %}{{ (bm.back[0].size / 1000)|round|int }}k{% endif %}</span>
+                 data-odds="{{ bm.back[0].price if bm.back and bm.back[0] else 1.0 }}"
+                 data-market-type="bookmaker"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ bm.runner }}', 'back', {{ bm.back[0].price if bm.back and bm.back[0] else 1.0 }}, 'bookmaker')">
+              <span class="odds-price">{% if is_susp %}SUSP{% elif bm.back and bm.back[0].price > 0 %}{{ "{:.2f}".format(bm.back[0].price) }}{% else %}-{% endif %}</span>
+              <span class="odds-size">{% if not is_susp and bm.rate_back %}{{ bm.rate_back }}{% endif %}</span>
             </div>
             <div class="odds-box lay {% if is_susp %}suspended{% endif %}"
                  id="box-bm-lay-{{ match.id }}-{{ bm_clean }}"
                  data-match-id="{{ match.id }}"
                  data-runner="{{ bm.runner }}"
                  data-type="lay"
-                 data-market-type="bookmaker">
-              <span class="odds-price">{% if is_susp %}SUSP{% elif bm.lay[0].price > 0 %}{{ "{:.2f}".format(bm.lay[0].price) }}{% else %}-{% endif %}</span>
-              <span class="odds-size">{% if not is_susp and bm.lay[0].size > 0 %}{{ (bm.lay[0].size / 1000)|round|int }}k{% endif %}</span>
+                 data-odds="{{ bm.lay[0].price if bm.lay and bm.lay[0] else 1.0 }}"
+                 data-market-type="bookmaker"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ bm.runner }}', 'lay', {{ bm.lay[0].price if bm.lay and bm.lay[0] else 1.0 }}, 'bookmaker')">
+              <span class="odds-price">{% if is_susp %}SUSP{% elif bm.lay and bm.lay[0].price > 0 %}{{ "{:.2f}".format(bm.lay[0].price) }}{% else %}-{% endif %}</span>
+              <span class="odds-size">{% if not is_susp and bm.rate_lay %}{{ bm.rate_lay }}{% endif %}</span>
             </div>
           </div>
         </div>
@@ -265,38 +569,9 @@
       </div>
       {% endif %}
 
-      <!-- MARKET 3: TIED MATCH (IF AVAILABLE) -->
-      {% if match.tied_match and match.tied_match|length > 0 %}
-      <div class="market-section">
-        <div class="market-header-row">
-          <div class="market-title">TIED MATCH</div>
-          <div class="odds-labels" style="width: 140px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 10px; font-weight: 800;">
-            <span style="color: var(--back-bg);">BACK</span>
-            <span style="color: var(--lay-bg);">LAY</span>
-          </div>
-        </div>
-        {% for tm in match.tied_match %}
-        {% set tm_clean = tm.runner.replace(' ', '_').replace('.', '_').replace('-', '_') %}
-        <div class="market-runner-row">
-          <div class="runner-meta"><span class="runner-name">{{ tm.runner }}</span></div>
-          <div class="odds-pair" style="width: 140px;">
-            <div class="odds-box back" id="box-tm-back-{{ match.id }}-{{ tm_clean }}"
-                 data-match-id="{{ match.id }}" data-runner="{{ tm.runner }}" data-type="back" data-market-type="tied_match">
-              <span class="odds-price">{{ "{:.2f}".format(tm.back[0].price) }}</span>
-            </div>
-            <div class="odds-box lay" id="box-tm-lay-{{ match.id }}-{{ tm_clean }}"
-                 data-match-id="{{ match.id }}" data-runner="{{ tm.runner }}" data-type="lay" data-market-type="tied_match">
-              <span class="odds-price">{{ "{:.2f}".format(tm.lay[0].price) }}</span>
-            </div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-      {% endif %}
-
-      <!-- MARKET 4: FANCY / SESSION BETTING -->
+      <!-- ==================== MARKET 7: FANCY / SESSION BETTING ==================== -->
       {% if match.fancy and match.fancy|length > 0 %}
-      <div class="market-section">
+      <div class="market-section market-category-section" data-cat="fancy">
         <div class="market-header-row">
           <div class="market-title">⚡ FANCY / SESSION OVER RUNS</div>
           <div class="odds-labels" style="width: 140px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 10px; font-weight: 800;">
@@ -309,15 +584,17 @@
         <div class="market-runner-row">
           <div class="runner-meta"><span class="runner-name">{{ f.runner }}</span></div>
           <div class="odds-pair" style="width: 140px;">
-            <div class="odds-box lay" id="box-fancy-no-{{ match.id }}-{{ f_clean }}"
-                 data-match-id="{{ match.id }}" data-runner="{{ f.runner }}" data-type="lay" data-market-type="fancy">
-              <span class="odds-price">{{ f.lay[0].price }}</span>
-              <span class="odds-size">{{ f.lay[0].size }}</span>
+            <div class="odds-box lay fancy-no" id="box-fancy-no-{{ match.id }}-{{ f_clean }}"
+                 data-match-id="{{ match.id }}" data-runner="{{ f.runner }} (NO)" data-type="lay" data-odds="2.00" data-market-type="fancy"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ f.runner }} (NO)', 'lay', 2.00, 'fancy')">
+              <span class="odds-price">{{ f.no_runs }}</span>
+              <span class="odds-size">{{ f.no_rate }}</span>
             </div>
-            <div class="odds-box back" id="box-fancy-yes-{{ match.id }}-{{ f_clean }}"
-                 data-match-id="{{ match.id }}" data-runner="{{ f.runner }}" data-type="back" data-market-type="fancy">
-              <span class="odds-price">{{ f.back[0].price }}</span>
-              <span class="odds-size">{{ f.back[0].size }}</span>
+            <div class="odds-box back fancy-yes" id="box-fancy-yes-{{ match.id }}-{{ f_clean }}"
+                 data-match-id="{{ match.id }}" data-runner="{{ f.runner }} (YES)" data-type="back" data-odds="2.00" data-market-type="fancy"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ f.runner }} (YES)', 'back', 2.00, 'fancy')">
+              <span class="odds-price">{{ f.yes_runs }}</span>
+              <span class="odds-size">{{ f.yes_rate }}</span>
             </div>
           </div>
         </div>
@@ -334,7 +611,7 @@
           ⚡ BET SLIP
         </button>
         <button id="tab-btn-openbets" class="desk-tab-btn" onclick="switchDeskTab('openbets')">
-          MY BETS <span class="badge-count" id="open-bets-count">{{ open_bets|length }}</span>
+          MY BETS <span class="badge-count" id="open-bets-count">{{ open_bets|length if open_bets else 0 }}</span>
         </button>
       </div>
 
@@ -343,8 +620,42 @@
           <div class="betslip-header">
             <span class="betslip-title">⚡ EXCHANGE BET SLIP</span>
           </div>
-          <div class="betslip-empty">
-            Click any <strong>Back (Blue)</strong> or <strong>Lay (Pink)</strong> box on the screen to place an exchange bet.
+          <div class="betslip-empty" id="desktop-betslip-empty">
+            Click any <strong>Back (Blue)</strong> or <strong>Lay (Pink)</strong> box on any player or market to place an exchange bet.
+          </div>
+          <div id="desktop-betslip-form" style="display: none; padding: 12px;">
+            <div style="font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 4px;" id="dt-runner-name">Runner Name</div>
+            <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 10px;">
+              <span id="dt-bet-badge" class="bet-badge back">BACK</span>
+              <span id="dt-market-name" style="font-size: 11px; color: var(--winbuzz-gold); font-weight: 700;">MATCH ODDS</span>
+            </div>
+            
+            <div style="margin-bottom: 8px;">
+              <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">ODDS / RATE</label>
+              <input type="number" id="dt-odds-input" step="0.01" style="width: 100%; background: #1e293b; border: 1px solid #475569; color: #fff; padding: 8px; border-radius: 6px; font-weight: 800; font-size: 14px;">
+            </div>
+
+            <div style="margin-bottom: 10px;">
+              <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">STAKE (₹)</label>
+              <input type="number" id="dt-stake-input" value="500" min="50" step="50" oninput="calculateDesktopProfit()" style="width: 100%; background: #1e293b; border: 1px solid #475569; color: #fff; padding: 8px; border-radius: 6px; font-weight: 800; font-size: 14px;">
+            </div>
+
+            <!-- Quick Stake Chips -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 12px;">
+              <button type="button" class="chip-btn" onclick="setDesktopStake(100)" style="padding: 4px; background: #0f172a; border: 1px solid #334155; color: #cbd5e1; border-radius: 4px; font-size: 10.5px; font-weight: 700;">+100</button>
+              <button type="button" class="chip-btn" onclick="setDesktopStake(500)" style="padding: 4px; background: #0f172a; border: 1px solid #334155; color: #cbd5e1; border-radius: 4px; font-size: 10.5px; font-weight: 700;">+500</button>
+              <button type="button" class="chip-btn" onclick="setDesktopStake(1000)" style="padding: 4px; background: #0f172a; border: 1px solid #334155; color: #cbd5e1; border-radius: 4px; font-size: 10.5px; font-weight: 700;">+1k</button>
+              <button type="button" class="chip-btn" onclick="setDesktopStake(5000)" style="padding: 4px; background: #0f172a; border: 1px solid #334155; color: #cbd5e1; border-radius: 4px; font-size: 10.5px; font-weight: 700;">+5k</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 12px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px;">
+              <span id="dt-calc-label" style="color: #94a3b8;">Potential Profit:</span>
+              <strong id="dt-calc-val" style="color: #00e676; font-size: 14px;">₹0.00</strong>
+            </div>
+
+            <button id="dt-submit-btn" onclick="submitDesktopBet()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #00e701, #009624); color: #000; border: none; border-radius: 8px; font-weight: 900; font-size: 14px; cursor: pointer;">
+              PLACE BET NOW
+            </button>
           </div>
         </div>
       </div>
@@ -366,15 +677,6 @@
                   <span>Odds: <strong style="color: #fff;">{{ bet.odds }}</strong></span>
                   <span>Stake: <strong style="color: #fff;">₹{{ bet.stake }}</strong></span>
                 </div>
-                <button class="btn-turbo-cashout cashout-btn"
-                        data-bet-id="{{ bet.id }}"
-                        data-match-id="{{ bet.match_id }}"
-                        data-runner="{{ bet.runner }}"
-                        data-orig-odds="{{ bet.odds }}"
-                        data-stake="{{ bet.stake }}">
-                  <span>⚡ TURBO CASH-OUT</span>
-                  <span class="cashout-payout">₹{{ bet.stake }}</span>
-                </button>
               </div>
               {% endfor %}
             {% else %}
@@ -400,11 +702,12 @@
           <span id="sheet-runner-name" class="sheet-runner-name">Runner Name</span>
           <span id="sheet-bet-badge" class="bet-badge back">BACK</span>
         </div>
+        <div id="sheet-market-tag" style="font-size: 10.5px; color: var(--winbuzz-gold); font-weight: 700; margin-top: 2px;">MATCH ODDS</div>
       </div>
 
       <!-- Odds Controls -->
       <div class="sheet-input-row">
-        <label>ODDS</label>
+        <label>ODDS / RATE</label>
         <div class="sheet-stepper">
           <button onclick="adjustSheetOdds(-0.01)">-</button>
           <input type="number" id="sheet-odds-input" step="0.01" min="1.01">
@@ -448,66 +751,173 @@
       <span class="nav-tab-icon">⚡</span>
       <span class="nav-tab-label">In-Play</span>
     </a>
-    <a href="/" class="nav-tab" style="text-decoration: none;">
-      <span class="nav-tab-icon">🏆</span>
-      <span class="nav-tab-label">Sports</span>
+    <a href="/casino" class="nav-tab" style="text-decoration: none;">
+      <span class="nav-tab-icon">✈️</span>
+      <span class="nav-tab-label">Aviator</span>
     </a>
     <a href="/casino" class="nav-tab" style="text-decoration: none;">
       <span class="nav-tab-icon">🎰</span>
       <span class="nav-tab-label">Casino</span>
     </a>
-    <a href="/" class="nav-tab" style="text-decoration: none;">
-      <span class="nav-tab-icon">📋</span>
-      <span class="nav-tab-label">My Bets</span>
-      <span class="nav-badge">{{ open_bets|length }}</span>
+    <a href="/admin" class="nav-tab" style="text-decoration: none;">
+      <span class="nav-tab-icon">🛡️</span>
+      <span class="nav-tab-label">Admin</span>
     </a>
-    {% if not user.is_guest and user.mobile %}
-    <a href="/" class="nav-tab" style="text-decoration: none;">
-      <span class="nav-tab-icon">👤</span>
-      <span class="nav-tab-label">Account</span>
-    </a>
-    {% else %}
-    <a href="/login" class="nav-tab" style="text-decoration: none;">
-      <span class="nav-tab-icon">🔑</span>
-      <span class="nav-tab-label" style="color: var(--winbuzz-gold); font-weight: 800;">Login</span>
-    </a>
-    {% endif %}
   </nav>
-
-  <!-- MODAL: ADD MONEY / DEPOSIT -->
-  <div class="modal-overlay" id="deposit-modal">
-    <div class="modal-box" style="max-width: 440px;">
-      <div class="modal-header">
-        <h3>💰 ADD MONEY TO WALLET</h3>
-        <button class="modal-close" onclick="closeDepositModal()">✕</button>
-      </div>
-      <div class="modal-body">
-        <div style="background: rgba(245, 166, 35, 0.08); border: 1px solid var(--winbuzz-gold); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 14px;">
-          <div style="font-size: 11px; color: var(--winbuzz-gold); font-weight: 800; margin-bottom: 6px;">⚡ FAST UPI PAYMENT DETAILS</div>
-          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-darkest); padding: 8px 10px; border-radius: 4px; border: 1px dashed var(--border-light); margin-bottom: 8px;">
-            <div>
-              <div style="font-size: 9.5px; color: var(--text-dim);">Receiver UPI ID:</div>
-              <strong id="deposit-upi-val" style="color: #fff; font-size: 13px;">cricknova@upi</strong>
-            </div>
-            <button type="button" class="btn-quick-credit" onclick="copyUpiId('cricknova@upi')" style="padding: 6px 12px; font-size: 11px;">
-              📋 COPY UPI
-            </button>
-          </div>
-        </div>
-
-        <input type="number" id="deposit-amount-input" value="1000" min="100" step="50"
-               style="width: 100%; margin-bottom: 10px; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 800; border-radius: var(--radius-xs);">
-        <input type="text" id="deposit-utr-input" placeholder="12-digit UTR Number"
-               style="width: 100%; margin-bottom: 14px; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 12px; border-radius: var(--radius-xs);">
-        <button class="btn-deposit" style="width: 100%; padding: 10px; justify-content: center; font-size: 13px; font-weight: 900;" onclick="submitDepositRequest()">
-          ⚡ SUBMIT DEPOSIT REQUEST
-        </button>
-      </div>
-    </div>
-  </div>
 
   <script src="/static/js/app.js"></script>
   <script src="/static/js/live_odds.js"></script>
   <script src="/static/js/betting.js"></script>
+
+  <script>
+    // Universal Bet Trigger for Mobile & Desktop
+    let currentDesktopBet = null;
+
+    function triggerBetSelection(matchId, matchName, runner, type, odds, marketType) {
+      const isMobile = window.innerWidth <= 768 || document.documentElement.classList.contains('is-mobile-device');
+      
+      if (isMobile) {
+        if (typeof openMobileBetSlip === 'function') {
+          openMobileBetSlip(matchId, matchName, runner, type, odds, marketType);
+          const tag = document.getElementById('sheet-market-tag');
+          if (tag) tag.innerText = (marketType || 'MATCH ODDS').toUpperCase().replace('_', ' ');
+        }
+      } else {
+        openDesktopBetSlip(matchId, matchName, runner, type, odds, marketType);
+      }
+    }
+
+    function openDesktopBetSlip(matchId, matchName, runner, type, odds, marketType) {
+      currentDesktopBet = { matchId, matchName, runner, type, odds: parseFloat(odds) || 1.95, stake: 500, marketType };
+      
+      const emptyMsg = document.getElementById('desktop-betslip-empty');
+      const form = document.getElementById('desktop-betslip-form');
+      if (emptyMsg) emptyMsg.style.display = 'none';
+      if (form) form.style.display = 'block';
+
+      document.getElementById('dt-runner-name').innerText = runner;
+      const badge = document.getElementById('dt-bet-badge');
+      badge.className = 'bet-badge ' + type.toLowerCase();
+      badge.innerText = type.toUpperCase();
+
+      document.getElementById('dt-market-name').innerText = (marketType || 'MATCH ODDS').toUpperCase().replace('_', ' ');
+      document.getElementById('dt-odds-input').value = odds;
+      document.getElementById('dt-stake-input').value = 500;
+      calculateDesktopProfit();
+      switchDeskTab('betslip');
+    }
+
+    function setDesktopStake(amount) {
+      const input = document.getElementById('dt-stake-input');
+      if (input) {
+        let cur = parseFloat(input.value) || 0;
+        input.value = cur + amount;
+        calculateDesktopProfit();
+      }
+    }
+
+    function calculateDesktopProfit() {
+      if (!currentDesktopBet) return;
+      const odds = parseFloat(document.getElementById('dt-odds-input').value) || 1.0;
+      const stake = parseFloat(document.getElementById('dt-stake-input').value) || 0;
+      const isBack = currentDesktopBet.type.toLowerCase() === 'back';
+      
+      const label = document.getElementById('dt-calc-label');
+      const val = document.getElementById('dt-calc-val');
+      
+      if (isBack) {
+        const profit = stake * (odds - 1.0);
+        label.innerText = 'Potential Profit:';
+        val.style.color = '#00e676';
+        val.innerText = '₹' + profit.toFixed(2);
+      } else {
+        const liability = stake * (odds - 1.0);
+        label.innerText = 'Liability (Risk):';
+        val.style.color = '#ff5252';
+        val.innerText = '₹' + liability.toFixed(2);
+      }
+    }
+
+    async function submitDesktopBet() {
+      if (!currentDesktopBet) return;
+      const odds = parseFloat(document.getElementById('dt-odds-input').value);
+      const stake = parseFloat(document.getElementById('dt-stake-input').value);
+      const btn = document.getElementById('dt-submit-btn');
+
+      if (isNaN(stake) || stake < 50) {
+        alert('Minimum bet stake is ₹50');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = 'PLACING BET...';
+
+      try {
+        const res = await fetch('/api/bet/place', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            match_id: currentDesktopBet.matchId,
+            runner: currentDesktopBet.runner,
+            type: currentDesktopBet.type,
+            odds: odds,
+            stake: stake,
+            market_type: currentDesktopBet.marketType || 'match_odds'
+          })
+        });
+        const data = await res.json();
+        if (res.status === 401) {
+          alert('⚠️ Please login first to place bets.');
+          window.location.href = '/login';
+          return;
+        }
+        if (res.ok && data.status === 'success') {
+          alert('✅ ' + data.message);
+          window.location.reload();
+        } else {
+          alert('❌ ' + (data.detail || data.message || 'Failed to place bet'));
+        }
+      } catch (err) {
+        alert('Network error while placing bet');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'PLACE BET NOW';
+      }
+    }
+
+    function filterMarketCategory(cat, btn) {
+      if (btn && btn.parentElement) {
+        btn.parentElement.querySelectorAll('.m-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      }
+      const sections = document.querySelectorAll('.market-category-section');
+      sections.forEach(sec => {
+        if (cat === 'all' || sec.dataset.cat === cat) {
+          sec.style.display = 'block';
+        } else {
+          sec.style.display = 'none';
+        }
+      });
+    }
+
+    function switchDeskTab(tab) {
+      const betslipC = document.getElementById('betslip-container');
+      const openbetsC = document.getElementById('open-bets-container');
+      const tabB = document.getElementById('tab-btn-betslip');
+      const tabO = document.getElementById('tab-btn-openbets');
+
+      if (tab === 'betslip') {
+        if (betslipC) betslipC.style.display = 'block';
+        if (openbetsC) openbetsC.style.display = 'none';
+        if (tabB) tabB.classList.add('active');
+        if (tabO) tabO.classList.remove('active');
+      } else {
+        if (betslipC) betslipC.style.display = 'none';
+        if (openbetsC) openbetsC.style.display = 'block';
+        if (tabB) tabB.classList.remove('active');
+        if (tabO) tabO.classList.add('active');
+      }
+    }
+  </script>
 </body>
 </html>

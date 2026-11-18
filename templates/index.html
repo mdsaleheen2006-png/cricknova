@@ -207,19 +207,22 @@
             {% endif %}
           {% endfor %}
 
-          <div class="android-match-card" data-sport="{{ match.sport|default('cricket') }}">
+          <div class="android-match-card" data-sport="{{ match.sport|default('cricket') }}" onclick="if(!event.target.closest('button, .android-odds-pair, .m-odds-box')) window.location.href='/match/{{ match.id }}'" style="cursor: pointer; border-left: 3px solid #ffd700;">
             <!-- Card Header -->
             <div class="android-card-top">
               <div class="android-match-meta">
                 <span class="android-live-pill">LIVE</span>
                 <span class="android-comp-name">{{ match.competition }}</span>
               </div>
-              <a href="/match/{{ match.id }}" class="android-detail-link">Full Markets & Stats →</a>
+              <a href="/match/{{ match.id }}" class="android-detail-link" style="display: inline-flex; align-items: center; gap: 4px; background: rgba(255, 215, 0, 0.18); border: 1px solid #ffd700; color: #ffd700; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 11px; text-decoration: none;">🏏 Live Players & Markets →</a>
             </div>
 
             <!-- Match Title & Score -->
-            <div class="android-match-title-row">
-              <a href="/match/{{ match.id }}" class="android-match-name">{{ match.name }}</a>
+            <div class="android-match-title-row" style="cursor: pointer;" onclick="window.location.href='/match/{{ match.id }}'">
+              <a href="/match/{{ match.id }}" class="android-match-name" style="text-decoration: none; color: #fff; font-size: 14.5px; font-weight: 900; display: flex; align-items: center; gap: 6px;">
+                <span>{{ match.name }}</span>
+                <span style="font-size: 9.5px; background: #0284c7; color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 800;">PLAYERS</span>
+              </a>
               <div class="android-score-badge match-score-{{ match.id }}">{{ match.score }}</div>
             </div>
 
@@ -750,7 +753,7 @@
               {% endif %}
             {% endfor %}
 
-            <div class="exchange-match-row" id="match-row-{{ match.id }}" data-match-id="{{ match.id }}" data-sport="{{ match.sport|default('cricket') }}">
+            <div class="exchange-match-row" id="match-row-{{ match.id }}" data-match-id="{{ match.id }}" data-sport="{{ match.sport|default('cricket') }}" onclick="if(!event.target.closest('button, .odds-cell, .odds-btn, .exchange-cell, .m-odds-box')) window.location.href='/match/{{ match.id }}'" style="cursor: pointer;">
               <!-- Match Info Cell -->
               <a href="/match/{{ match.id }}" class="cell-match-info">
                 <span class="pin-icon" title="Pin to top">☆</span>
@@ -764,7 +767,8 @@
                     <span class="match-score-{{ match.id }}">{{ match.score }}</span>
                   </div>
                 </div>
-                <div class="match-feature-icons" style="margin-left: auto;">
+                <div class="match-feature-icons" style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+                  <a href="/match/{{ match.id }}" class="btn-detail-markets" style="background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; font-size: 11px; padding: 4px 10px; border-radius: 6px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">🏏 Live Players & Markets →</a>
                   <span title="Live Stream">📺</span>
                   <span title="Fancy Session">⚡</span>
                   <span title="Bookmaker">📘</span>
