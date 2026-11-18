@@ -1511,6 +1511,9 @@ GAME_ALIASES = {
     "jetx": "flight",
     "spacexy": "flight",
     "cashcrash": "flight",
+    "cricpilot": "flight",
+    "cric-pilot": "flight",
+    "spribe-aviator": "flight",
     
     # 2. Temple of Gems / Fortune Gems (Official Room: gold)
     "gold": "gold",

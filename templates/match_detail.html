@@ -610,15 +610,117 @@
       </div>
 
       <!-- MARKET CATEGORY FILTER TABS -->
-      <div class="market-tabs-bar">
-        <button type="button" class="m-tab-btn active" onclick="filterMarketCategory('all', this)">⚡ All Markets</button>
-        <button type="button" class="m-tab-btn" onclick="filterMarketCategory('player_runs', this)" style="border-color: #ffd700; color: #ffd700;">🏏 Player Runs ({{ match.player_runs|length if match.player_runs else 0 }})</button>
-        <button type="button" class="m-tab-btn" onclick="filterMarketCategory('top_batsmen', this)">⭐ Top Batsman ({{ match.top_batsmen|length if match.top_batsmen else 0 }})</button>
-        <button type="button" class="m-tab-btn" onclick="filterMarketCategory('top_bowlers', this)">🎯 Top Bowler ({{ match.top_bowlers|length if match.top_bowlers else 0 }})</button>
-        <button type="button" class="m-tab-btn" onclick="filterMarketCategory('match_odds', this)">🏆 Match Odds</button>
-        <button type="button" class="m-tab-btn" onclick="filterMarketCategory('bookmaker', this)">📈 Bookmaker</button>
-        <button type="button" class="m-tab-btn" onclick="filterMarketCategory('fancy', this)">⚡ Session / Fancy</button>
+              <div class="market-tabs-bar">
+          <button type="button" class="m-tab-btn active" onclick="filterMarketCategory('all', this)">⚡ All Markets</button>
+          <button type="button" class="m-tab-btn" onclick="filterMarketCategory('match_odds', this)" style="border-color: #38bdf8; color: #38bdf8; font-weight: 800;">🏆 Match Odds</button>
+          <button type="button" class="m-tab-btn" onclick="filterMarketCategory('bookmaker', this)">📈 Bookmaker</button>
+          <button type="button" class="m-tab-btn" onclick="filterMarketCategory('fancy', this)">⚡ Session / Fancy</button>
+          <button type="button" class="m-tab-btn" onclick="filterMarketCategory('player_runs', this)" style="border-color: #ffd700; color: #ffd700;">🏏 Player Runs ({{ match.player_runs|length if match.player_runs else 0 }})</button>
+          <button type="button" class="m-tab-btn" onclick="filterMarketCategory('top_batsmen', this)">⭐ Top Batsman ({{ match.top_batsmen|length if match.top_batsmen else 0 }})</button>
+          <button type="button" class="m-tab-btn" onclick="filterMarketCategory('top_bowlers', this)">🎯 Top Bowler ({{ match.top_bowlers|length if match.top_bowlers else 0 }})</button>
+        </div>
+
+      <!-- ==================== MARKET 5: MATCH ODDS (GENUINE PROVIDER FEED) ==================== -->
+      <div class="market-section market-category-section" data-cat="match_odds">
+        <div class="market-header-row">
+          <div class="market-title">MATCH ODDS • 1-CLICK EXCHANGE</div>
+          <div class="odds-labels" style="width: 140px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 10px; font-weight: 800;">
+            <span style="color: var(--back-bg);">BACK</span>
+            <span style="color: var(--lay-bg);">LAY</span>
+          </div>
+        </div>
+
+        {% for r in match.match_odds %}
+        {% set r_clean = r.runner.replace(' ', '_').replace('.', '_').replace('-', '_') %}
+        {% set is_susp = (match.status == 'SUSPENDED') or (r.status == 'SUSPENDED') %}
+        <div class="market-runner-row">
+          <div class="runner-meta">
+            <span class="runner-name">{{ r.runner }}</span>
+            {% set pnl = book_match_odds.get(r.runner, 0.0) %}
+            <span class="runner-book-pnl {% if pnl > 0 %}positive{% elif pnl < 0 %}negative{% else %}zero{% endif %} pnl-{{ match.id }}-{{ r_clean }}">
+              {% if pnl > 0 %}+{% endif %}₹{{ "{:.2f}".format(pnl) }}
+            </span>
+          </div>
+
+          <div class="odds-pair" style="width: 140px;">
+            <div class="odds-box back {% if is_susp %}suspended{% endif %}"
+                 id="box-back-{{ match.id }}-{{ r_clean }}"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ r.runner }}"
+                 data-type="back"
+                 data-odds="{{ r.back[0].price }}"
+                 data-market-type="match_odds"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ r.runner }}', 'back', {{ r.back[0].price }}, 'match_odds')">
+              <span class="odds-price">{% if is_susp %}SUSP{% elif r.back[0].price > 0 %}{{ "{:.2f}".format(r.back[0].price) }}{% else %}-{% endif %}</span>
+              <span class="odds-size">{% if not is_susp and r.back[0].size > 0 %}{{ (r.back[0].size / 1000)|round|int }}k{% endif %}</span>
+            </div>
+            <div class="odds-box lay {% if is_susp %}suspended{% endif %}"
+                 id="box-lay-{{ match.id }}-{{ r_clean }}"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ r.runner }}"
+                 data-type="lay"
+                 data-odds="{{ r.lay[0].price }}"
+                 data-market-type="match_odds"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ r.runner }}', 'lay', {{ r.lay[0].price }}, 'match_odds')">
+              <span class="odds-price">{% if is_susp %}SUSP{% elif r.lay[0].price > 0 %}{{ "{:.2f}".format(r.lay[0].price) }}{% else %}-{% endif %}</span>
+              <span class="odds-size">{% if not is_susp and r.lay[0].size > 0 %}{{ (r.lay[0].size / 1000)|round|int }}k{% endif %}</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
       </div>
+
+      <!-- ==================== MARKET 6: BOOKMAKER 0% COMMISSION ==================== -->
+      {% if match.bookmaker and match.bookmaker|length > 0 %}
+      <div class="market-section market-category-section" data-cat="bookmaker">
+        <div class="market-header-row">
+          <div class="market-title">BOOKMAKER 0% COMMISSION</div>
+          <div class="odds-labels" style="width: 140px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 10px; font-weight: 800;">
+            <span style="color: var(--back-bg);">BACK</span>
+            <span style="color: var(--lay-bg);">LAY</span>
+          </div>
+        </div>
+
+        {% for bm in match.bookmaker %}
+        {% set bm_clean = bm.runner.replace(' ', '_').replace('.', '_').replace('-', '_') %}
+        {% set is_susp = (match.status == 'SUSPENDED') or (bm.status == 'SUSPENDED') %}
+        <div class="market-runner-row">
+          <div class="runner-meta">
+            <span class="runner-name">{{ bm.runner }}</span>
+            {% set pnl_bm = book_bookmaker.get(bm.runner, 0.0) %}
+            <span class="runner-book-pnl {% if pnl_bm > 0 %}positive{% elif pnl_bm < 0 %}negative{% else %}zero{% endif %} pnl-bm-{{ match.id }}-{{ bm_clean }}">
+              {% if pnl_bm > 0 %}+{% endif %}₹{{ "{:.2f}".format(pnl_bm) }}
+            </span>
+          </div>
+
+          <div class="odds-pair" style="width: 140px;">
+            <div class="odds-box back {% if is_susp %}suspended{% endif %}"
+                 id="box-bm-back-{{ match.id }}-{{ bm_clean }}"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ bm.runner }}"
+                 data-type="back"
+                 data-odds="{{ bm.back[0].price if bm.back and bm.back[0] else 1.0 }}"
+                 data-market-type="bookmaker"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ bm.runner }}', 'back', {{ bm.back[0].price if bm.back and bm.back[0] else 1.0 }}, 'bookmaker')">
+              <span class="odds-price">{% if is_susp %}SUSP{% elif bm.back and bm.back[0].price > 0 %}{{ "{:.2f}".format(bm.back[0].price) }}{% else %}-{% endif %}</span>
+              <span class="odds-size">{% if not is_susp and bm.rate_back %}{{ bm.rate_back }}{% endif %}</span>
+            </div>
+            <div class="odds-box lay {% if is_susp %}suspended{% endif %}"
+                 id="box-bm-lay-{{ match.id }}-{{ bm_clean }}"
+                 data-match-id="{{ match.id }}"
+                 data-runner="{{ bm.runner }}"
+                 data-type="lay"
+                 data-odds="{{ bm.lay[0].price if bm.lay and bm.lay[0] else 1.0 }}"
+                 data-market-type="bookmaker"
+                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ bm.runner }}', 'lay', {{ bm.lay[0].price if bm.lay and bm.lay[0] else 1.0 }}, 'bookmaker')">
+              <span class="odds-price">{% if is_susp %}SUSP{% elif bm.lay and bm.lay[0].price > 0 %}{{ "{:.2f}".format(bm.lay[0].price) }}{% else %}-{% endif %}</span>
+              <span class="odds-size">{% if not is_susp and bm.rate_lay %}{{ bm.rate_lay }}{% endif %}</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
 
       <!-- ==================== MARKET 1: PLAYER RUNS (FANCY OVER / UNDER) ==================== -->
       {% if match.player_runs and match.player_runs|length > 0 %}
@@ -828,108 +930,6 @@
                  onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ pp.title }}', 'lay', {{ pp.lay[0].price }}, 'player_props')">
               <span class="odds-price">{{ "{:.2f}".format(pp.lay[0].price) }}</span>
               <span class="odds-size">NO</span>
-            </div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-      {% endif %}
-
-      <!-- ==================== MARKET 5: MATCH ODDS (GENUINE PROVIDER FEED) ==================== -->
-      <div class="market-section market-category-section" data-cat="match_odds">
-        <div class="market-header-row">
-          <div class="market-title">MATCH ODDS • 1-CLICK EXCHANGE</div>
-          <div class="odds-labels" style="width: 140px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 10px; font-weight: 800;">
-            <span style="color: var(--back-bg);">BACK</span>
-            <span style="color: var(--lay-bg);">LAY</span>
-          </div>
-        </div>
-
-        {% for r in match.match_odds %}
-        {% set r_clean = r.runner.replace(' ', '_').replace('.', '_').replace('-', '_') %}
-        {% set is_susp = (match.status == 'SUSPENDED') or (r.status == 'SUSPENDED') %}
-        <div class="market-runner-row">
-          <div class="runner-meta">
-            <span class="runner-name">{{ r.runner }}</span>
-            {% set pnl = book_match_odds.get(r.runner, 0.0) %}
-            <span class="runner-book-pnl {% if pnl > 0 %}positive{% elif pnl < 0 %}negative{% else %}zero{% endif %} pnl-{{ match.id }}-{{ r_clean }}">
-              {% if pnl > 0 %}+{% endif %}₹{{ "{:.2f}".format(pnl) }}
-            </span>
-          </div>
-
-          <div class="odds-pair" style="width: 140px;">
-            <div class="odds-box back {% if is_susp %}suspended{% endif %}"
-                 id="box-back-{{ match.id }}-{{ r_clean }}"
-                 data-match-id="{{ match.id }}"
-                 data-runner="{{ r.runner }}"
-                 data-type="back"
-                 data-odds="{{ r.back[0].price }}"
-                 data-market-type="match_odds"
-                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ r.runner }}', 'back', {{ r.back[0].price }}, 'match_odds')">
-              <span class="odds-price">{% if is_susp %}SUSP{% elif r.back[0].price > 0 %}{{ "{:.2f}".format(r.back[0].price) }}{% else %}-{% endif %}</span>
-              <span class="odds-size">{% if not is_susp and r.back[0].size > 0 %}{{ (r.back[0].size / 1000)|round|int }}k{% endif %}</span>
-            </div>
-            <div class="odds-box lay {% if is_susp %}suspended{% endif %}"
-                 id="box-lay-{{ match.id }}-{{ r_clean }}"
-                 data-match-id="{{ match.id }}"
-                 data-runner="{{ r.runner }}"
-                 data-type="lay"
-                 data-odds="{{ r.lay[0].price }}"
-                 data-market-type="match_odds"
-                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ r.runner }}', 'lay', {{ r.lay[0].price }}, 'match_odds')">
-              <span class="odds-price">{% if is_susp %}SUSP{% elif r.lay[0].price > 0 %}{{ "{:.2f}".format(r.lay[0].price) }}{% else %}-{% endif %}</span>
-              <span class="odds-size">{% if not is_susp and r.lay[0].size > 0 %}{{ (r.lay[0].size / 1000)|round|int }}k{% endif %}</span>
-            </div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-
-      <!-- ==================== MARKET 6: BOOKMAKER 0% COMMISSION ==================== -->
-      {% if match.bookmaker and match.bookmaker|length > 0 %}
-      <div class="market-section market-category-section" data-cat="bookmaker">
-        <div class="market-header-row">
-          <div class="market-title">BOOKMAKER 0% COMMISSION</div>
-          <div class="odds-labels" style="width: 140px; display: grid; grid-template-columns: 1fr 1fr; text-align: center; font-size: 10px; font-weight: 800;">
-            <span style="color: var(--back-bg);">BACK</span>
-            <span style="color: var(--lay-bg);">LAY</span>
-          </div>
-        </div>
-
-        {% for bm in match.bookmaker %}
-        {% set bm_clean = bm.runner.replace(' ', '_').replace('.', '_').replace('-', '_') %}
-        {% set is_susp = (match.status == 'SUSPENDED') or (bm.status == 'SUSPENDED') %}
-        <div class="market-runner-row">
-          <div class="runner-meta">
-            <span class="runner-name">{{ bm.runner }}</span>
-            {% set pnl_bm = book_bookmaker.get(bm.runner, 0.0) %}
-            <span class="runner-book-pnl {% if pnl_bm > 0 %}positive{% elif pnl_bm < 0 %}negative{% else %}zero{% endif %} pnl-bm-{{ match.id }}-{{ bm_clean }}">
-              {% if pnl_bm > 0 %}+{% endif %}₹{{ "{:.2f}".format(pnl_bm) }}
-            </span>
-          </div>
-
-          <div class="odds-pair" style="width: 140px;">
-            <div class="odds-box back {% if is_susp %}suspended{% endif %}"
-                 id="box-bm-back-{{ match.id }}-{{ bm_clean }}"
-                 data-match-id="{{ match.id }}"
-                 data-runner="{{ bm.runner }}"
-                 data-type="back"
-                 data-odds="{{ bm.back[0].price if bm.back and bm.back[0] else 1.0 }}"
-                 data-market-type="bookmaker"
-                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ bm.runner }}', 'back', {{ bm.back[0].price if bm.back and bm.back[0] else 1.0 }}, 'bookmaker')">
-              <span class="odds-price">{% if is_susp %}SUSP{% elif bm.back and bm.back[0].price > 0 %}{{ "{:.2f}".format(bm.back[0].price) }}{% else %}-{% endif %}</span>
-              <span class="odds-size">{% if not is_susp and bm.rate_back %}{{ bm.rate_back }}{% endif %}</span>
-            </div>
-            <div class="odds-box lay {% if is_susp %}suspended{% endif %}"
-                 id="box-bm-lay-{{ match.id }}-{{ bm_clean }}"
-                 data-match-id="{{ match.id }}"
-                 data-runner="{{ bm.runner }}"
-                 data-type="lay"
-                 data-odds="{{ bm.lay[0].price if bm.lay and bm.lay[0] else 1.0 }}"
-                 data-market-type="bookmaker"
-                 onclick="triggerBetSelection('{{ match.id }}', '{{ match.name|replace("'", "") }}', '{{ bm.runner }}', 'lay', {{ bm.lay[0].price if bm.lay and bm.lay[0] else 1.0 }}, 'bookmaker')">
-              <span class="odds-price">{% if is_susp %}SUSP{% elif bm.lay and bm.lay[0].price > 0 %}{{ "{:.2f}".format(bm.lay[0].price) }}{% else %}-{% endif %}</span>
-              <span class="odds-size">{% if not is_susp and bm.rate_lay %}{{ bm.rate_lay }}{% endif %}</span>
             </div>
           </div>
         </div>
