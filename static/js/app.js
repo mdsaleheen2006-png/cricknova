@@ -69,9 +69,10 @@ function switchAndroidTab(tabName) {
     }
   });
 
-  // If opening Account tab, refresh user profile
+  // If opening Account tab, refresh user profile and transaction feed
   if (tabName === 'account') {
     checkAuthStatus();
+    loadAccountScreenHistory();
   }
 
   // Scroll to top of Android view
@@ -1265,12 +1266,116 @@ async function switchHistoryTab(tab, isSilent = false) {
     }
   }
 }
+
+// Modal backdrop click handler
+window.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('active');
+  }
+});
+
+// ==================== 8. ACCOUNT SCREEN LIVE STATEMENT & SESSION PERSISTENCE ====================
+async function loadAccountScreenHistory(phoneOverride = null) {
+  const container = document.getElementById('account-screen-history-list');
+  if (!container) return;
+  const phone = phoneOverride || localStorage.getItem('cricknova_user_phone') || '';
+  const url = phone ? `/api/user/deposit-history?phone=${encodeURIComponent(phone)}` : '/api/user/deposit-history';
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      container.innerHTML = '<div style="color:var(--text-dim); text-align:center; padding:10px;">Please login to view your transaction statement.</div>';
+      return;
+    }
+    const data = await res.json();
+    const deposits = data.deposits || [];
+    if (deposits.length === 0) {
+      container.innerHTML = '<div style="color:var(--text-dim); text-align:center; padding:12px;">No deposit requests registered yet.</div>';
+      return;
+    }
+    let html = '<div style="display:flex; flex-direction:column; gap:8px;">';
+    deposits.forEach(d => {
+      const isApproved = d.status === 'APPROVED';
+      const isDeclined = d.status === 'DECLINED';
+      const color = isApproved ? '#00e676' : (isDeclined ? '#ef4444' : '#f5a623');
+      const bg = isApproved ? 'rgba(0,230,118,0.15)' : (isDeclined ? 'rgba(239,68,68,0.15)' : 'rgba(245,166,35,0.15)');
+      const label = isApproved ? '✅ APPROVED & CREDITED' : (isDeclined ? '❌ DECLINED' : '⏳ PENDING REVIEW');
+      const utrText = d.utr ? `UTR: ${d.utr}` : 'Verifying with Slice...';
+      html += `
+        <div style="background:rgba(255,255,255,0.03); border:1px solid ${isApproved ? 'rgba(0,230,118,0.3)' : 'var(--border-dark)'}; border-radius:6px; padding:10px; font-size:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-family:monospace; color:var(--winbuzz-gold); font-weight:800;">${d.id}</span>
+            <span style="font-size:10px; font-weight:800; color:${color}; background:${bg}; border:1px solid ${color}; padding:2px 7px; border-radius:3px;">
+              ${label}
+            </span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:14px; font-weight:900; color:#fff;">₹${Number(d.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+            <span style="font-size:10.5px; color:#94a3b8;">${d.created_at || ''}</span>
+          </div>
+          <div style="font-size:10.5px; color:#cbd5e1; font-family:monospace; margin-top:3px;">
+            ${utrText}
+          </div>
+          ${d.approved_at ? `<div style="font-size:10px; color:#00e676; margin-top:2px; font-weight:700;">Credited to Wallet on ${d.approved_at}</div>` : ''}
+          ${d.decline_reason ? `<div style="font-size:10px; color:#ef4444; margin-top:2px;">${d.decline_reason}</div>` : ''}
+        </div>
+      `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+  } catch (err) {
+    container.innerHTML = `<div style="color:#ef4444; font-size:11px; text-align:center;">Failed to load statement: ${err.message}</div>`;
+  }
 }
 
-  // Modal backdrop click handler
-  window.addEventListener('click', (e) => {
-    if (e.target.classList.contains('modal-overlay')) {
-      e.target.classList.remove('active');
+async function doQuickAccountLogin() {
+  const phone = document.getElementById('quick-login-phone')?.value.trim();
+  const pwd = document.getElementById('quick-login-pwd')?.value.trim();
+  if (!phone) return alert('Please enter your mobile number');
+  if (!pwd) return alert('Please enter your password');
+
+  try {
+    const res = await fetch('/api/auth/login-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier: phone, password: pwd })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      if (data.mobile) {
+        localStorage.setItem('cricknova_user_phone', data.mobile);
+      }
+      alert('🎉 ' + data.message);
+      window.location.reload();
+    } else {
+      alert('❌ ' + (data.detail || 'Login failed'));
     }
-  });
+  } catch (err) {
+    alert('Network error: ' + err.message);
+  }
+}
+
+function lookupClaimsByPhone() {
+  const phone = prompt('Enter your 10-digit mobile number to view your deposit claims:');
+  if (!phone) return;
+  loadAccountScreenHistory(phone.trim());
+}
+
+// Automatic silent session recovery on page load
+document.addEventListener('DOMContentLoaded', () => {
+  const savedPhone = localStorage.getItem('cricknova_user_phone');
+  if (savedPhone) {
+    const phoneHeader = document.getElementById('account-phone-val');
+    if (!phoneHeader) {
+      fetch('/api/auth/silent-restore?phone=' + encodeURIComponent(savedPhone))
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'success') {
+            window.location.reload();
+          }
+        }).catch(() => {});
+    }
+  }
+  loadAccountScreenHistory();
+});
 });

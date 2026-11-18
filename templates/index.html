@@ -417,18 +417,27 @@
       <section id="android-screen-account" class="android-screen">
         <div class="android-account-box">
           {% if user.is_guest or not user.mobile %}
-          <div style="background: rgba(245, 166, 35, 0.08); border: 1px solid var(--winbuzz-gold); border-radius: var(--radius-sm); padding: 20px 16px; text-align: center; margin-bottom: 14px;">
-            <div style="font-size: 36px; margin-bottom: 8px;">🔑</div>
-            <h3 style="color: #fff; font-size: 16px; font-weight: 900; margin-bottom: 6px;">Customer Login Required</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">
-              Sign in with your registered phone number & password to view your real-time wallet balance, add money, and place live bets.
+          <div style="background: rgba(245, 166, 35, 0.08); border: 1px solid var(--winbuzz-gold); border-radius: var(--radius-sm); padding: 18px 14px; text-align: center; margin-bottom: 14px;">
+            <div style="font-size: 32px; margin-bottom: 6px;">🔑</div>
+            <h3 style="color: #fff; font-size: 15px; font-weight: 900; margin-bottom: 4px;">Sign In to Your Account</h3>
+            <p style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 12px;">
+              Enter your mobile number & password to access your wallet, deposit history, and live bets.
             </p>
-            <a href="/login" class="btn-winbuzz-login" style="display: flex; justify-content: center; width: 100%; padding: 12px; font-size: 13.5px; text-decoration: none; margin-bottom: 10px;">
-              🔑 LOGIN WITH PASSWORD
-            </a>
-            <a href="/login?registered=1" class="btn-winbuzz-signup" style="display: flex; justify-content: center; width: 100%; padding: 12px; font-size: 13.5px; text-decoration: none;">
-              ⚡ CREATE NEW ACCOUNT (₹500 BONUS)
-            </a>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; text-align: left;">
+              <input type="text" id="quick-login-phone" placeholder="Mobile Number (e.g. 9229297543)"
+                     style="width: 100%; padding: 10px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 13px; font-weight: 800; border-radius: 4px;">
+              <input type="password" id="quick-login-pwd" placeholder="Password"
+                     style="width: 100%; padding: 10px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 13px; font-weight: 800; border-radius: 4px;">
+            </div>
+            <button type="button" class="btn-deposit" style="width: 100%; padding: 11px; justify-content: center; font-size: 13px; font-weight: 900;" onclick="doQuickAccountLogin()">
+              🔑 LOGIN / RESTORE WALLET 🚀
+            </button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 11px;">
+              <a href="/login?registered=1" style="color: var(--winbuzz-gold); text-decoration: none; font-weight: 800;">⚡ Create New (₹500 Bonus)</a>
+              <button type="button" onclick="lookupClaimsByPhone()" style="background: none; border: none; color: #38bdf8; cursor: pointer; text-decoration: underline; font-size: 11px;">
+                🔍 View My Claims History
+              </button>
+            </div>
           </div>
           {% else %}
           <div class="account-profile-header">
@@ -456,14 +465,27 @@
             </button>
           </div>
           <div class="account-actions-grid" style="margin-bottom: 12px; gap: 6px;">
-            <button class="btn-header" style="padding: 9px; justify-content: center; font-size: 11px; font-weight: 800; background: rgba(245, 166, 35, 0.1); border: 1px solid var(--winbuzz-gold); color: var(--winbuzz-gold);" onclick="openHistoryModal('deposit')">
-              ⚡ DEPOSIT HISTORY
+            <button class="btn-header" style="padding: 9px; justify-content: center; font-size: 11px; font-weight: 800; background: rgba(245, 166, 35, 0.15); border: 1px solid var(--winbuzz-gold); color: var(--winbuzz-gold);" onclick="openHistoryModal('deposit')">
+              ⚡ DEPOSIT STATEMENT (HISTORY)
             </button>
-            <button class="btn-header" style="padding: 9px; justify-content: center; font-size: 11px; font-weight: 800; background: rgba(0, 176, 255, 0.1); border: 1px solid #00b0ff; color: #00b0ff;" onclick="openHistoryModal('withdraw')">
-              💳 WITHDRAW HISTORY
+            <button class="btn-header" style="padding: 9px; justify-content: center; font-size: 11px; font-weight: 800; background: rgba(0, 176, 255, 0.15); border: 1px solid #00b0ff; color: #00b0ff;" onclick="openHistoryModal('withdraw')">
+              💳 WITHDRAW STATEMENT
             </button>
           </div>
           {% endif %}
+
+          <!-- Direct Real-Time Statement Box on Account Screen -->
+          <div style="background: var(--bg-darkest); border: 1px solid var(--border-dark); border-radius: 8px; padding: 12px; margin-bottom: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 12px; font-weight: 800; color: var(--winbuzz-gold);">📜 REAL-TIME TRANSACTION FEED</span>
+              <button class="btn-header" style="font-size: 10px; padding: 3px 8px; background: rgba(245, 166, 35, 0.15); color: var(--winbuzz-gold); border: 1px solid var(--winbuzz-gold); border-radius: 4px;" onclick="openHistoryModal('deposit')">
+                FULL STATEMENT →
+              </button>
+            </div>
+            <div id="account-screen-history-list" style="font-size: 11.5px; max-height: 240px; overflow-y: auto;">
+              <div style="text-align: center; color: var(--text-dim); padding: 12px;">⏳ Loading your live transaction statement...</div>
+            </div>
+          </div>
 
           <div class="account-links-list">
             <a href="https://wa.me/{{ payment_config.whatsapp_number }}?text=Hi%20CrickNova%2C%20I%20need%20help%20with%20my%20account" target="_blank" class="account-link-item" style="color: #25d366; font-weight: 800;">
@@ -571,17 +593,10 @@
         <span class="nav-tab-label">My Bets</span>
         <span class="nav-badge" id="bottom-bets-count">{{ open_bets|length }}</span>
       </button>
-      {% if not user.is_guest and user.mobile %}
       <button class="nav-tab" data-tab="account" onclick="switchAndroidTab('account')">
         <span class="nav-tab-icon">👤</span>
         <span class="nav-tab-label">Account</span>
       </button>
-      {% else %}
-      <a href="/login" class="nav-tab" style="text-decoration: none;">
-        <span class="nav-tab-icon">🔑</span>
-        <span class="nav-tab-label" style="color: var(--winbuzz-gold); font-weight: 800;">Login</span>
-      </a>
-      {% endif %}
     </nav>
   </div>
 

@@ -476,6 +476,9 @@
         });
         const data = await res.json();
         if (res.ok) {
+          if (data.mobile) {
+            localStorage.setItem('cricknova_user_phone', data.mobile);
+          }
           window.location.href = '/';
         } else {
           alert('❌ ' + (data.detail || 'Login failed'));
