@@ -48,6 +48,14 @@ app.add_middleware(
 )
 
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+
+casino_games_dir = os.path.join(BASE_DIR, "static", "casino_games")
+if os.path.exists(casino_games_dir):
+    app.mount("/casino-games", StaticFiles(directory=casino_games_dir, html=True), name="casino_games")
+
+roulette_3d_dir = os.path.join(BASE_DIR, "static", "roulette_3d")
+if os.path.exists(roulette_3d_dir):
+    app.mount("/roulette-3d", StaticFiles(directory=roulette_3d_dir, html=True), name="roulette_3d")
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 # ==================== DATA HELPERS ====================
@@ -1326,12 +1334,22 @@ async def match_detail(request: Request, match_id: str):
 # ============================================================================
 
 GAME_ALIASES = {
+    # 0. Integrated Originals & 3D Games
+    "crash": "crash",
+    "cricknova-crash": "crash",
+    "plinko": "plinko",
+    "cricknova-plinko": "plinko",
+    "mines": "mines",
+    "cricknova-mines": "mines",
+    "roulette-3d": "roulette-3d",
+    "roulette_3d": "roulette-3d",
+    "roulette-royale": "roulette-3d",
+
     # 1. Spribe Aviator Flight Game (Official Room: flight)
     "aviator": "flight",
     "flight": "flight",
     "spaceman": "flight",
     "jetx": "flight",
-    "crash": "flight",
     "spacexy": "flight",
     "cashcrash": "flight",
     
@@ -1738,9 +1756,18 @@ def evaluate_bet_payout(game_id: str, outcome: Dict[str, Any], bet_type: str) ->
 
 @app.get("/casino", response_class=HTMLResponse)
 @app.get("/casino/{game_slug}", response_class=HTMLResponse)
-async def casino_arena(request: Request, game_slug: str = "flight"):
+async def casino_arena(request: Request, game_slug: str = "lobby"):
     if game_slug in GAME_ALIASES:
         game_slug = GAME_ALIASES[game_slug]
+
+    if game_slug == "crash":
+        return RedirectResponse(url="/casino-games/#/crash", status_code=302)
+    elif game_slug == "plinko":
+        return RedirectResponse(url="/casino-games/#/plinko", status_code=302)
+    elif game_slug == "mines":
+        return RedirectResponse(url="/casino-games/#/mines", status_code=302)
+    elif game_slug in ("roulette-3d", "roulette_3d"):
+        return RedirectResponse(url="/roulette-3d/", status_code=302)
 
     user = get_active_user(request)
     recalculate_user_exposure(user)

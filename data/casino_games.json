@@ -1,5 +1,57 @@
 [
   {
+    "id": "crash",
+    "slug": "crash",
+    "name": "Cricknova Crash • Live Rocket Multiplier",
+    "category": "crash",
+    "provider": "CrickNova Originals",
+    "badge": "HOT MULTIPLIER",
+    "players": 1940,
+    "icon": "🚀",
+    "gradient": "linear-gradient(135deg, #10b981, #064e3b)",
+    "description": "Watch the multiplier rocket soar! Cash out before the crash to win up to 1,000,000x.",
+    "play_url": "/casino-games/#/crash"
+  },
+  {
+    "id": "roulette-3d",
+    "slug": "roulette-3d",
+    "name": "3D Roulette Royale • European Table",
+    "category": "roulette",
+    "provider": "CrickNova 3D Studio",
+    "badge": "3D PHYSICS",
+    "players": 1120,
+    "icon": "🎡",
+    "gradient": "linear-gradient(135deg, #dc2626, #450a0a)",
+    "description": "Realistic 3D roulette wheel with ball physics, dynamic camera views, and authentic casino room sound.",
+    "play_url": "/roulette-3d/"
+  },
+  {
+    "id": "plinko",
+    "slug": "plinko",
+    "name": "Cricknova Plinko • Gravity Drop",
+    "category": "arcade",
+    "provider": "CrickNova Originals",
+    "badge": "1000X MULTI",
+    "players": 1350,
+    "icon": "⚪",
+    "gradient": "linear-gradient(135deg, #6366f1, #312e81)",
+    "description": "Drop balls through peg pyramids with configurable risk levels and massive edge multipliers.",
+    "play_url": "/casino-games/#/plinko"
+  },
+  {
+    "id": "mines",
+    "slug": "mines",
+    "name": "Cricknova Mines • 5x5 Grid Cashout",
+    "category": "arcade",
+    "provider": "CrickNova Originals",
+    "badge": "POPULAR #1",
+    "players": 1620,
+    "icon": "💎",
+    "gradient": "linear-gradient(135deg, #f59e0b, #78350f)",
+    "description": "Uncover sparkling gems and dodge the hidden mines. Cash out anytime as payout compounds!",
+    "play_url": "/casino-games/#/mines"
+  },
+  {
     "id": "flight",
     "slug": "flight",
     "name": "Aviator • Spribe Official Cockpit",
@@ -7,9 +59,10 @@
     "provider": "Spribe Official",
     "badge": "TRENDING #1",
     "players": 1420,
-    "icon": "🚀",
+    "icon": "✈️",
     "gradient": "linear-gradient(135deg, #e11d48, #4c0519)",
-    "description": "Multiplayer live flight multiplier with auto cashout and dual cockpit betting."
+    "description": "Multiplayer live flight multiplier with auto cashout and dual cockpit betting.",
+    "play_url": "/casino/flight"
   },
   {
     "id": "gold",
@@ -21,7 +74,8 @@
     "players": 980,
     "icon": "💎",
     "gradient": "linear-gradient(135deg, #b45309, #78350f)",
-    "description": "3 classic reels with golden multiplier wheel feature up to 1000x."
+    "description": "3 classic reels with golden multiplier wheel feature up to 1000x.",
+    "play_url": "/casino/gold"
   },
   {
     "id": "andar",
@@ -33,7 +87,8 @@
     "players": 1150,
     "icon": "🃏",
     "gradient": "linear-gradient(135deg, #0ea5e9, #0369a1)",
-    "description": "Fast matching-card table with Andar, Bahar and card count side bets."
+    "description": "Fast matching-card table with Andar, Bahar and card count side bets.",
+    "play_url": "/casino/andar"
   },
   {
     "id": "wheel",
@@ -43,9 +98,10 @@
     "provider": "Live Studio",
     "badge": "36X ODDS",
     "players": 820,
-    "icon": "🎡",
+    "icon": "🎯",
     "gradient": "linear-gradient(135deg, #ffd700, #b45309)",
-    "description": "European single zero 0-36 roulette with straight up, red/black, dozens, and columns."
+    "description": "European single zero 0-36 roulette with straight up, red/black, dozens, and columns.",
+    "play_url": "/casino/wheel"
   },
   {
     "id": "storm",
@@ -57,18 +113,20 @@
     "players": 640,
     "icon": "⚡",
     "gradient": "linear-gradient(135deg, #0891b2, #164e63)",
-    "description": "Six reels Egyptian Nile theme with wild scarabs, cascades, and free spins multiplier."
+    "description": "Six reels Egyptian Nile theme with wild scarabs, cascades, and free spins multiplier.",
+    "play_url": "/casino/storm"
   },
   {
     "id": "bingo",
     "slug": "bingo",
-    "name": "Palace Bingo • 4-Ticket 90-Ball",
+    "name": "Super Bingo • Fast Balls 90",
     "category": "arcade",
-    "provider": "Arcade Rooms",
+    "provider": "VIP Arcade",
     "badge": "INSTANT WIN",
     "players": 510,
     "icon": "🎱",
-    "gradient": "linear-gradient(135deg, #059669, #064e3b)",
-    "description": "Four live bingo cards with 90-ball drum caller and line jackpot payouts."
+    "gradient": "linear-gradient(135deg, #10b981, #064e3b)",
+    "description": "Instant live bingo with multiple cards, bonus balls, and progressive jackpot lines.",
+    "play_url": "/casino/bingo"
   }
 ]
