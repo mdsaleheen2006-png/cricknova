@@ -2849,7 +2849,7 @@ async def submit_deposit_request(request: Request):
         raise HTTPException(status_code=401, detail="Please login to your account to submit a deposit request.")
 
     content_type = request.headers.get("content-type", "")
-    amount = 500.0
+    amount = 100.0
     utr = ""
     method = "YouPI Slice UPI"
     notes = "Customer deposit claim"
@@ -2857,39 +2857,61 @@ async def submit_deposit_request(request: Request):
     req_id_param = ""
 
     if "multipart/form-data" in content_type:
-        form = await request.form()
         try:
-            amount = float(form.get("amount", 500.0))
-        except (ValueError, TypeError):
-            amount = 500.0
-        utr = str(form.get("utr", "")).strip()
-        method = str(form.get("method", "YouPI Slice UPI")).strip()
-        notes = str(form.get("notes", "Customer deposit claim")).strip()
-        req_id_param = str(form.get("request_id", "")).strip()
+            form = await request.form()
+            try:
+                amount = float(form.get("amount", 100.0))
+            except (ValueError, TypeError):
+                amount = 100.0
+            utr = str(form.get("utr", "")).strip()
+            method = str(form.get("method", "YouPI Slice UPI")).strip()
+            notes = str(form.get("notes", "Customer deposit claim")).strip()
+            req_id_param = str(form.get("request_id", "")).strip()
 
-        proof_file = form.get("proof_image")
-        if proof_file and hasattr(proof_file, "filename") and proof_file.filename:
-            upload_dir = os.path.join(BASE_DIR, "static", "uploads", "deposits")
-            os.makedirs(upload_dir, exist_ok=True)
-            ext = os.path.splitext(proof_file.filename)[1].lower() or ".jpg"
-            clean_token = re.sub(r'[^0-9A-Za-z]', '', utr)[-6:] if utr else str(random.randint(1000, 9999))
-            filename = f"proof_{time.strftime('%Y%m%d%H%M%S')}_{clean_token}{ext}"
-            filepath = os.path.join(upload_dir, filename)
-            file_bytes = await proof_file.read()
-            with open(filepath, "wb") as f:
-                f.write(file_bytes)
-            screenshot_url = f"/static/uploads/deposits/{filename}"
+            proof_file = form.get("proof_image")
+            if proof_file and hasattr(proof_file, "filename") and proof_file.filename:
+                upload_dir = os.path.join(BASE_DIR, "static", "uploads", "deposits")
+                os.makedirs(upload_dir, exist_ok=True)
+                ext = os.path.splitext(proof_file.filename)[1].lower() or ".jpg"
+                clean_token = re.sub(r'[^0-9A-Za-z]', '', utr)[-6:] if utr else str(random.randint(1000, 9999))
+                filename = f"proof_{time.strftime('%Y%m%d%H%M%S')}_{clean_token}{ext}"
+                filepath = os.path.join(upload_dir, filename)
+                file_bytes = await proof_file.read()
+                with open(filepath, "wb") as f:
+                    f.write(file_bytes)
+                screenshot_url = f"/static/uploads/deposits/{filename}"
+        except Exception as form_err:
+            print(f"[Form parsing warning]: {form_err}")
     else:
-        data = await request.json()
         try:
-            amount = float(data.get("amount", 500.0))
+            data = await request.json()
+        except Exception:
+            data = {}
+        try:
+            amount = float(data.get("amount", 100.0))
         except (ValueError, TypeError):
-            amount = 500.0
+            amount = 100.0
         utr = str(data.get("utr", "")).strip()
         method = str(data.get("method", "YouPI Slice UPI")).strip()
         notes = str(data.get("notes", "Customer deposit claim")).strip()
         screenshot_url = str(data.get("screenshot_url", "")).strip()
         req_id_param = str(data.get("request_id", "")).strip()
+
+        screenshot_base64 = str(data.get("screenshot_base64", "")).strip()
+        if screenshot_base64 and "," in screenshot_base64:
+            try:
+                header, b64data = screenshot_base64.split(",", 1)
+                file_bytes = base64.b64decode(b64data)
+                upload_dir = os.path.join(BASE_DIR, "static", "uploads", "deposits")
+                os.makedirs(upload_dir, exist_ok=True)
+                clean_token = re.sub(r'[^0-9A-Za-z]', '', utr)[-6:] if utr else str(random.randint(1000, 9999))
+                filename = f"proof_{time.strftime('%Y%m%d%H%M%S')}_{clean_token}.jpg"
+                filepath = os.path.join(upload_dir, filename)
+                with open(filepath, "wb") as f:
+                    f.write(file_bytes)
+                screenshot_url = f"/static/uploads/deposits/{filename}"
+            except Exception as b64_err:
+                print(f"[Base64 image upload error]: {b64_err}")
 
     if amount < 100.0 or amount > 100000.0:
         raise HTTPException(status_code=400, detail="Deposit amount must be between ₹100 and ₹1,00,000")

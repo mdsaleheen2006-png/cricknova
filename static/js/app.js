@@ -649,24 +649,39 @@ async function submitDepositRequestWithProof() {
   }
 
   try {
-    const formData = new FormData();
-    formData.append('amount', amount);
-    formData.append('utr', utr || `SCREENSHOT-${Date.now()}`);
-    formData.append('method', 'YouPI Slice UPI');
-    formData.append('notes', 'Customer deposit via Slice UPI (Tarana Nasreen: 9693554087@slc)');
+    const submitPayload = {
+      amount: amount,
+      utr: utr || `PROOF${Date.now()}`,
+      method: 'YouPI Slice UPI',
+      notes: 'Customer deposit via Slice UPI (Tarana Nasreen: 9693554087@slc)'
+    };
     if (activeYouPiDepositSession && activeYouPiDepositSession.request_id) {
-      formData.append('request_id', activeYouPiDepositSession.request_id);
+      submitPayload.request_id = activeYouPiDepositSession.request_id;
     }
 
     if (hasProofFile) {
-      formData.append('proof_image', fileInput.files[0]);
+      const file = fileInput.files[0];
+      const b64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(file);
+      });
+      if (b64) submitPayload.screenshot_base64 = b64;
     }
 
     const res = await fetch('/api/user/deposit-request', {
       method: 'POST',
-      body: formData
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(submitPayload)
     });
-    const data = await res.json();
+
+    let data = null;
+    try {
+      data = await res.json();
+    } catch (parseErr) {
+      // Handle HTML or text error
+    }
 
     if (res.status === 401) {
       alert('⚠️ Please login first to deposit money into your account.');
@@ -674,7 +689,7 @@ async function submitDepositRequestWithProof() {
       return;
     }
 
-    if (res.ok) {
+    if (res.ok && data) {
       if (resultBox) {
         resultBox.style.display = 'block';
         resultBox.style.background = 'rgba(168, 85, 247, 0.12)';
@@ -684,15 +699,16 @@ async function submitDepositRequestWithProof() {
           <div style="font-weight: 900; color: #c084fc; margin-bottom: 4px;">⏳ SLICE UPI CLAIM SUBMITTED (PENDING REVIEW)</div>
           <div>Request ID: <strong style="color: #fff;">${data.request.id}</strong></div>
           <div>Amount: <strong style="color: #c084fc;">₹${amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</strong></div>
-          <div>UTR Claim: <code style="color: #fff;">${utr}</code></div>
+          <div>UTR Claim: <code style="color: #fff;">${utr || data.request.utr}</code></div>
           <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
-            Your deposit request is pending manual verification. Admin will verify against Slice transaction history for Tarana Nasreen (9693554087@slc) and credit your wallet.
+            Your deposit request is pending verification. If Slice bank alert was captured, YouPI will auto-credit in seconds!
           </div>
         `;
       }
-      alert(`✅ Deposit Claim of ₹${amount.toLocaleString('en-IN')} submitted!\n\nStatus: PENDING ADMIN REVIEW.\nAdmin is verifying your UTR against Slice app history.`);
+      alert(`✅ Deposit Claim of ₹${amount.toLocaleString('en-IN')} submitted successfully!\n\nStatus: PENDING REVIEW.\nYour deposit is registered and being verified against Slice.`);
     } else {
-      alert('❌ ' + (data.detail || data.message || 'Failed to submit request'));
+      const errMsg = (data && (data.detail || data.message)) || `Server returned error status ${res.status}`;
+      alert('❌ ' + errMsg);
     }
   } catch (err) {
     alert('Network error submitting deposit: ' + err.message);
