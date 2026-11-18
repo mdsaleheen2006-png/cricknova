@@ -1433,10 +1433,10 @@ GAME_ALIASES = {
     "supersicbo": "bingo",
     "sicbo": "bingo",
     "sic-bo-live": "bingo",
-    "plinko": "bingo",
-    "plinkospribe": "bingo",
-    "mines": "bingo",
-    "stakemines": "bingo",
+    "plinko": "plinko",
+    "plinkospribe": "plinko",
+    "mines": "mines",
+    "stakemines": "mines",
     "dice": "bingo",
     "spribedice": "bingo"
 }
