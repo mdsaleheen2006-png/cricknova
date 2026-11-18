@@ -2435,7 +2435,10 @@ async def register_user(request: Request):
 
 @app.post("/api/auth/login-password")
 async def login_with_password(request: Request):
-    data = await request.json()
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
     identifier = str(data.get("identifier") or data.get("mobile") or data.get("email") or "").strip().replace(" ", "")
     password = str(data.get("password", "")).strip()
 
