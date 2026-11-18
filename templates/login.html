@@ -476,9 +476,9 @@
         });
         const data = await res.json();
         if (res.ok) {
-          if (data.mobile) {
-            localStorage.setItem('cricknova_user_phone', data.mobile);
-          }
+          const userMob = String(data.mobile || identifier).replace(/\D/g, '').slice(-10);
+          localStorage.setItem('cricknova_user_phone', userMob);
+          document.cookie = `cricknova_user=${userMob}; path=/; max-age=31536000; SameSite=Lax`;
           window.location.href = '/';
         } else {
           alert('❌ ' + (data.detail || 'Login failed'));
@@ -612,6 +612,9 @@
         });
         const data = await res.json();
         if (res.ok) {
+          const userMob = String(mobile).replace(/\D/g, '').slice(-10);
+          localStorage.setItem('cricknova_user_phone', userMob);
+          document.cookie = `cricknova_user=${userMob}; path=/; max-age=31536000; SameSite=Lax`;
           alert('🎉 Account created! ₹500 welcome bonus added.');
           window.location.href = '/';
         } else {

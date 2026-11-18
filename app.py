@@ -910,7 +910,7 @@ async def login_page(request: Request):
 @app.get("/logout")
 async def logout_redirect():
     response = RedirectResponse(url="/login?logout=1", status_code=302)
-    response.delete_cookie("cricknova_user")
+    response.delete_cookie("cricknova_user", path="/")
     return response
 
 @app.get("/match/{match_id}", response_class=HTMLResponse)
@@ -2271,7 +2271,7 @@ async def verify_email_otp_api(request: Request):
         "user": user_sanitized,
         "identifier": target_key
     })
-    response.set_cookie("cricknova_user", target_key, max_age=86400 * 30, httponly=False)
+    response.set_cookie("cricknova_user", target_key, max_age=86400 * 365, httponly=False, samesite="lax", path="/")
     return response
 
 @app.post("/api/auth/reset-password-email")
@@ -2324,7 +2324,7 @@ async def reset_password_email_api(request: Request):
         "user": user_sanitized,
         "identifier": target_key
     })
-    response.set_cookie("cricknova_user", target_key, max_age=86400 * 30, httponly=False)
+    response.set_cookie("cricknova_user", target_key, max_age=86400 * 365, httponly=False, samesite="lax", path="/")
     return response
 
 @app.post("/api/auth/send-otp")
@@ -2430,7 +2430,7 @@ async def register_user(request: Request):
         "user": user_sanitized,
         "mobile": mobile
     })
-    response.set_cookie("cricknova_user", mobile, max_age=86400 * 30, httponly=False)
+    response.set_cookie("cricknova_user", mobile, max_age=86400 * 365, httponly=False, samesite="lax", path="/")
     return response
 
 @app.post("/api/auth/login-password")
@@ -2542,7 +2542,7 @@ async def login_with_password(request: Request):
         "user": user_sanitized,
         "mobile": target_user.get("mobile", target_key)
     })
-    response.set_cookie("cricknova_user", target_key, max_age=86400 * 365, httponly=False, samesite="lax")
+    response.set_cookie("cricknova_user", target_key, max_age=86400 * 365, httponly=False, samesite="lax", path="/")
     return response
 
 @app.get("/api/auth/silent-restore")
@@ -2572,7 +2572,7 @@ async def silent_restore_auth(request: Request):
 
     if target_user:
         resp = JSONResponse(content={"status": "success", "mobile": target_key, "balance": target_user.get("balance", 0.0)})
-        resp.set_cookie("cricknova_user", target_key, max_age=86400 * 365, httponly=False, samesite="lax")
+        resp.set_cookie("cricknova_user", target_key, max_age=86400 * 365, httponly=False, samesite="lax", path="/")
         return resp
     return JSONResponse(status_code=404, content={"status": "error", "message": "User not found"})
 
@@ -2631,7 +2631,7 @@ async def verify_otp(request: Request):
         "user": user_sanitized,
         "mobile": mobile
     })
-    response.set_cookie("cricknova_user", mobile, max_age=86400 * 30, httponly=False)
+    response.set_cookie("cricknova_user", mobile, max_age=86400 * 365, httponly=False, samesite="lax", path="/")
     return response
 
 @app.post("/api/auth/reset-password")
@@ -2670,13 +2670,13 @@ async def reset_password(request: Request):
         "user": user_sanitized,
         "mobile": mobile
     })
-    response.set_cookie("cricknova_user", mobile, max_age=86400 * 30, httponly=False)
+    response.set_cookie("cricknova_user", mobile, max_age=86400 * 365, httponly=False, samesite="lax", path="/")
     return response
 
 @app.post("/api/auth/logout")
 async def user_logout():
     response = JSONResponse(content={"status": "success", "message": "Logged out successfully"})
-    response.delete_cookie("cricknova_user")
+    response.delete_cookie("cricknova_user", path="/")
     return response
 
 @app.get("/api/auth/me")

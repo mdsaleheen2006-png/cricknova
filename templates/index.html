@@ -100,7 +100,7 @@
           📜 HISTORY
         </button>
         <span class="user-badge-header">📱 {{ user.mobile }}</span>
-        <a href="/logout" class="btn-header btn-logout-hdr" title="Sign Out">LOGOUT</a>
+        <a href="/logout" onclick="localStorage.removeItem('cricknova_user_phone'); document.cookie='cricknova_user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';" class="btn-header btn-logout-hdr" title="Sign Out">LOGOUT</a>
         {% else %}
         <!-- WINBUZZ STYLE LOGIN & SIGN UP BUTTONS -->
         <a href="/login" class="btn-winbuzz-login">🔑 LOGIN</a>

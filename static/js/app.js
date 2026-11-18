@@ -285,10 +285,13 @@ async function handlePasswordLogin(e) {
     const res = await fetch('/api/auth/login-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mobile: mobile, password: password })
+      body: JSON.stringify({ mobile: mobile, identifier: mobile, password: password })
     });
     const data = await res.json();
     if (res.ok) {
+      const userMob = String(data.mobile || mobile).replace(/\D/g, '').slice(-10);
+      localStorage.setItem('cricknova_user_phone', userMob);
+      document.cookie = `cricknova_user=${userMob}; path=/; max-age=31536000; SameSite=Lax`;
       alert(`✅ ${data.message}`);
       closeLoginModal();
       window.location.reload();
@@ -388,6 +391,9 @@ async function completeRegistration() {
     });
     const data = await res.json();
     if (res.ok) {
+      const userMob = String(data.mobile || mobile).replace(/\D/g, '').slice(-10);
+      localStorage.setItem('cricknova_user_phone', userMob);
+      document.cookie = `cricknova_user=${userMob}; path=/; max-age=31536000; SameSite=Lax`;
       alert(`🎉 ${data.message}\nYour account is verified and password is saved securely!`);
       closeLoginModal();
       window.location.reload();
@@ -464,6 +470,9 @@ async function completeOtpOnlyLogin() {
     });
     const data = await res.json();
     if (res.ok) {
+      const userMob = String(data.mobile || mobile).replace(/\D/g, '').slice(-10);
+      localStorage.setItem('cricknova_user_phone', userMob);
+      document.cookie = `cricknova_user=${userMob}; path=/; max-age=31536000; SameSite=Lax`;
       alert(`✅ ${data.message}`);
       closeLoginModal();
       window.location.reload();
@@ -1342,9 +1351,9 @@ async function doQuickAccountLogin() {
     });
     const data = await res.json();
     if (res.ok) {
-      if (data.mobile) {
-        localStorage.setItem('cricknova_user_phone', data.mobile);
-      }
+      const userMob = String(data.mobile || phone).replace(/\D/g, '').slice(-10);
+      localStorage.setItem('cricknova_user_phone', userMob);
+      document.cookie = `cricknova_user=${userMob}; path=/; max-age=31536000; SameSite=Lax`;
       alert('🎉 ' + data.message);
       window.location.reload();
     } else {
@@ -1361,16 +1370,26 @@ function lookupClaimsByPhone() {
   loadAccountScreenHistory(phone.trim());
 }
 
-// Automatic silent session recovery on page load
+// Automatic silent session recovery on page load (Mobile WebView & Desktop)
 document.addEventListener('DOMContentLoaded', () => {
   const savedPhone = localStorage.getItem('cricknova_user_phone');
   if (savedPhone) {
-    const phoneHeader = document.getElementById('account-phone-val');
-    if (!phoneHeader) {
+    if (!document.cookie.includes('cricknova_user=')) {
+      document.cookie = `cricknova_user=${savedPhone}; path=/; max-age=31536000; SameSite=Lax`;
+    }
+    const guestBox = document.getElementById('account-login-box') || document.querySelector('.btn-login-hdr');
+    const userBadge = document.querySelector('.user-badge-header') || document.getElementById('account-phone-val');
+    if (!userBadge && guestBox) {
       fetch('/api/auth/silent-restore?phone=' + encodeURIComponent(savedPhone))
         .then(r => r.json())
         .then(data => {
           if (data.status === 'success') {
+            document.cookie = `cricknova_user=${data.mobile || savedPhone}; path=/; max-age=31536000; SameSite=Lax`;
+            window.location.reload();
+          } else if (data.status === 'error' && data.message && data.message.includes('Blocked')) {
+            localStorage.removeItem('cricknova_user_phone');
+            document.cookie = 'cricknova_user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+            alert('⛔ Account is Blocked by Admin');
             window.location.reload();
           }
         }).catch(() => {});
