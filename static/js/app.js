@@ -1118,7 +1118,7 @@ document.addEventListener('DOMContentLoaded', () => {
 let historyPollingTimer = null;
 let currentHistoryTab = 'deposit';
 
-function openHistoryModal(tab = 'deposit') {
+function openHistoryModal(tab = 'all') {
   closeDepositModal();
   closeWithdrawModal();
   const modal = document.getElementById('history-modal');
@@ -1150,6 +1150,7 @@ function closeHistoryModal() {
 
 async function switchHistoryTab(tab, isSilent = false) {
   currentHistoryTab = tab;
+  const allBtn = document.getElementById('tab-btn-all-history');
   const depBtn = document.getElementById('tab-btn-deposit-history');
   const wthBtn = document.getElementById('tab-btn-withdraw-history');
   const container = document.getElementById('history-list-container');
@@ -1157,17 +1158,103 @@ async function switchHistoryTab(tab, isSilent = false) {
   if (!isSilent && loading) loading.style.display = 'block';
   if (!isSilent && container) container.innerHTML = '';
 
-  if (tab === 'deposit') {
-    if (depBtn) {
-      depBtn.style.color = '#fff';
-      depBtn.style.borderBottom = '2px solid var(--winbuzz-gold)';
+  const phone = localStorage.getItem('cricknova_user_phone') || '';
+
+  // Tab button styling
+  [
+    { btn: allBtn, active: tab === 'all' },
+    { btn: depBtn, active: tab === 'deposit' },
+    { btn: wthBtn, active: tab === 'withdraw' }
+  ].forEach(({ btn, active }) => {
+    if (btn) {
+      btn.style.color = active ? '#fff' : '#94a3b8';
+      btn.style.borderBottom = active ? '2px solid var(--winbuzz-gold)' : 'none';
     }
-    if (wthBtn) {
-      wthBtn.style.color = '#94a3b8';
-      wthBtn.style.borderBottom = 'none';
-    }
+  });
+
+  if (tab === 'all') {
     try {
-      const res = await fetch('/api/user/deposit-history');
+      const url = phone ? `/api/user/transactions?phone=${encodeURIComponent(phone)}` : '/api/user/transactions';
+      const res = await fetch(url);
+      const data = await res.json();
+      if (loading) loading.style.display = 'none';
+
+      if (data.user_balance !== undefined) {
+        const balHdr = document.getElementById('wallet-balance');
+        const balMob = document.getElementById('android-wallet-val');
+        const balAcc = document.getElementById('account-bal-val');
+        if (balHdr) balHdr.innerText = '₹' + Number(data.user_balance).toLocaleString('en-IN', {minimumFractionDigits: 2});
+        if (balMob) balMob.innerText = Number(data.user_balance).toLocaleString('en-IN', {maximumFractionDigits: 0});
+        if (balAcc) balAcc.innerText = '₹' + Number(data.user_balance).toLocaleString('en-IN', {minimumFractionDigits: 2});
+      }
+
+      const txs = data.transactions || [];
+      if (txs.length === 0) {
+        if (container) container.innerHTML = '<div style="text-align:center; padding:30px 10px; color:#64748b; font-size:12px;">No transactions recorded in your ledger yet. Play games or deposit to view activity!</div>';
+        return;
+      }
+
+      let html = '<div style="display:flex; flex-direction:column; gap:8px;">';
+      txs.forEach(t => {
+        const typeStr = (t.type || 'TRANSACTION').toUpperCase();
+        const isCredit = typeStr.includes('WIN') || typeStr.includes('DEPOSIT') || typeStr.includes('REFUND') || (t.amount > 0 && !typeStr.includes('BET') && !typeStr.includes('WITHDRAW'));
+        const sign = isCredit ? '+' : '-';
+        const amtColor = isCredit ? '#00e676' : '#f87171';
+
+        let badgeLabel = '✅ COMPLETED';
+        let badgeBg = 'rgba(0,230,118,0.12)';
+        let badgeColor = '#00e676';
+
+        if (t.status === 'PENDING') {
+          badgeLabel = '⏳ PENDING';
+          badgeBg = 'rgba(245,166,35,0.15)';
+          badgeColor = '#f5a623';
+        } else if (t.status === 'DECLINED' || t.status === 'FAILED') {
+          badgeLabel = '❌ FAILED';
+          badgeBg = 'rgba(239,68,68,0.15)';
+          badgeColor = '#ef4444';
+        }
+
+        let icon = '⚡';
+        if (typeStr.includes('CRICKET')) icon = '🏏';
+        else if (typeStr.includes('CASINO') || typeStr.includes('ROULETTE') || typeStr.includes('JHANDI')) icon = '🎰';
+        else if (typeStr.includes('AVIATOR')) icon = '✈️';
+        else if (typeStr.includes('WITHDRAW')) icon = '💳';
+        else if (typeStr.includes('DEPOSIT')) icon = '💰';
+
+        const absAmt = Math.abs(Number(t.amount || 0));
+
+        html += `
+          <div style="background:var(--bg-darkest); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:10px 12px; font-size:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-family:monospace; color:var(--winbuzz-gold); font-weight:800; font-size:11px;">
+                ${icon} ${typeStr.replace('_', ' ')}
+              </span>
+              <span style="font-size:10px; padding:2px 7px; border-radius:4px; font-weight:800; color:${badgeColor}; background:${badgeBg}; border:1px solid ${badgeColor};">
+                ${badgeLabel}
+              </span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:14px; font-weight:900; color:${amtColor}; font-family:'JetBrains Mono', monospace;">
+                ${sign}₹${absAmt.toLocaleString('en-IN', {minimumFractionDigits: 2})}
+              </span>
+              <span style="font-size:10.5px; color:#94a3b8;">${t.created_at || t.timestamp || ''}</span>
+            </div>
+            ${t.game_or_market || t.description ? `<div style="font-size:11px; color:#cbd5e1; margin-top:3px;">${t.game_or_market || t.description}</div>` : ''}
+            ${t.ref_id ? `<div style="font-size:10px; color:#64748b; font-family:monospace; margin-top:2px;">Ref: ${t.ref_id}</div>` : ''}
+          </div>
+        `;
+      });
+      html += '</div>';
+      if (container) container.innerHTML = html;
+    } catch (e) {
+      if (loading) loading.style.display = 'none';
+      if (container) container.innerHTML = `<div style="color:#ef4444; font-size:12px; text-align:center;">Failed to load transactions: ${e.message}</div>`;
+    }
+  } else if (tab === 'deposit') {
+    try {
+      const url = phone ? `/api/user/deposit-history?phone=${encodeURIComponent(phone)}` : '/api/user/deposit-history';
+      const res = await fetch(url);
       const data = await res.json();
       if (loading) loading.style.display = 'none';
 
@@ -1223,16 +1310,9 @@ async function switchHistoryTab(tab, isSilent = false) {
       if (container) container.innerHTML = `<div style="color:#ef4444; font-size:12px; text-align:center;">Failed to load deposits: ${e.message}</div>`;
     }
   } else {
-    if (depBtn) {
-      depBtn.style.color = '#94a3b8';
-      depBtn.style.borderBottom = 'none';
-    }
-    if (wthBtn) {
-      wthBtn.style.color = '#fff';
-      wthBtn.style.borderBottom = '2px solid var(--winbuzz-gold)';
-    }
     try {
-      const res = await fetch('/api/user/withdrawal-history');
+      const url = phone ? `/api/user/withdrawal-history?phone=${encodeURIComponent(phone)}` : '/api/user/withdrawal-history';
+      const res = await fetch(url);
       const data = await res.json();
       if (loading) loading.style.display = 'none';
       const wths = data.withdrawals || [];
@@ -1288,18 +1368,66 @@ async function loadAccountScreenHistory(phoneOverride = null) {
   const container = document.getElementById('account-screen-history-list');
   if (!container) return;
   const phone = phoneOverride || localStorage.getItem('cricknova_user_phone') || '';
-  const url = phone ? `/api/user/deposit-history?phone=${encodeURIComponent(phone)}` : '/api/user/deposit-history';
+  const txUrl = phone ? `/api/user/transactions?phone=${encodeURIComponent(phone)}` : '/api/user/transactions';
 
   try {
-    const res = await fetch(url);
-    if (!res.ok) {
+    const res = await fetch(txUrl);
+    if (res.ok) {
+      const data = await res.json();
+      const txs = data.transactions || [];
+      if (txs.length > 0) {
+        let html = '<div style="display:flex; flex-direction:column; gap:8px;">';
+        txs.slice(0, 6).forEach(t => {
+          const typeStr = (t.type || 'TRANSACTION').toUpperCase();
+          const isCredit = typeStr.includes('WIN') || typeStr.includes('DEPOSIT') || typeStr.includes('REFUND') || (t.amount > 0 && !typeStr.includes('BET') && !typeStr.includes('WITHDRAW'));
+          const sign = isCredit ? '+' : '-';
+          const amtColor = isCredit ? '#00e676' : '#f87171';
+          const absAmt = Math.abs(Number(t.amount || 0));
+
+          let icon = '⚡';
+          if (typeStr.includes('CRICKET')) icon = '🏏';
+          else if (typeStr.includes('CASINO') || typeStr.includes('ROULETTE') || typeStr.includes('JHANDI')) icon = '🎰';
+          else if (typeStr.includes('AVIATOR')) icon = '✈️';
+          else if (typeStr.includes('WITHDRAW')) icon = '💳';
+          else if (typeStr.includes('DEPOSIT')) icon = '💰';
+
+          html += `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:6px; padding:10px; font-size:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-family:monospace; color:var(--winbuzz-gold); font-weight:800; font-size:11px;">
+                  ${icon} ${typeStr.replace('_', ' ')}
+                </span>
+                <span style="font-size:10px; font-weight:800; color:#00e676; background:rgba(0,230,118,0.12); padding:2px 7px; border-radius:3px;">
+                  ${t.status || 'COMPLETED'}
+                </span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:14px; font-weight:900; color:${amtColor}; font-family:'JetBrains Mono', monospace;">
+                  ${sign}₹${absAmt.toLocaleString('en-IN', {minimumFractionDigits: 2})}
+                </span>
+                <span style="font-size:10.5px; color:#94a3b8;">${t.created_at || t.timestamp || ''}</span>
+              </div>
+              ${t.game_or_market || t.description ? `<div style="font-size:10.5px; color:#cbd5e1; margin-top:2px;">${t.game_or_market || t.description}</div>` : ''}
+            </div>
+          `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+        return;
+      }
+    }
+
+    // Fallback to deposit-history
+    const depUrl = phone ? `/api/user/deposit-history?phone=${encodeURIComponent(phone)}` : '/api/user/deposit-history';
+    const depRes = await fetch(depUrl);
+    if (!depRes.ok) {
       container.innerHTML = '<div style="color:var(--text-dim); text-align:center; padding:10px;">Please login to view your transaction statement.</div>';
       return;
     }
-    const data = await res.json();
-    const deposits = data.deposits || [];
+    const depData = await depRes.json();
+    const deposits = depData.deposits || [];
     if (deposits.length === 0) {
-      container.innerHTML = '<div style="color:var(--text-dim); text-align:center; padding:12px;">No deposit requests registered yet.</div>';
+      container.innerHTML = '<div style="color:var(--text-dim); text-align:center; padding:12px;">No transactions registered yet.</div>';
       return;
     }
     let html = '<div style="display:flex; flex-direction:column; gap:8px;">';

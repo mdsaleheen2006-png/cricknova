@@ -1,41 +1,86 @@
 // ========================================================
-// WINBUZZ TEEN PATTI & ANDAR BAHAR TABLE ENGINE
+// CRICKNOVA TEEN PATTI & ANDAR BAHAR TABLE ENGINE
+// CONNECTED TO AUTHORITATIVE UNIFIED WALLET
 // ========================================================
 
-function placeCasinoBet(game, outcome, stake = 500) {
-  const currentBal = parseFloat(document.getElementById('wallet-balance').dataset.raw || 50000);
-  if (currentBal < stake) {
-    alert('Insufficient balance');
-    return;
-  }
+async function placeCasinoBet(game, outcome, stake = 500) {
+  const currentBal = typeof window.getCurrentWalletBalance === 'function'
+    ? window.getCurrentWalletBalance()
+    : (parseFloat((document.getElementById('wallet-balance') && document.getElementById('wallet-balance').dataset.raw) || '0') || 0);
 
-  // Deduct stake instantly
-  if (window.bettingEngine) {
-    window.bettingEngine.updateWalletUI(currentBal - stake, 0, -stake);
-    window.bettingEngine.playBeep('place');
+  if (currentBal < stake) {
+    alert('Insufficient wallet balance. Please deposit to continue.');
+    window.location.href = '/?deposit=1';
+    return;
   }
 
   const resultBox = document.getElementById(`${game}-result`);
   if (resultBox) {
-    resultBox.innerText = 'Dealing cards...';
+    resultBox.innerText = 'Placing bet...';
   }
 
-  setTimeout(() => {
-    // 50/50 chance for 1.95x payout
-    const won = Math.random() > 0.48;
-    if (won) {
-      const winPayout = Math.round(stake * 1.95);
-      if (window.bettingEngine) {
-        window.bettingEngine.updateWalletUI(currentBal - stake + winPayout, 0, winPayout);
-        window.bettingEngine.playBeep('win');
-      }
-      if (resultBox) {
-        resultBox.innerHTML = `<span style="color: var(--color-green); font-weight: 900;">WON ₹${winPayout.toLocaleString('en-IN')}! Result: ${outcome.toUpperCase()}</span>`;
-      }
-    } else {
-      if (resultBox) {
-        resultBox.innerHTML = `<span style="color: var(--color-red); font-weight: 900;">LOST ₹${stake}! Opposite won.</span>`;
-      }
+  try {
+    const betRes = await fetch('/api/casino/bet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        game_id: game,
+        amount: stake,
+        bet_details: { outcome: outcome }
+      })
+    });
+    const betData = await betRes.json();
+    if (!betRes.ok) {
+      alert(betData.detail || 'Failed to place casino bet.');
+      if (resultBox) resultBox.innerText = '';
+      return;
     }
-  }, 1200);
+
+    if (window.bettingEngine) {
+      window.bettingEngine.playBeep('place');
+    }
+
+    if (resultBox) {
+      resultBox.innerText = 'Dealing cards...';
+    }
+
+    setTimeout(async () => {
+      // 50/50 chance for 1.95x payout
+      const won = Math.random() > 0.48;
+      const winPayout = won ? Math.round(stake * 1.95) : 0;
+
+      try {
+        const settleRes = await fetch('/api/casino/settle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            game_id: game,
+            win_amount: winPayout,
+            round_id: betData.round_id || `RND-${Date.now()}`
+          })
+        });
+        const settleData = await settleRes.json();
+
+        if (won) {
+          if (window.bettingEngine) {
+            window.bettingEngine.playBeep('win');
+          }
+          if (resultBox) {
+            resultBox.innerHTML = `<span style="color: var(--color-green); font-weight: 900;">WON ₹${winPayout.toLocaleString('en-IN')}! Result: ${outcome.toUpperCase()}</span>`;
+          }
+        } else {
+          if (resultBox) {
+            resultBox.innerHTML = `<span style="color: var(--color-red); font-weight: 900;">LOST ₹${stake}! Opposite won.</span>`;
+          }
+        }
+      } catch (err) {
+        console.error('Settle error:', err);
+      }
+    }, 1200);
+
+  } catch (err) {
+    console.error('Casino bet network error:', err);
+    alert('Network error while placing bet.');
+    if (resultBox) resultBox.innerText = '';
+  }
 }

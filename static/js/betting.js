@@ -73,7 +73,9 @@ class BettingEngine {
       if (chipBtn && this.currentBet) {
         const val = chipBtn.dataset.val;
         if (val === 'MAX') {
-          const avail = parseFloat(document.getElementById('wallet-balance').dataset.raw || 50000);
+          const avail = typeof window.getCurrentWalletBalance === 'function'
+            ? window.getCurrentWalletBalance()
+            : (parseFloat((document.getElementById('wallet-balance') && document.getElementById('wallet-balance').dataset.raw) || '0') || 0);
           this.setStake(Math.floor(avail));
         } else {
           const add = parseInt(val, 10);
@@ -275,6 +277,18 @@ class BettingEngine {
       const data = await res.json();
 
       if (!res.ok) {
+        if (res.status === 409 && data.code === 'ODDS_CHANGED' && data.new_odds) {
+          const confirmAccept = confirm(`${data.detail}\n\nDo you want to accept the new odds (${data.new_odds}) and place your bet?`);
+          if (confirmAccept) {
+            this.currentBet.odds = data.new_odds;
+            this.currentBet.accept_odds_mode = 'any';
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerText = 'PLACE BET NOW';
+            }
+            return this.submitBet();
+          }
+        }
         alert(data.detail || 'Failed to place bet');
         if (submitBtn) {
           submitBtn.disabled = false;

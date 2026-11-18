@@ -15,7 +15,23 @@
     return n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
   }
 
+  var currentBalance = 0;
+  var currentAvailable = 0;
+  var currentExposure = 0;
+
+  window.getCurrentWalletBalance = function() {
+    var el = document.getElementById('wallet-balance');
+    if (el && el.dataset && el.dataset.raw !== undefined && !isNaN(parseFloat(el.dataset.raw))) {
+      return parseFloat(el.dataset.raw);
+    }
+    return currentAvailable;
+  };
+
   function updateDomBalances(balance, available, exposure) {
+    currentBalance = Number(balance) || 0;
+    currentAvailable = Number(available !== undefined ? available : balance) || 0;
+    currentExposure = Number(exposure) || 0;
+
     var formatted = formatMoney(balance);
     var formattedRound = formatMoneyRound(balance);
 
@@ -38,6 +54,9 @@
           el.value = balance;
         } else {
           el.innerText = formatted;
+        }
+        if (el.dataset) {
+          el.dataset.raw = String(balance);
         }
       });
     });

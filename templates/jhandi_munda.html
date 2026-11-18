@@ -160,6 +160,13 @@
       border-style: solid;
       border-color: #fef08a;
     }
+    .chip-drop-anim {
+      animation: chipDropBounce 0.24s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    @keyframes chipDropBounce {
+      0% { transform: translateY(-20px) scale(1.45); opacity: 0.35; }
+      100% { transform: translateY(-50%) scale(1); opacity: 1; }
+    }
 
     /* Wood / Gold Bottom Dock */
     .wood-dock {
@@ -363,7 +370,7 @@
       <div class="flex items-center gap-3">
         <div>
           <span class="text-amber-300/90 text-[11px]">Wallet Balance</span>
-          <span id="balanceText" class="text-yellow-300 font-black ml-1">₹{{ "%.2f"|format(user.balance if user and user.balance is defined else 600.0) }}</span>
+          <span id="balanceText" class="text-yellow-300 font-black ml-1">₹{{ "%.2f"|format(user.balance if user and user.balance is defined else 0.0) }}</span>
         </div>
         <div>
           <span class="text-amber-300/90 text-[11px]">Total Bet</span>
@@ -1413,7 +1420,7 @@
         });
 
         const userChipOverlay = userBet > 0 ? `
-          <div class="absolute left-1.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full casino-chip bg-teal-600 text-white text-[11px] z-20">
+          <div class="absolute left-1.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full casino-chip bg-teal-600 text-white text-[11px] z-20 chip-drop-anim">
             <span class="bg-white text-black rounded-full w-7 h-7 flex items-center justify-center font-black text-[10px] shadow">${formatChipAmount(userBet)}</span>
           </div>
         ` : '';

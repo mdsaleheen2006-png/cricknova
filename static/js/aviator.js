@@ -46,7 +46,7 @@ class AviatorGame {
     }, 1000);
   }
 
-  startFlight() {
+  async startFlight() {
     this.gameState = 'FLYING';
     this.multiplier = 1.00;
     // Weighted crash point generator
@@ -56,13 +56,32 @@ class AviatorGame {
     else this.crashPoint = 4.0 + Math.random() * 12.0; // high flyer
 
     if (this.betActive) {
-      this.updateCashoutButton(true);
-      if (window.bettingEngine) {
-        window.bettingEngine.updateWalletUI(
-          parseFloat(document.getElementById('wallet-balance').dataset.raw || 50000) - this.stake,
-          0,
-          -this.stake
-        );
+      try {
+        const betRes = await fetch('/api/casino/bet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            game_id: 'aviator',
+            amount: this.stake,
+            bet_details: { stake: this.stake }
+          })
+        });
+        const betData = await betRes.json();
+        if (!betRes.ok) {
+          this.betActive = false;
+          this.updateCashoutButton(false);
+          const btn = document.getElementById('aviator-bet-btn');
+          if (btn) {
+            btn.innerText = 'BET ₹' + this.stake;
+            btn.style.background = 'var(--color-green)';
+          }
+          alert(betData.detail || 'Insufficient wallet balance for Aviator bet.');
+        } else {
+          this.currentRoundId = betData.round_id || `AV-${Date.now()}`;
+          this.updateCashoutButton(true);
+        }
+      } catch (err) {
+        console.error('Aviator bet error:', err);
       }
     }
 
@@ -84,7 +103,7 @@ class AviatorGame {
     this.animId = requestAnimationFrame(animate);
   }
 
-  triggerCrash() {
+  async triggerCrash() {
     cancelAnimationFrame(this.animId);
     this.gameState = 'CRASHED';
     this.history.unshift(this.multiplier);
@@ -94,24 +113,44 @@ class AviatorGame {
     if (this.betActive) {
       this.betActive = false;
       this.updateCashoutButton(false);
+      try {
+        await fetch('/api/casino/settle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            game_id: 'aviator',
+            win_amount: 0,
+            round_id: this.currentRoundId || `AV-${Date.now()}`
+          })
+        });
+      } catch (e) {}
     }
 
     this.drawCrashed();
     setTimeout(() => this.startRoundCountdown(), 2500);
   }
 
-  cashout() {
+  async cashout() {
     if (!this.betActive || this.gameState !== 'FLYING') return;
     this.betActive = false;
     const winAmount = Math.round(this.stake * this.multiplier);
 
+    try {
+      await fetch('/api/casino/settle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          game_id: 'aviator',
+          win_amount: winAmount,
+          round_id: this.currentRoundId || `AV-${Date.now()}`
+        })
+      });
+    } catch (e) {
+      console.error('Aviator cashout error:', e);
+    }
+
     if (window.bettingEngine) {
       window.bettingEngine.playBeep('win');
-      window.bettingEngine.updateWalletUI(
-        parseFloat(document.getElementById('wallet-balance').dataset.raw || 50000) + winAmount,
-        0,
-        winAmount
-      );
     }
 
     this.updateCashoutButton(false);

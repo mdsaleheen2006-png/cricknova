@@ -2732,11 +2732,21 @@ async def get_current_user_wallet(request: Request):
 async def get_current_user_transactions(request: Request):
     user = get_active_user(request)
     if user.get("is_guest") or not user.get("mobile"):
+        phone = request.query_params.get("mobile") or request.query_params.get("phone")
+        if phone:
+            all_data = load_all_user_data()
+            if phone in all_data.get("users", {}):
+                user = all_data["users"][phone]
+    if user.get("is_guest") or not user.get("mobile"):
         raise HTTPException(status_code=401, detail="Please login first.")
     all_data = load_all_user_data()
     db_user = all_data.get("users", {}).get(user["mobile"], user)
     txs = db_user.get("transactions", [])
-    return JSONResponse(content={"status": "success", "transactions": txs[:50]})
+    return JSONResponse(content={
+        "status": "success",
+        "transactions": txs[:100],
+        "user_balance": db_user.get("balance", 0.0)
+    })
 
 # ==================== ADMIN AUTHENTICATION ROUTES ====================
 @app.get("/admin/login", response_class=HTMLResponse)

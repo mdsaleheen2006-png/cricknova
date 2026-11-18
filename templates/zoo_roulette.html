@@ -139,17 +139,17 @@
     /* Scattered Mini Chips */
     .mini-chip {
       position: absolute;
-      width: 20px;
-      height: 20px;
+      width: 17px;
+      height: 17px;
       border-radius: 9999px;
       border: 1.5px dashed rgba(255,255,255,0.92);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 7px;
+      font-size: 6.5px;
       font-weight: 900;
       color: #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.75);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.75);
       pointer-events: none;
       animation: chipLand 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.15);
     }
@@ -193,73 +193,73 @@
     }
   </style>
 </head>
-<body class="flex flex-col items-center justify-between min-h-screen p-1 sm:p-2.5">
+<body class="flex flex-col items-center justify-start sm:justify-between min-h-screen p-1 sm:p-2.5">
 
-  <div class="w-full max-w-5xl flex flex-col justify-between min-h-[98vh] gap-1.5 sm:gap-2.5 relative">
+  <div class="w-full max-w-5xl flex flex-col justify-start sm:justify-between min-h-0 sm:min-h-[98vh] gap-1 sm:gap-2.5 relative">
 
     <!-- 1. TOP CASINO BAR: CRICKNOVA BRAND + REAL UNIFIED WALLET + LIVE STATUS -->
-    <header class="flex items-center justify-between px-2 py-1.5 bg-black/60 backdrop-blur-md border border-amber-500/30 rounded-xl z-30 shadow-lg">
+    <header class="flex items-center justify-between px-1.5 sm:px-2 py-1 sm:py-1.5 bg-black/60 backdrop-blur-md border border-amber-500/30 rounded-xl z-30 shadow-lg w-full">
       <!-- Left: Back to Lobby + Logo -->
-      <div class="flex items-center gap-1.5 sm:gap-2">
-        <a href="/casino" class="flex items-center gap-1 text-xs font-black text-amber-300 hover:text-yellow-200 bg-amber-950/60 hover:bg-amber-900 border border-amber-500/40 px-2.5 py-1 rounded-lg transition-all" title="Return to Casino Lobby">
+      <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+        <a href="/casino" class="flex items-center gap-1 text-[11px] sm:text-xs font-black text-amber-300 hover:text-yellow-200 bg-amber-950/60 hover:bg-amber-900 border border-amber-500/40 px-2 sm:px-2.5 py-1 rounded-lg transition-all" title="Return to Casino Lobby">
           <span>‹</span>
           <span class="hidden sm:inline">Lobby</span>
         </a>
-        <div class="flex items-center gap-1.5">
-          <span class="text-base sm:text-lg">🦁</span>
+        <div class="flex items-center gap-1">
+          <span class="text-sm sm:text-lg">🦁</span>
           <div class="leading-tight">
-            <h1 class="font-royal text-xs sm:text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 tracking-wider">
+            <h1 class="font-royal text-[11px] sm:text-xs md:text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 tracking-wider">
               ZOO ROULETTE 3D
             </h1>
-            <span class="text-[9px] font-bold text-emerald-300/80 hidden sm:inline-block">CrickNova Safari Studio</span>
+            <span class="text-[8px] sm:text-[9px] font-bold text-emerald-300/80 hidden sm:inline-block">CrickNova Safari Studio</span>
           </div>
         </div>
       </div>
 
       <!-- Center: Gold Shark X100 & Live Timer Pill -->
-      <div class="flex items-center gap-1.5 sm:gap-2 bg-black/75 border border-amber-400/60 rounded-full px-2.5 sm:px-3.5 py-0.5 sm:py-1 shadow-inner">
+      <div class="flex items-center gap-1 sm:gap-2 bg-black/75 border border-amber-400/60 rounded-full px-2 sm:px-3 py-0.5 sm:py-1 shadow-inner shrink-0">
         <div class="flex items-center gap-1">
-          <span class="text-sm sm:text-base">🦈</span>
-          <span class="font-royal text-[10px] sm:text-xs font-black text-yellow-300">X100</span>
+          <span class="text-xs sm:text-base">🦈</span>
+          <span class="font-royal text-[9px] sm:text-xs font-black text-yellow-300">X100</span>
         </div>
-        <span class="text-amber-500/40">|</span>
+        <span class="text-amber-500/40 text-[10px]">|</span>
         <div class="flex items-center gap-1 sm:gap-1.5">
-          <span id="phaseLabelText" class="text-[10px] sm:text-xs font-extrabold text-emerald-300 uppercase tracking-tight">Betting</span>
-          <span id="phaseTimerText" class="font-bold text-xs sm:text-sm text-white min-w-[18px] text-center">15</span>
+          <span id="phaseLabelText" class="text-[9px] sm:text-xs font-extrabold text-emerald-300 uppercase tracking-tight">Betting</span>
+          <span id="phaseTimerText" class="font-bold text-xs sm:text-sm text-white min-w-[16px] text-center">15</span>
         </div>
       </div>
 
       <!-- Right: Real Unified Wallet Balance + Controls -->
-      <div class="flex items-center gap-1.5 sm:gap-2">
-        <div class="flex items-center gap-1.5 bg-gradient-to-r from-emerald-950/80 via-black/90 to-emerald-950/80 border border-emerald-400/60 rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 shadow-inner">
-          <span class="text-[10px] font-bold text-emerald-200/90 uppercase tracking-tight hidden sm:inline">Wallet</span>
-          <span id="wallet-balance" class="font-racing text-xs sm:text-sm font-black text-yellow-300 min-w-[55px] text-right">
+      <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+        <div class="flex items-center gap-1 bg-gradient-to-r from-emerald-950/80 via-black/90 to-emerald-950/80 border border-emerald-400/60 rounded-full px-2 sm:px-3 py-0.5 sm:py-1 shadow-inner">
+          <span class="text-[9px] font-bold text-emerald-200/90 uppercase tracking-tight hidden md:inline">Wallet</span>
+          <span id="wallet-balance" class="font-racing text-[11px] sm:text-xs md:text-sm font-black text-yellow-300 min-w-[50px] sm:min-w-[55px] text-right">
             ₹{{ "%.2f"|format(user.balance if user and user.balance is defined else 0.0) }}
           </span>
-          <a href="/?deposit=1" class="w-4 h-4 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black font-black text-[11px] flex items-center justify-center leading-none" title="Deposit Money into Wallet">+</a>
+          <a href="/?deposit=1" class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black font-black text-[10px] sm:text-[11px] flex items-center justify-center leading-none" title="Deposit Money into Wallet">+</a>
         </div>
 
-        <button id="btnSoundToggle" onclick="toggleSound()" class="px-2 py-1 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-amber-400/40 text-[11px] font-bold text-amber-200" title="Sound On/Off">
+        <button id="btnSoundToggle" onclick="toggleSound()" class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-amber-400/40 text-[10px] sm:text-[11px] font-bold text-amber-200 flex items-center justify-center" title="Sound On/Off">
           🔊
         </button>
-        <button id="btnRulesModal" onclick="openRulesModal()" class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-amber-400/40 text-xs font-black text-amber-300" title="Game Rules">
+        <button id="btnRulesModal" onclick="openRulesModal()" class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-amber-400/40 text-[10px] sm:text-xs font-black text-amber-300 flex items-center justify-center" title="Game Rules">
           ?
         </button>
       </div>
     </header>
 
-    <!-- MOBILE-ONLY: TOP HORIZONTAL RECORD STRIP (Gives 100% of mobile width to the 9-col track) -->
-    <div class="flex sm:hidden items-center justify-between bg-black/60 border border-amber-500/30 rounded-xl px-2 py-1 z-20">
-      <span class="text-[9px] font-black text-amber-300 uppercase tracking-wider flex items-center gap-1">
+    <!-- MOBILE-ONLY: TOP HORIZONTAL RECORD STRIP (Gives 100% of mobile width to recent winners) -->
+    <div class="flex sm:hidden items-center justify-between bg-black/60 border border-amber-500/30 rounded-xl px-2 py-0.5 z-20 w-full">
+      <span class="text-[8px] font-black text-amber-300 uppercase tracking-wider flex items-center gap-1">
         <span>🏆</span> Recent
       </span>
-      <div id="mobileRecordListContainer" class="flex items-center gap-1.5 overflow-x-auto py-0.5">
+      <div id="mobileRecordListContainer" class="flex items-center gap-1 overflow-x-auto py-0.5">
         <!-- Injected via renderRecordStrips() -->
       </div>
     </div>
 
     <!-- 2. MAIN ZOO ROULETTE CABINET (26-SLOT PERIMETER TRACK + INNER BETTING ARENA) -->
-    <div class="flex items-center justify-center gap-1 sm:gap-2.5 my-auto relative w-full">
+    <div class="flex items-center justify-center gap-1 sm:gap-2.5 my-0 sm:my-auto relative w-full">
 
       <!-- DESKTOP-ONLY: Left Decorative Lever: Pay All -->
       <div class="hidden sm:flex flex-col items-center gap-1 z-20 shrink-0">
@@ -270,7 +270,7 @@
       </div>
 
       <!-- GOLDEN JUNGLE CABINET -->
-      <div class="zoo-cabinet flex-1 p-1.5 sm:p-3 relative max-w-[840px]">
+      <div class="zoo-cabinet flex-1 p-1 sm:p-2.5 md:p-3 relative max-w-[840px] w-full">
 
         <!-- TOP TRACK ROW (9 Slots: indices 0..8) -->
         <div id="trackTopRow" class="grid grid-cols-9 gap-1 sm:gap-1.5 mb-1 sm:mb-1.5"></div>
@@ -281,17 +281,17 @@
           <!-- LEFT TRACK COLUMN (4 Slots: indices 25, 24, 23, 22 top-to-bottom) -->
           <div id="trackLeftCol" class="col-span-1 flex flex-col justify-between gap-1 sm:gap-1.5"></div>
 
-          <!-- INNER BETTING ARENA (7 Columns wide) -->
-          <div class="col-span-7 zoo-inner-arena p-1 sm:p-2.5 relative flex flex-col justify-between gap-1 sm:gap-1.5">
+          <!-- INNER BETTING ARENA (7 Columns wide on desktop, adapts flexibly on mobile) -->
+          <div class="col-span-7 zoo-inner-arena p-1 sm:p-2 relative flex flex-col justify-between gap-1 sm:gap-1.5">
 
-            <!-- UPPER 3-COLUMN ARENA: [2x2 Beasts] | [Center Hero Card] | [2x2 Birds] -->
-            <div class="grid grid-cols-12 gap-1 sm:gap-2 flex-1">
+            <!-- ARENA GRIDS & HERO SPOTLIGHT (Responsive: stacked rows on mobile, 3-col on desktop) -->
+            <div class="flex flex-col sm:grid sm:grid-cols-12 gap-1 sm:gap-1.5 flex-1">
 
-              <!-- LEFT 2x2 BEASTS (Monkey, Rabbit, Lion, Panda) -->
-              <div class="col-span-4 grid grid-cols-2 gap-1 sm:gap-1.5" id="leftBeastsGrid"></div>
+              <!-- BEASTS (Monkey, Rabbit, Lion, Panda): 4 cols on mobile, 2x2 in 4 cols on desktop -->
+              <div class="w-full sm:col-span-4 grid grid-cols-4 sm:grid-cols-2 gap-1" id="leftBeastsGrid"></div>
 
               <!-- CENTER HERO BATTLE ARTWORK / WINNER SPOTLIGHT CARD -->
-              <div class="col-span-4 rounded-xl border-2 border-amber-400/70 bg-gradient-to-b from-sky-900/80 via-slate-900 to-amber-950/90 relative overflow-hidden flex flex-col items-center justify-between p-1 sm:p-1.5 shadow-2xl">
+              <div class="w-full sm:col-span-4 rounded-xl border border-amber-400/70 bg-gradient-to-b from-sky-900/80 via-slate-900 to-amber-950/90 relative overflow-hidden flex flex-col items-center justify-between p-1 shadow-2xl min-h-[46px] sm:min-h-[90px]">
                 <!-- Default Split Hero Artwork (Bird vs Beast) OR Winner Spotlight -->
                 <div id="centerHeroDisplay" class="w-full flex-1 flex flex-col items-center justify-center relative">
                   <!-- Populated dynamically by renderCenterHero() -->
@@ -303,13 +303,13 @@
                 </div>
               </div>
 
-              <!-- RIGHT 2x2 BIRDS (Swallow, Pigeon, Peacock, Eagle) -->
-              <div class="col-span-4 grid grid-cols-2 gap-1 sm:gap-1.5" id="rightBirdsGrid"></div>
+              <!-- BIRDS (Swallow, Pigeon, Peacock, Eagle): 4 cols on mobile, 2x2 in 4 cols on desktop -->
+              <div class="w-full sm:col-span-4 grid grid-cols-4 sm:grid-cols-2 gap-1" id="rightBirdsGrid"></div>
 
             </div>
 
-            <!-- LOWER 3-COLUMN CATEGORY & SHARK BAR: [Beast x2] | [Shark x24] | [Bird x2] -->
-            <div class="grid grid-cols-12 gap-1 sm:gap-2" id="bottomCategoryGrid"></div>
+            <!-- LOWER CATEGORY & SHARK BAR: [Beast x2] | [Shark x24] | [Bird x2] -->
+            <div class="grid grid-cols-3 sm:grid-cols-12 gap-1 sm:gap-1.5" id="bottomCategoryGrid"></div>
 
             <!-- FLOATING CENTER RIBBON BANNER ("Place Your Bet" / "Stop Betting") -->
             <div id="phaseBannerOverlay" class="hidden absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
@@ -354,41 +354,43 @@
     </div>
 
     <!-- 3. BOTTOM CASINO CONTROL DOCK (Unified Balance + 6 Chips + Action Buttons) -->
-    <footer class="bg-gradient-to-t from-black via-[#081812]/95 to-black/80 border-t border-amber-500/35 rounded-t-2xl px-2 sm:px-4 py-2 flex flex-wrap items-center justify-between gap-2 z-30">
+    <footer class="bg-gradient-to-t from-black via-[#081812]/95 to-black/80 border-t border-amber-500/35 rounded-t-2xl px-2 sm:px-4 py-1.5 sm:py-2 flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-2 z-30 w-full">
 
-      <!-- Player Profile & Real Wallet Balance -->
-      <div class="flex items-center gap-2 bg-black/60 border border-amber-400/40 rounded-xl px-2.5 py-1.5">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-amber-500 p-0.5 flex items-center justify-center text-base shadow">
-          🦁
-        </div>
-        <div class="leading-tight">
-          <div class="text-[9px] font-bold text-amber-200/80">
-            {{ user.mobile if user and user.mobile else "Guest" }}
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span id="balanceText" class="font-racing text-xs sm:text-sm font-black text-yellow-300">
-              ₹{{ "%.2f"|format(user.balance if user and user.balance is defined else 0.0) }}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 6 Casino Chips (10, 50, 100, 500, 1000, 5000) -->
-      <div id="chipDock" class="flex items-center gap-1 sm:gap-2 overflow-x-auto py-1">
+      <!-- Row 1 on mobile: 6 Casino Chips (10, 50, 100, 500, 1000, 5000) -->
+      <div id="chipDock" class="flex items-center justify-center gap-1.5 sm:gap-2 overflow-x-auto py-0.5 w-full sm:w-auto order-1 sm:order-2">
         <!-- Populated by renderChipDock() -->
       </div>
 
-      <!-- Controls: x2, Clear, Rebet -->
-      <div class="flex items-center gap-1 sm:gap-1.5">
-        <button id="btnDoubleBet" onclick="doubleMyBets()" class="px-2.5 py-1.5 sm:py-2 rounded-xl bg-gradient-to-b from-amber-500 to-orange-700 hover:from-amber-400 border border-yellow-200 text-black font-black text-xs shadow-lg active:scale-95">
-          ×2
-        </button>
-        <button id="btnClearBet" onclick="clearMyBets()" class="px-2.5 py-1.5 sm:py-2 rounded-xl bg-gradient-to-b from-rose-600 to-rose-900 hover:from-rose-500 border border-rose-300/70 text-white font-bold text-xs shadow-lg active:scale-95">
-          Clear
-        </button>
-        <button id="btnRebet" onclick="rebetLastRound()" class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-b from-emerald-400 to-emerald-700 hover:from-emerald-300 border border-emerald-200 text-black font-black text-xs sm:text-sm shadow-[0_0_15px_rgba(16,185,129,0.5)] active:scale-95">
-          Rebet
-        </button>
+      <!-- Row 2 on mobile: Player Profile & Real Wallet Balance (Left) + Action Buttons (Right) -->
+      <div class="flex items-center justify-between w-full sm:w-auto order-2 sm:order-1 gap-2">
+        <div class="flex items-center gap-1.5 sm:gap-2 bg-black/60 border border-amber-400/40 rounded-xl px-2 sm:px-2.5 py-1">
+          <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-amber-500 p-0.5 flex items-center justify-center text-xs sm:text-base shadow">
+            🦁
+          </div>
+          <div class="leading-tight">
+            <div class="text-[8px] sm:text-[9px] font-bold text-amber-200/80">
+              {{ user.mobile if user and user.mobile else "Guest" }}
+            </div>
+            <div class="flex items-center gap-1">
+              <span id="balanceText" class="font-racing text-[11px] sm:text-xs md:text-sm font-black text-yellow-300">
+                ₹{{ "%.2f"|format(user.balance if user and user.balance is defined else 0.0) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls: x2, Clear, Rebet -->
+        <div class="flex items-center gap-1 sm:gap-1.5">
+          <button id="btnDoubleBet" onclick="doubleMyBets()" class="px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-gradient-to-b from-amber-500 to-orange-700 hover:from-amber-400 border border-yellow-200 text-black font-black text-[11px] sm:text-xs shadow-lg active:scale-95">
+            ×2
+          </button>
+          <button id="btnClearBet" onclick="clearMyBets()" class="px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-gradient-to-b from-rose-600 to-rose-900 hover:from-rose-500 border border-rose-300/70 text-white font-bold text-[11px] sm:text-xs shadow-lg active:scale-95">
+            Clear
+          </button>
+          <button id="btnRebet" onclick="rebetLastRound()" class="px-3 sm:px-4 py-1 sm:py-1.5 rounded-xl bg-gradient-to-b from-emerald-400 to-emerald-700 hover:from-emerald-300 border border-emerald-200 text-black font-black text-[11px] sm:text-xs shadow-[0_0_15px_rgba(16,185,129,0.5)] active:scale-95">
+            Rebet
+          </button>
+        </div>
       </div>
 
     </footer>
@@ -670,37 +672,37 @@
       ).join('');
 
       return `
-        <div id="betBox_${key}" onclick="placeMyBet('${key}')" class="zoo-bet-box ${cssClass} ${isWin ? 'winner-box' : ''} ${extraClasses} p-1 sm:p-1.5 flex flex-col justify-between min-h-[64px] sm:min-h-[78px] md:min-h-[86px]">
-          <div class="flex items-center justify-between text-[9px] sm:text-[10px] font-black z-20">
+        <div id="betBox_${key}" onclick="placeMyBet('${key}')" class="zoo-bet-box ${cssClass} ${isWin ? 'winner-box' : ''} ${extraClasses} p-1 sm:p-1.5 flex flex-col justify-between min-h-[48px] sm:min-h-[78px] md:min-h-[86px]">
+          <div class="flex items-center justify-between text-[8px] sm:text-[10px] font-black z-20">
             <span class="text-amber-200">${(crowd + mine).toLocaleString()}</span>
-            ${mine > 0 ? `<span class="bg-emerald-400 text-black px-1.5 rounded-full text-[8px] sm:text-[9px] font-black shadow">${mine}</span>` : ''}
+            ${mine > 0 ? `<span class="bg-emerald-400 text-black px-1 sm:px-1.5 rounded-full text-[7.5px] sm:text-[9px] font-black shadow">${mine}</span>` : ''}
           </div>
           <div class="absolute inset-0 pointer-events-none z-10 overflow-hidden">${chipsHtml}</div>
-          <div class="flex items-center justify-center gap-1 my-auto z-20">
-            <div class="w-8 h-8 sm:w-11 sm:h-11 md:w-12 md:h-12 drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)]">${a.icon}</div>
+          <div class="flex items-center justify-center gap-0.5 my-auto z-20">
+            <div class="w-6 h-6 sm:w-11 sm:h-11 md:w-12 md:h-12 drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)]">${a.icon}</div>
           </div>
-          <div class="flex items-center justify-between text-[9px] sm:text-[10px] font-bold z-20">
-            <span class="text-white/90">${a.name}</span>
-            <span class="text-yellow-300 font-black">×${a.mult}</span>
+          <div class="flex items-center justify-between text-[8px] sm:text-[10px] font-bold z-20">
+            <span class="text-white/90 truncate">${a.name}</span>
+            <span class="text-yellow-300 font-black ml-0.5">×${a.mult}</span>
           </div>
         </div>
       `;
     }
 
     function renderBettingGrids() {
-      // Left 2x2 Beasts
+      // Beasts Grid (Monkey, Rabbit, Lion, Panda)
       document.getElementById('leftBeastsGrid').innerHTML =
         ['monkey', 'rabbit', 'lion', 'panda'].map(k => createBetBoxHTML(k, 'beast-cell')).join('');
 
-      // Right 2x2 Birds
+      // Birds Grid (Swallow, Pigeon, Peacock, Eagle)
       document.getElementById('rightBirdsGrid').innerHTML =
         ['swallow', 'pigeon', 'peacock', 'eagle'].map(k => createBetBoxHTML(k, 'bird-cell')).join('');
 
       // Bottom Category Row: Beast x2 | Shark x24 | Bird x2
       document.getElementById('bottomCategoryGrid').innerHTML =
-        createBetBoxHTML('beast', 'beast-cell', 'col-span-4 min-h-[50px] sm:min-h-[58px]') +
-        createBetBoxHTML('shark', 'shark-cell', 'col-span-4 min-h-[50px] sm:min-h-[58px]') +
-        createBetBoxHTML('bird',  'bird-cell',  'col-span-4 min-h-[50px] sm:min-h-[58px]');
+        createBetBoxHTML('beast', 'beast-cell', 'col-span-1 sm:col-span-4 min-h-[44px] sm:min-h-[58px]') +
+        createBetBoxHTML('shark', 'shark-cell', 'col-span-1 sm:col-span-4 min-h-[44px] sm:min-h-[58px]') +
+        createBetBoxHTML('bird',  'bird-cell',  'col-span-1 sm:col-span-4 min-h-[44px] sm:min-h-[58px]');
     }
 
     function renderCenterHero() {
