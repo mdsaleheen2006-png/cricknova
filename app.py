@@ -1937,6 +1937,19 @@ async def download_youpi_observer_apk():
         )
     raise HTTPException(status_code=404, detail="YouPI SMS Gateway APK not found")
 
+@app.get("/download/cricknova-admin.apk")
+@app.get("/download/admin.apk")
+@app.get("/static/cricknova-admin.apk")
+async def download_cricknova_admin_apk():
+    apk_file = os.path.join(BASE_DIR, "static", "cricknova-admin.apk")
+    if os.path.exists(apk_file):
+        return FileResponse(
+            apk_file,
+            media_type="application/vnd.android.package-archive",
+            filename="cricknova-admin.apk"
+        )
+    raise HTTPException(status_code=404, detail="CrickNova Admin APK not found")
+
 # ==================== PASSWORD & REAL SMS GATEWAY HELPERS ====================
 def hash_password(password: str) -> str:
     # High-grade cryptographic encryption: PBKDF2 with SHA-256 and 100,000 iterations
