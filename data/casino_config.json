@@ -1,0 +1,9 @@
+{
+  "house_margin_pct": 30.0,
+  "guaranteed_profit_enabled": true,
+  "max_payout_ratio": 0.20,
+  "total_bets_inr": 0.0,
+  "total_payouts_inr": 0.0,
+  "net_house_profit_inr": 0.0,
+  "last_updated": "2026-11-18 19:30:00"
+}

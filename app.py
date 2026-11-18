@@ -225,6 +225,70 @@ def get_casino_games_dict() -> Dict[str, Dict[str, Any]]:
     return {g.get("id"): g for g in games if isinstance(g, dict) and g.get("id")}
 
 CASINO_GAMES = get_casino_games_list()
+CASINO_CONFIG_FILE = os.path.join(DATA_DIR, "casino_config.json")
+
+def get_casino_config() -> Dict[str, Any]:
+    cfg = load_json(CASINO_CONFIG_FILE, {})
+    if not isinstance(cfg, dict) or not cfg:
+        cfg = {
+            "house_margin_pct": 30.0,
+            "guaranteed_profit_enabled": True,
+            "max_payout_ratio": 0.20,
+            "total_bets_inr": 0.0,
+            "total_payouts_inr": 0.0,
+            "net_house_profit_inr": 0.0,
+            "last_updated": time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        save_json(CASINO_CONFIG_FILE, cfg)
+    return cfg
+
+def save_casino_config(cfg: Dict[str, Any]):
+    cfg["last_updated"] = time.strftime("%Y-%m-%d %H:%M:%S")
+    save_json(CASINO_CONFIG_FILE, cfg)
+
+def record_casino_financials(stake_inr: float, payout_inr: float):
+    try:
+        cfg = get_casino_config()
+        cfg["total_bets_inr"] = round(cfg.get("total_bets_inr", 0.0) + float(stake_inr), 2)
+        cfg["total_payouts_inr"] = round(cfg.get("total_payouts_inr", 0.0) + float(payout_inr), 2)
+        cfg["net_house_profit_inr"] = round(cfg["total_bets_inr"] - cfg["total_payouts_inr"], 2)
+        save_casino_config(cfg)
+    except Exception as e:
+        print(f"Error recording casino financials: {e}")
+
+def apply_casino_house_edge(payout_inr: float, stake_inr: float, game_id: str = "") -> float:
+    """
+    Mathematical House Profit Margin Engine.
+    Ensures the casino is guaranteed profitable based on configured House Margin % (default 30.0%).
+    Strictly preserves house edge across all rounds and bets.
+    """
+    cfg = get_casino_config()
+    if not cfg.get("guaranteed_profit_enabled", True):
+        return round(float(payout_inr), 2)
+
+    margin_pct = float(cfg.get("house_margin_pct", 30.0))
+    max_payout_ratio = float(cfg.get("max_payout_ratio", 0.20))
+    total_bets = float(cfg.get("total_bets_inr", 0.0))
+    total_payouts = float(cfg.get("total_payouts_inr", 0.0))
+
+    if payout_inr <= 0:
+        return 0.0
+
+    # House profit mathematical budget:
+    target_max_total_payout = (total_bets + stake_inr) * (1.0 - (margin_pct / 100.0))
+    available_payout_budget = max(0.0, target_max_total_payout - total_payouts)
+
+    # Single-round pool cap ensuring house retention:
+    round_cap = stake_inr * (1.0 - (margin_pct / 100.0))
+
+    if available_payout_budget > 0:
+        capped = min(payout_inr, round_cap, available_payout_budget)
+    else:
+        # Payout budget exhausted: enforce strict max payout ratio limit (e.g. 20% pool cap)
+        capped = min(payout_inr, stake_inr * max_payout_ratio)
+
+    return round(max(0.0, float(capped)), 2)
+
 
 # In-Memory Real-time State
 LIVE_MATCHES: Dict[str, Any] = {}
@@ -600,15 +664,25 @@ def get_active_user(request: Request) -> Dict[str, Any]:
 
     if user_key:
         clean_key = str(user_key).strip().replace(" ", "").replace("+91", "").lower()
+        target = None
         if clean_key in users:
-            return users[clean_key]
-        for k, u in users.items():
-            if str(k).lower() == clean_key:
-                return u
-            u_mob = str(u.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
-            u_email = str(u.get("email", "")).strip().lower()
-            if u_mob == clean_key or u_email == clean_key:
-                return u
+            target = users[clean_key]
+        else:
+            for k, u in users.items():
+                if str(k).lower() == clean_key:
+                    target = u
+                    break
+                u_mob = str(u.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
+                u_email = str(u.get("email", "")).strip().lower()
+                if u_mob == clean_key or u_email == clean_key:
+                    target = u
+                    break
+        if target:
+            target.setdefault("wagering_required_paise", 0)
+            target.setdefault("wagering_completed_paise", 0)
+            target["wagering_required"] = from_paise(target["wagering_required_paise"])
+            target["wagering_completed"] = from_paise(target["wagering_completed_paise"])
+            return target
 
     # Return Guest User if not logged in (prevents unauthorized access)
     return {
@@ -1409,6 +1483,11 @@ async def place_casino_bet(request: Request):
         notes=f"Bet on {game_id}"
     )
 
+    # Wagering Completion Tracking & Casino Financials
+    db_user["wagering_completed_paise"] = db_user.get("wagering_completed_paise", 0) + stake_paise
+    db_user["wagering_completed"] = from_paise(db_user["wagering_completed_paise"])
+    record_casino_financials(stake, 0.0)
+
     save_all_user_data()
     user["balance_paise"] = new_bal_paise
     user["balance"] = from_paise(new_bal_paise)
@@ -1448,7 +1527,8 @@ async def claim_casino_round(request: Request):
             continue
         mult = evaluate_bet_payout(game_id, outcome, b_type)
         if mult > 0:
-            win_amt = b_stake * mult
+            raw_win = b_stake * mult
+            win_amt = apply_casino_house_edge(raw_win, b_stake, game_id)
             total_payout_paise += to_paise(win_amt)
             winning_bets.append({"type": b_type, "stake": b_stake, "mult": mult, "payout": win_amt})
 
@@ -1458,6 +1538,7 @@ async def claim_casino_round(request: Request):
     db_user = all_data.get("users", {}).get(user_mobile, user)
 
     if total_payout_paise > 0:
+        record_casino_financials(0.0, payout_inr)
         bal_before = db_user.get("balance_paise", to_paise(db_user.get("balance", 0.0)))
         bal_after = bal_before + total_payout_paise
         db_user["balance_paise"] = bal_after
@@ -1517,6 +1598,8 @@ async def settle_casino_bet(request: Request):
     payout = float(data.get("payout", 0.0))
 
     if outcome == "WIN" and payout > 0:
+        payout = apply_casino_house_edge(payout, stake, game_id)
+        record_casino_financials(stake, payout)
         all_data = load_all_user_data()
         user_mobile = user.get("mobile")
         db_user = all_data.get("users", {}).get(user_mobile, user)
@@ -1580,6 +1663,10 @@ async def execute_casino_action(request: Request):
     user_mobile = user.get("mobile")
     db_user = all_data.get("users", {}).get(user_mobile, user)
 
+    if stake > 0:
+        db_user["wagering_completed_paise"] = db_user.get("wagering_completed_paise", 0) + to_paise(stake)
+        db_user["wagering_completed"] = from_paise(db_user["wagering_completed_paise"])
+
     # 1. PLINKO 3D
     if game_id == "plinko":
         stake_paise = to_paise(stake)
@@ -1592,7 +1679,9 @@ async def execute_casino_action(request: Request):
         bucket = sum(path)
         plinko_mults = [16.0, 9.0, 2.0, 1.4, 0.4, 0.2, 0.4, 1.4, 2.0, 9.0, 16.0]
         mult = plinko_mults[bucket]
-        payout = round(stake * mult, 2)
+        raw_payout = round(stake * mult, 2)
+        payout = apply_casino_house_edge(raw_payout, stake, "plinko")
+        record_casino_financials(stake, payout)
         payout_paise = to_paise(payout)
 
         new_bal_paise = bal_paise - stake_paise + payout_paise
@@ -1636,7 +1725,9 @@ async def execute_casino_action(request: Request):
         if win_chance <= 0: win_chance = 1.0
         mult = round(98.0 / win_chance, 2)
         won = (roll < target) if condition == "under" else (roll > target)
-        payout = round(stake * mult, 2) if won else 0.0
+        raw_payout = round(stake * mult, 2) if won else 0.0
+        payout = apply_casino_house_edge(raw_payout, stake, "dice") if won else 0.0
+        record_casino_financials(stake, payout)
         payout_paise = to_paise(payout)
 
         new_bal_paise = bal_paise - stake_paise + payout_paise
@@ -1665,7 +1756,9 @@ async def execute_casino_action(request: Request):
         r = random.random()
         crash_mult = round(0.97 / (1.0 - r), 2) if r < 0.99 else 100.0
         won = crash_mult >= target_mult
-        payout = round(stake * target_mult, 2) if won else 0.0
+        raw_payout = round(stake * target_mult, 2) if won else 0.0
+        payout = apply_casino_house_edge(raw_payout, stake, "limbo") if won else 0.0
+        record_casino_financials(stake, payout)
         payout_paise = to_paise(payout)
 
         new_bal_paise = bal_paise - stake_paise + payout_paise
@@ -1694,7 +1787,9 @@ async def execute_casino_action(request: Request):
         matches = len(set(chosen).intersection(set(draw)))
         paytable = {0: 0, 1: 0, 2: 0, 3: 0, 4: 1.0, 5: 3.0, 6: 15.0, 7: 80.0, 8: 400.0, 9: 2500.0, 10: 10000.0}
         mult = paytable.get(matches, 0.0)
-        payout = round(stake * mult, 2)
+        raw_payout = round(stake * mult, 2)
+        payout = apply_casino_house_edge(raw_payout, stake, "keno")
+        record_casino_financials(stake, payout)
         payout_paise = to_paise(payout)
 
         new_bal_paise = bal_paise - stake_paise + payout_paise
@@ -1747,7 +1842,9 @@ async def execute_casino_action(request: Request):
             total_mult += 10.0
             winning_lines.append({"line": "scatter", "symbol": "👑", "matches": scatters, "mult": 10.0})
 
-        payout = round(stake * total_mult, 2)
+        raw_payout = round(stake * total_mult, 2)
+        payout = apply_casino_house_edge(raw_payout, stake, game_id)
+        record_casino_financials(stake, payout)
         payout_paise = to_paise(payout)
 
         new_bal_paise = bal_paise - stake_paise + payout_paise
@@ -3384,6 +3481,16 @@ async def submit_withdrawal_request(request: Request):
     if amount < 500.0:
         raise HTTPException(status_code=400, detail="Minimum withdrawal amount is ₹500.00")
 
+    # Wagering Requirement Check (Admin Controlled)
+    w_required = user_rec.get("wagering_required_paise", 0)
+    w_done = user_rec.get("wagering_completed_paise", 0)
+    if w_required > w_done:
+        rem_paise = w_required - w_done
+        raise HTTPException(
+            status_code=400,
+            detail=f"Wagering target incomplete! Aapko withdraw karne ke liye ₹{from_paise(rem_paise):,.2f} ka aur wagering turnover/game khelna hoga. (Target: ₹{from_paise(w_required):,.2f}, Completed: ₹{from_paise(w_done):,.2f})"
+        )
+
     amt_paise = to_paise(amount)
     user_rec["balance_paise"] = user_rec.get("balance_paise", to_paise(user_rec.get("balance", 0.0)))
     user_rec["reserved_withdrawal_paise"] = user_rec.get("reserved_withdrawal_paise", 0)
@@ -3509,6 +3616,8 @@ async def place_bet(request: Request):
     }
 
     user.setdefault("bets", []).insert(0, new_bet)
+    user["wagering_completed_paise"] = user.get("wagering_completed_paise", 0) + to_paise(stake)
+    user["wagering_completed"] = from_paise(user["wagering_completed_paise"])
     recalculate_user_exposure(user)
     save_all_user_data()
 
@@ -3659,6 +3768,100 @@ async def admin_add_money(request: Request):
         "mobile": mobile,
         "balance": target["balance"]
     })
+
+@app.post("/api/admin/set-wagering")
+async def admin_set_wagering(request: Request):
+    data = await request.json()
+    mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
+    try:
+        wagering_amount = float(data.get("wagering_amount", 0.0))
+    except (ValueError, TypeError):
+        wagering_amount = 0.0
+
+    if not mobile or len(mobile) != 10:
+        raise HTTPException(status_code=400, detail="Please provide a valid 10-digit mobile number")
+
+    all_data = load_all_user_data()
+    users = all_data.setdefault("users", {})
+    if mobile not in users:
+        raise HTTPException(status_code=404, detail=f"User +91 {mobile} not found in database")
+
+    target = users[mobile]
+    w_paise = to_paise(wagering_amount)
+    target["wagering_required_paise"] = w_paise
+    target["wagering_required"] = wagering_amount
+    target["wagering_completed_paise"] = 0
+    target["wagering_completed"] = 0.0
+
+    save_all_user_data(all_data)
+    return JSONResponse(content={
+        "status": "success",
+        "message": f"Wagering target of ₹{wagering_amount:,.2f} assigned to +91 {mobile} successfully!",
+        "mobile": mobile,
+        "wagering_required": wagering_amount,
+        "wagering_completed": 0.0
+    })
+
+@app.get("/api/admin/casino-config")
+async def admin_get_casino_config():
+    return JSONResponse(content={"status": "success", "config": get_casino_config()})
+
+@app.post("/api/admin/casino-config")
+async def admin_update_casino_config(request: Request):
+    data = await request.json()
+    cfg = get_casino_config()
+    if "house_margin_pct" in data:
+        cfg["house_margin_pct"] = float(data["house_margin_pct"])
+    if "guaranteed_profit_enabled" in data:
+        cfg["guaranteed_profit_enabled"] = bool(data["guaranteed_profit_enabled"])
+    if "max_payout_ratio" in data:
+        cfg["max_payout_ratio"] = float(data["max_payout_ratio"])
+    save_casino_config(cfg)
+    return JSONResponse(content={
+        "status": "success",
+        "message": "Casino House Margin & Profit Engine updated successfully!",
+        "config": cfg
+    })
+
+@app.post("/api/admin/deposit/delete")
+async def admin_delete_deposit(request: Request):
+    data = await request.json()
+    req_id = str(data.get("request_id", "")).strip()
+    if not req_id:
+        raise HTTPException(status_code=400, detail="Missing request_id")
+    all_data = load_all_user_data()
+    reqs = all_data.get("deposit_requests", [])
+    before_len = len(reqs)
+    all_data["deposit_requests"] = [r for r in reqs if r.get("id") != req_id]
+    if len(all_data["deposit_requests"]) == before_len:
+        raise HTTPException(status_code=404, detail="Deposit claim not found")
+    save_all_user_data(all_data)
+    return JSONResponse(content={"status": "success", "message": f"Deposit claim {req_id} removed from history."})
+
+@app.post("/api/admin/deposit/clear-history")
+async def admin_clear_deposit_history():
+    all_data = load_all_user_data()
+    reqs = all_data.get("deposit_requests", [])
+    # Keep only PENDING claims, delete all APPROVED and DECLINED claims
+    all_data["deposit_requests"] = [r for r in reqs if r.get("status") == "PENDING"]
+    save_all_user_data(all_data)
+    return JSONResponse(content={"status": "success", "message": "All settled deposit history cleared successfully."})
+
+@app.post("/api/admin/withdrawal/delete")
+async def admin_delete_withdrawal(request: Request):
+    data = await request.json()
+    req_id = str(data.get("request_id", "")).strip()
+    if not req_id:
+        raise HTTPException(status_code=400, detail="Missing request_id")
+    all_data = load_all_user_data()
+    wths = all_data.get("withdrawal_requests", [])
+    before_len = len(wths)
+    all_data["withdrawal_requests"] = [w for w in wths if w.get("id") != req_id]
+    if len(all_data["withdrawal_requests"]) == before_len:
+        raise HTTPException(status_code=404, detail="Withdrawal request not found")
+    save_all_user_data(all_data)
+    return JSONResponse(content={"status": "success", "message": f"Withdrawal request {req_id} removed from history."})
+
 
 # ==================== MOBILE ADMIN PWA & FINANCIAL SETTLEMENT DESK ====================
 @app.get("/admin/mobile", response_class=HTMLResponse)
