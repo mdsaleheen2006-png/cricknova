@@ -6,6 +6,7 @@
   <title>CrickNova | Jhandi Munda Royal 3D Casino</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="/static/js/unified_wallet.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -640,7 +641,16 @@
     const BLIND_LOCK_SECONDS = 5; // Last 5 seconds before roll: betting locked & dice hidden!
 
     const userLoggedIn = {{ 'true' if user and not user.is_guest else 'false' }};
-    const initialServerBalance = Number("{{ user.balance if user and user.balance is defined else 600.0 }}");
+    const initialServerBalance = Number("{{ user.balance if user and user.balance is defined else 0.0 }}");
+
+    window.addEventListener('cricknova:wallet_updated', function(e) {
+      if (e && e.detail && typeof e.detail.available === 'number') {
+        state.balance = e.detail.available;
+        if (typeof updateBalanceAndBetReadouts === 'function') {
+          updateBalanceAndBetReadouts();
+        }
+      }
+    });
 
     const state = {
       balance: initialServerBalance,

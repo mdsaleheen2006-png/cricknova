@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CrickNova | Master Admin Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body {
+      background: radial-gradient(circle at 50% 20%, #172033 0%, #0a0d14 70%, #05070a 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      background: #0f1422;
+      border: 1.5px solid rgba(255, 215, 0, 0.4);
+      border-radius: 16px;
+      padding: 32px 24px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 24px rgba(255, 215, 0, 0.15);
+    }
+    .brand-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #ffd700, #ff9100);
+      color: #000;
+      font-weight: 900;
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+    p {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 24px;
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #cbd5e1;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    input {
+      width: 100%;
+      background: #07090e;
+      border: 1.5px solid #283548;
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      border-color: #ffd700;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);
+    }
+    .btn-login {
+      width: 100%;
+      background: linear-gradient(135deg, #ffd700, #ff9100);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      padding: 13px;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(255, 215, 0, 0.35);
+      transition: transform 0.1s, filter 0.2s;
+    }
+    .btn-login:hover {
+      filter: brightness(1.1);
+    }
+    .btn-login:active {
+      transform: scale(0.98);
+    }
+    .alert-box {
+      display: none;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .alert-error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+    }
+    .footer-note {
+      text-align: center;
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div style="text-align: center;">
+      <span class="brand-badge">Restricted Access</span>
+      <h1>CRICKNOVA ADMIN</h1>
+      <p>Authorized personnel only. All access attempts are logged.</p>
+    </div>
+
+    <div id="alertBox" class="alert-box alert-error"></div>
+
+    <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+      <div class="form-group">
+        <label for="adminUsername">Admin Identifier</label>
+        <input type="text" id="adminUsername" placeholder="e.g. admin" required autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label for="adminPassword">Master Security Key / Password</label>
+        <input type="password" id="adminPassword" placeholder="Enter Master Password" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn-login" id="btnLogin">AUTHENTICATE & ENTER</button>
+    </form>
+
+    <div class="footer-note">
+      🔒 256-Bit TLS Secured • IP: <span id="clientIp">Protected</span>
+    </div>
+  </div>
+
+  <script>
+    async function handleAdminLogin(e) {
+      e.preventDefault();
+      const userEl = document.getElementById('adminUsername');
+      const passEl = document.getElementById('adminPassword');
+      const alertBox = document.getElementById('alertBox');
+      const btn = document.getElementById('btnLogin');
+
+      alertBox.style.display = 'none';
+      btn.disabled = true;
+      btn.innerText = 'Verifying Credentials...';
+
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: userEl.value.trim(),
+            password: passEl.value
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.status === 'success') {
+          btn.innerText = 'Access Granted!';
+          btn.style.background = '#10b981';
+          setTimeout(() => {
+            window.location.href = data.redirect || '/admin';
+          }, 400);
+        } else {
+          alertBox.innerText = data.detail || data.message || 'Invalid administrator credentials.';
+          alertBox.style.display = 'block';
+          btn.disabled = false;
+          btn.innerText = 'AUTHENTICATE & ENTER';
+        }
+      } catch (err) {
+        alertBox.innerText = 'Network error contacting security service.';
+        alertBox.style.display = 'block';
+        btn.disabled = false;
+        btn.innerText = 'AUTHENTICATE & ENTER';
+      }
+    }
+  </script>
+</body>
+</html>

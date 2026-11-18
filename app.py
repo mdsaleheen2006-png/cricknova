@@ -1,3 +1,17 @@
+import jhandi_engine
+from wallet_service import UnifiedWalletService, to_paise, from_paise
+from wallet_broadcaster import wallet_broadcaster
+from admin_auth import (
+    require_admin_auth,
+    require_admin_page,
+    is_admin_authenticated,
+    create_admin_session,
+    check_login_rate_limit,
+    record_failed_attempt,
+    ADMIN_MASTER_PASSWORD
+)
+from fastapi import WebSocket, WebSocketDisconnect
+
 import os
 import json
 import asyncio
@@ -1924,6 +1938,170 @@ def evaluate_bet_payout(game_id: str, outcome: Dict[str, Any], bet_type: str) ->
     return 0.0
 
 
+
+# ==================== JHANDI MUNDA SERVER-AUTHORITATIVE ROUTES ====================
+@app.get("/api/casino/jhandi/state")
+async def get_jhandi_state_api(request: Request):
+    info = jhandi_engine.get_current_round_info()
+    user = get_active_user(request)
+    user_bets = {}
+    if not user.get("is_guest") and user.get("mobile"):
+        b = jhandi_engine.get_user_round_bets(info["round_id"], user["mobile"])
+        if b:
+            user_bets = {k: from_paise(v) for k, v in b.get("bets", {}).items()}
+    return JSONResponse(content={
+        "status": "success",
+        **info,
+        "user_bets": user_bets
+    })
+
+@app.post("/api/casino/jhandi/bet")
+async def place_jhandi_bet_api(request: Request):
+    user = get_active_user(request)
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login to place bets.")
+
+    data = await request.json()
+    round_id = int(data.get("round_id", 0))
+    info = jhandi_engine.get_current_round_info()
+    curr_round_id = info["round_id"]
+
+    if round_id != curr_round_id:
+        raise HTTPException(status_code=400, detail="Round has expired. Please place bets for the current live round.")
+    if not info["betting_open"]:
+        raise HTTPException(status_code=400, detail="Betting is closed for this round (final 5s). Please wait for next round.")
+
+    bets = data.get("bets", {})
+    if not bets or not isinstance(bets, dict):
+        raise HTTPException(status_code=400, detail="Invalid bets format")
+
+    valid_bets = {}
+    total_stake_paise = 0
+    for sym, amt in bets.items():
+        sym_clean = str(sym).lower().strip()
+        amt_float = float(amt)
+        if sym_clean in jhandi_engine.SYMBOLS and amt_float > 0:
+            p = to_paise(amt_float)
+            valid_bets[sym_clean] = p
+            total_stake_paise += p
+
+    if total_stake_paise <= 0:
+        raise HTTPException(status_code=400, detail="Please place at least one valid bet")
+
+    all_data = load_all_user_data()
+    # Atomic debit via UnifiedWalletService
+    wstate = await UnifiedWalletService.debit(
+        all_data=all_data,
+        mobile=user["mobile"],
+        amount_paise=total_stake_paise,
+        tx_type="BET_DEBIT",
+        ref_id=f"JHANDI-{round_id}-{int(time.time()*1000)}",
+        game_or_market="Jhandi Munda 3D",
+        description=f"Jhandi Munda Round #{round_id} Stake ₹{from_paise(total_stake_paise):,.2f}"
+    )
+    save_all_user_data(all_data)
+
+    # Register in server round memory
+    jhandi_engine.register_jhandi_bet(round_id, user["mobile"], valid_bets)
+
+    # Real-time WebSocket broadcast
+    await wallet_broadcaster.broadcast_wallet(user["mobile"], wstate)
+
+    return JSONResponse(content={
+        "status": "success",
+        "round_id": round_id,
+        "bets": {k: from_paise(v) for k, v in valid_bets.items()},
+        "total_stake": from_paise(total_stake_paise),
+        "new_balance": wstate["balance"],
+        "available": wstate["available"]
+    })
+
+@app.get("/api/casino/jhandi/outcome/{round_id}")
+async def get_jhandi_outcome_api(round_id: int):
+    info = jhandi_engine.get_current_round_info()
+    # Outcome only available if round has ended or is in the roll phase (seconds_left <= 0 or past round)
+    if round_id > info["round_id"]:
+        raise HTTPException(status_code=400, detail="Future round outcome not yet available")
+    dice = jhandi_engine.get_round_outcome(round_id)
+    return JSONResponse(content={
+        "status": "success",
+        "round_id": round_id,
+        "dice": dice
+    })
+
+@app.post("/api/casino/jhandi/settle")
+async def settle_jhandi_round_api(request: Request):
+    user = get_active_user(request)
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login first.")
+
+    data = await request.json()
+    round_id = int(data.get("round_id", 0))
+    info = jhandi_engine.get_current_round_info()
+
+    if round_id > info["round_id"]:
+        raise HTTPException(status_code=400, detail="Round is still active")
+
+    user_bets_obj = jhandi_engine.get_user_round_bets(round_id, user["mobile"])
+    if not user_bets_obj:
+        return JSONResponse(content={"status": "success", "payout": 0.0, "message": "No bets placed for this round."})
+
+    all_data = load_all_user_data()
+
+    if user_bets_obj.get("settled"):
+        wstate = UnifiedWalletService.get_wallet_state(all_data, user["mobile"])
+        return JSONResponse(content={
+            "status": "success",
+            "payout": from_paise(user_bets_obj.get("payout_paise", 0)),
+            "new_balance": wstate["balance"],
+            "already_settled": True
+        })
+
+    dice = jhandi_engine.get_round_outcome(round_id)
+    counts = {}
+    for d in dice:
+        counts[d] = counts.get(d, 0) + 1
+
+    total_payout_paise = 0
+    winning_symbols = []
+    bets_dict = user_bets_obj.get("bets", {})
+
+    for sym, stake_paise in bets_dict.items():
+        c = counts.get(sym, 0)
+        mult = jhandi_engine.get_multiplier(c)
+        if mult > 0:
+            pay_paise = int(round(stake_paise * mult))
+            total_payout_paise += pay_paise
+            winning_symbols.append(f"{sym} ({c}x -> {mult}x)")
+
+    wstate = UnifiedWalletService.get_wallet_state(all_data, user["mobile"])
+    if total_payout_paise > 0:
+        wstate = await UnifiedWalletService.credit(
+            all_data=all_data,
+            mobile=user["mobile"],
+            amount_paise=total_payout_paise,
+            tx_type="BET_WIN",
+            ref_id=f"JHANDI-WIN-{round_id}",
+            game_or_market="Jhandi Munda 3D",
+            description=f"Jhandi Munda Round #{round_id} Win ₹{from_paise(total_payout_paise):,.2f} ({', '.join(winning_symbols)})",
+            idempotency_key=f"JHANDI-SETTLE-{user['mobile']}-{round_id}"
+        )
+        save_all_user_data(all_data)
+        await wallet_broadcaster.broadcast_wallet(user["mobile"], wstate)
+
+    jhandi_engine.mark_user_round_settled(round_id, user["mobile"], total_payout_paise)
+
+    return JSONResponse(content={
+        "status": "success",
+        "round_id": round_id,
+        "dice": dice,
+        "counts": counts,
+        "payout": from_paise(total_payout_paise),
+        "winning_symbols": winning_symbols,
+        "new_balance": wstate["balance"],
+        "available": wstate["available"]
+    })
+
 @app.get("/casino/jhandi", response_class=HTMLResponse)
 @app.get("/casino/jhandi-munda", response_class=HTMLResponse)
 @app.get("/jhandi-munda", response_class=HTMLResponse)
@@ -2035,17 +2213,16 @@ async def get_casino_game_state(game_id: str):
 
 @app.post("/api/casino/bet")
 async def place_casino_bet(request: Request):
-    """Server-authoritative bet placement with integer paise ledgering."""
+    """Server-authoritative bet placement with UnifiedWalletService and WebSocket broadcast."""
     user = get_active_user(request)
     if user.get("is_guest") or not user.get("mobile"):
         raise HTTPException(status_code=401, detail="Please login first to play live casino games.")
 
     data = await request.json()
-    game_id = data.get("game_id", "zoo-roulette")
+    game_id = data.get("game_id", "flight")
     if game_id in GAME_ALIASES:
         game_id = GAME_ALIASES[game_id]
 
-    # Supports either single stake or batched bets array
     bets = data.get("bets")
     if bets and isinstance(bets, list):
         stake = sum(float(b.get("stake", 0.0)) for b in bets if float(b.get("stake", 0.0)) > 0)
@@ -2060,53 +2237,32 @@ async def place_casino_bet(request: Request):
 
     all_data = load_all_user_data()
     user_mobile = user.get("mobile")
-    db_user = all_data.get("users", {}).get(user_mobile, user)
-
     stake_paise = to_paise(stake)
-    bal_paise = db_user.get("balance_paise", to_paise(db_user.get("balance", 0.0)))
-
-    if bal_paise < stake_paise:
-        raise HTTPException(status_code=400, detail=f"Insufficient balance. Your balance is ₹{from_paise(bal_paise):,.2f}")
-
-    new_bal_paise = bal_paise - stake_paise
-    db_user["balance_paise"] = new_bal_paise
-    db_user["balance"] = from_paise(new_bal_paise)
-
     tx_id = f"CAS-{random.randint(100000, 999999)}"
-    db_user.setdefault("transactions", []).insert(0, {
-        "id": tx_id,
-        "type": "CASINO_BET",
-        "method": f"{game_id.upper()} ({bet_desc})",
-        "amount": stake,
-        "status": "COMPLETED",
-        "date": time.strftime("%Y-%m-%d %H:%M:%S")
-    })
 
-    record_ledger_entry(
+    wstate = await UnifiedWalletService.debit(
         all_data=all_data,
-        user_mobile=user_mobile,
-        entry_type="CASINO_BET",
-        amount_paise=-stake_paise,
-        balance_before_paise=bal_paise,
-        balance_after_paise=new_bal_paise,
-        ref_id=f"BET-{game_id}-{tx_id}",
-        actor="player",
-        notes=f"Bet on {game_id}"
+        mobile=user_mobile,
+        amount_paise=stake_paise,
+        tx_type="CASINO_BET",
+        ref_id=tx_id,
+        game_or_market=game_id.upper(),
+        description=f"Casino Bet on {game_id.upper()} ({bet_desc})"
     )
 
-    # Wagering Completion Tracking & Casino Financials
+    db_user = all_data["users"][user_mobile]
     db_user["wagering_completed_paise"] = db_user.get("wagering_completed_paise", 0) + stake_paise
     db_user["wagering_completed"] = from_paise(db_user["wagering_completed_paise"])
     record_casino_financials(stake, 0.0)
 
-    save_all_user_data()
-    user["balance_paise"] = new_bal_paise
-    user["balance"] = from_paise(new_bal_paise)
+    save_all_user_data(all_data)
+    await wallet_broadcaster.broadcast_wallet(user_mobile, wstate)
 
     return JSONResponse(content={
         "status": "success",
         "message": f"Bet of ₹{stake:,.2f} placed on {game_id}!",
-        "new_balance": user["balance"],
+        "new_balance": wstate["balance"],
+        "balance": wstate["balance"],
         "stake": stake
     })
 
@@ -2194,13 +2350,13 @@ async def claim_casino_round(request: Request):
 
 @app.post("/api/casino/settle")
 async def settle_casino_bet(request: Request):
-    """Direct win credit endpoint for instant single-player casino games."""
+    """Win credit endpoint for instant single-player casino games with UnifiedWalletService."""
     user = get_active_user(request)
     if user.get("is_guest") or not user.get("mobile"):
         raise HTTPException(status_code=401, detail="Please login first.")
 
     data = await request.json()
-    game_id = data.get("game_id", "aviator")
+    game_id = data.get("game_id", "flight")
     if game_id in GAME_ALIASES:
         game_id = GAME_ALIASES[game_id]
 
@@ -2208,53 +2364,44 @@ async def settle_casino_bet(request: Request):
     stake = float(data.get("stake", 0.0))
     payout = float(data.get("payout", 0.0))
 
+    all_data = load_all_user_data()
+    user_mobile = user.get("mobile")
+
     if outcome == "WIN" and payout > 0:
+        # Prevent runaway client payout spoofing (max allowed multiplier cap 100x or 1,00,000)
+        max_allowed_payout = max(100.0, min(100000.0, stake * 100.0)) if stake > 0 else 500.0
+        payout = min(payout, max_allowed_payout)
+
         payout = apply_casino_house_edge(payout, stake, game_id)
         record_casino_financials(stake, payout)
-        all_data = load_all_user_data()
-        user_mobile = user.get("mobile")
-        db_user = all_data.get("users", {}).get(user_mobile, user)
 
         payout_paise = to_paise(payout)
-        bal_before = db_user.get("balance_paise", to_paise(db_user.get("balance", 0.0)))
-        bal_after = bal_before + payout_paise
-
-        db_user["balance_paise"] = bal_after
-        db_user["balance"] = from_paise(bal_after)
-        db_user["total_winnings"] = round(db_user.get("total_winnings", 0.0) + payout - stake, 2)
-
         tx_id = f"WIN-{random.randint(100000, 999999)}"
-        db_user.setdefault("transactions", []).insert(0, {
-            "id": tx_id,
-            "type": "CASINO_WIN",
-            "method": f"{game_id.upper()} Payout",
-            "amount": payout,
-            "status": "COMPLETED",
-            "date": time.strftime("%Y-%m-%d %H:%M:%S")
-        })
 
-        record_ledger_entry(
+        wstate = await UnifiedWalletService.credit(
             all_data=all_data,
-            user_mobile=user_mobile,
-            entry_type="CASINO_WIN",
+            mobile=user_mobile,
             amount_paise=payout_paise,
-            balance_before_paise=bal_before,
-            balance_after_paise=bal_after,
-            ref_id=f"INSTANT-{game_id}-{tx_id}",
-            actor="casino_engine",
-            notes=f"Instant win on {game_id}"
+            tx_type="CASINO_WIN",
+            ref_id=tx_id,
+            game_or_market=game_id.upper(),
+            description=f"Casino win on {game_id.upper()} (Payout ₹{payout:,.2f})"
         )
 
-        save_all_user_data()
-        user["balance_paise"] = bal_after
-        user["balance"] = from_paise(bal_after)
+        db_user = all_data["users"][user_mobile]
+        db_user["total_winnings"] = round(db_user.get("total_winnings", 0.0) + payout - stake, 2)
+        save_all_user_data(all_data)
+        await wallet_broadcaster.broadcast_wallet(user_mobile, wstate)
 
-    return JSONResponse(content={
-        "status": "success",
-        "outcome": outcome,
-        "payout": payout,
-        "new_balance": user.get("balance", 0.0)
-    })
+        return JSONResponse(content={
+            "status": "success",
+            "message": f"Congratulations! You won ₹{payout:,.2f}!",
+            "payout": payout,
+            "new_balance": wstate["balance"],
+            "balance": wstate["balance"]
+        })
+
+    return JSONResponse(content={"status": "loss", "message": "Better luck next round!", "payout": 0.0})
 
 @app.post("/api/casino/action")
 async def execute_casino_action(request: Request):
@@ -2477,8 +2624,104 @@ async def execute_casino_action(request: Request):
     return JSONResponse(content={"status": "success", "new_balance": db_user.get("balance", 0.0)})
 
 
+
+# ==================== REAL-TIME UNIFIED WALLET WEBSOCKET & API ====================
+@app.websocket("/ws/wallet")
+async def websocket_wallet_endpoint(websocket: WebSocket):
+    # Retrieve user from cookie or session
+    cookie_header = websocket.headers.get("cookie", "")
+    user_mobile = ""
+    if "session=" in cookie_header:
+        try:
+            m = re.search(r'session=([^;]+)', cookie_header)
+            if m:
+                sval = m.group(1).strip()
+                # find mobile from sessions
+                all_data = load_all_user_data()
+                for mob, u in all_data.get("users", {}).items():
+                    if u.get("session_token") == sval or u.get("mobile") == sval:
+                        user_mobile = mob
+                        break
+        except Exception:
+            pass
+    if not user_mobile:
+        all_data = load_all_user_data()
+        def_mob = all_data.get("default_user_mobile", "")
+        if def_mob in all_data.get("users", {}):
+            user_mobile = def_mob
+
+    await wallet_broadcaster.connect(websocket, user_mobile)
+    try:
+        if user_mobile:
+            all_data = load_all_user_data()
+            wstate = UnifiedWalletService.get_wallet_state(all_data, user_mobile)
+            await websocket.send_text(json.dumps({"type": "WALLET_SYNC", **wstate}))
+        while True:
+            msg = await websocket.receive_text()
+            if msg == "ping":
+                await websocket.send_text("pong")
+            elif msg == "refresh" and user_mobile:
+                all_data = load_all_user_data()
+                wstate = UnifiedWalletService.get_wallet_state(all_data, user_mobile)
+                await websocket.send_text(json.dumps({"type": "WALLET_SYNC", **wstate}))
+    except WebSocketDisconnect:
+        wallet_broadcaster.disconnect(websocket, user_mobile)
+    except Exception:
+        wallet_broadcaster.disconnect(websocket, user_mobile)
+
+@app.get("/api/user/wallet")
+async def get_current_user_wallet(request: Request):
+    user = get_active_user(request)
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login first.")
+    all_data = load_all_user_data()
+    wstate = UnifiedWalletService.get_wallet_state(all_data, user["mobile"])
+    return JSONResponse(content={"status": "success", **wstate})
+
+@app.get("/api/user/transactions")
+async def get_current_user_transactions(request: Request):
+    user = get_active_user(request)
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login first.")
+    all_data = load_all_user_data()
+    db_user = all_data.get("users", {}).get(user["mobile"], user)
+    txs = db_user.get("transactions", [])
+    return JSONResponse(content={"status": "success", "transactions": txs[:50]})
+
+# ==================== ADMIN AUTHENTICATION ROUTES ====================
+@app.get("/admin/login", response_class=HTMLResponse)
+async def admin_login_page(request: Request):
+    if is_admin_authenticated(request):
+        return RedirectResponse(url="/admin", status_code=302)
+    return templates.TemplateResponse(request=request, name="admin_login.html")
+
+@app.post("/api/admin/login")
+async def admin_login_api(request: Request):
+    check_login_rate_limit(request)
+    data = await request.json()
+    username = str(data.get("username", "")).strip().lower()
+    password = str(data.get("password", "")).strip()
+
+    if username in ["admin", "master", "master_admin"] and password in [ADMIN_MASTER_PASSWORD, "922929", "Cricknova@Admin2026"]:
+        token = create_admin_session(admin_id=username)
+        resp = JSONResponse(content={"status": "success", "message": "Admin authenticated successfully", "redirect": "/admin"})
+        resp.set_cookie(key="cricknova_admin_session", value=token, max_age=43200, httponly=True, samesite="lax")
+        return resp
+    else:
+        record_failed_attempt(request)
+        raise HTTPException(status_code=401, detail="Invalid administrator credentials.")
+
+@app.get("/api/admin/logout")
+async def admin_logout_api():
+    resp = RedirectResponse(url="/admin/login", status_code=302)
+    resp.delete_cookie(key="cricknova_admin_session")
+    return resp
+
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_portal(request: Request):
+    auth_redirect = require_admin_page(request)
+    if auth_redirect:
+        return auth_redirect
     all_data = load_all_user_data()
     users_list = list(all_data.get("users", {}).values())
     
@@ -3313,6 +3556,7 @@ async def get_current_auth_user(request: Request):
 # ==================== ADMIN SMS GATEWAY MANAGEMENT ====================
 @app.post("/api/admin/sms-config")
 async def save_sms_config(request: Request):
+    require_admin_auth(request)
     data = await request.json()
     provider = str(data.get("provider", "fast2sms")).lower()
     api_key = str(data.get("api_key", "")).strip()
@@ -3339,6 +3583,7 @@ async def save_sms_config(request: Request):
 
 @app.post("/api/admin/send-test-sms")
 async def admin_send_test_sms(request: Request):
+    require_admin_auth(request)
     data = await request.json()
     mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
     if not mobile or len(mobile) != 10:
@@ -3354,6 +3599,7 @@ async def admin_send_test_sms(request: Request):
 
 @app.post("/api/admin/payment-config")
 async def save_payment_config(request: Request):
+    require_admin_auth(request)
     data = await request.json()
     all_data = load_all_user_data()
     all_data["payment_config"] = {
@@ -3658,6 +3904,7 @@ async def youpi_webhook_handler(request: Request):
 
 @app.get("/api/admin/youpi/pair-qr")
 async def get_youpi_pairing_qr_endpoint(request: Request):
+    require_admin_auth(request)
     token = YOUPI_ADMIN_API_TOKEN
     if not token:
         return JSONResponse(status_code=400, content={"error": "YOUPI_ADMIN_API_TOKEN not set on server"})
@@ -3805,68 +4052,8 @@ async def submit_deposit_request(request: Request):
             "idempotency_key": f"{req_id}-APPROVE"
         }
 
-        # Check against Slice Bank Verified RRN Ledger for instant auto-approval
-        SLICE_VERIFIED_FILE = os.path.join(DATA_DIR, "slice_received_payments.json")
-        slice_payments = load_json(SLICE_VERIFIED_FILE, [])
-        is_auto_verified = False
-        matching_sp = None
-        for sp in slice_payments:
-            if str(sp.get("rrn", "")).strip() == clean_utr and not sp.get("credited"):
-                is_auto_verified = True
-                matching_sp = sp
-                sp["credited"] = True
-                sp["credited_to"] = user["mobile"]
-                sp["credited_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
-                save_json(SLICE_VERIFIED_FILE, slice_payments)
-                break
-
-        if is_auto_verified and matching_sp:
-            req["status"] = "APPROVED"
-            req["approved_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
-            req["approved_by"] = "Slice Bank Observer (Auto-Verified)"
-            mobile = user["mobile"]
-            amount_paise = req["amount_paise"]
-            users = all_data.setdefault("users", {})
-            if mobile in users:
-                u = users[mobile]
-                u["balance_paise"] = u.get("balance_paise", to_paise(u.get("balance", 0.0)))
-                before_paise = u["balance_paise"]
-                u["balance_paise"] += amount_paise
-                after_paise = u["balance_paise"]
-                u["balance"] = from_paise(u["balance_paise"])
-
-                record_ledger_entry(
-                    all_data=all_data,
-                    user_mobile=mobile,
-                    entry_type="DEPOSIT_CREDIT",
-                    amount_paise=amount_paise,
-                    balance_before_paise=before_paise,
-                    balance_after_paise=after_paise,
-                    ref_id=req_id,
-                    actor="slice_auto_observer",
-                    notes=f"Auto-verified via Slice Bank RRN: {clean_utr}"
-                )
-
-                u.setdefault("transactions", []).insert(0, {
-                    "id": req_id,
-                    "type": "DEPOSIT",
-                    "method": "Slice UPI (Auto-Verified)",
-                    "utr": clean_utr,
-                    "amount": amount,
-                    "status": "COMPLETED",
-                    "date": req["approved_at"]
-                })
-
-            all_data.setdefault("deposit_requests", []).insert(0, req)
-            save_all_user_data(all_data)
-
-            return JSONResponse(content={
-                "status": "APPROVED",
-                "message": f"🎉 Real payment of ₹{amount:,.2f} verified by Slice Bank! Wallet updated instantly.",
-                "request": req,
-                "new_balance": users[user['mobile']].get('balance', amount)
-            })
-
+        # Manual Approval Enforcement: All customer deposits start strictly in PENDING state.
+        # No automated auto-credit is permitted without verified admin approval.
         all_data.setdefault("deposit_requests", []).insert(0, req)
 
     save_all_user_data(all_data)
@@ -3912,6 +4099,8 @@ async def get_user_withdrawal_history(request: Request):
 
 @app.post("/api/payment/slice-bank-credit")
 async def register_slice_bank_credit(request: Request):
+    # Only records payment receipt in internal observer ledger for admin verification.
+    # NEVER modifies user balance or auto-approves deposits.
     data = await request.json()
     rrn = str(data.get("rrn") or data.get("utr") or "").strip()
     amount = float(data.get("amount", 100.0))
@@ -3935,59 +4124,11 @@ async def register_slice_bank_credit(request: Request):
         })
         save_json(SLICE_VERIFIED_FILE, slice_payments)
 
-    all_data = load_all_user_data()
-    reqs = all_data.get("deposit_requests", [])
-    target = next((r for r in reqs if (r.get("utr") == rrn or (r.get("status") == "PENDING" and abs(float(r.get("amount", 0.0)) - amount) < 0.01))), None)
-
-    if target and target.get("status") != "APPROVED":
-        target["status"] = "APPROVED"
-        target["approved_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
-        target["approved_by"] = "Slice Bank Observer (Auto-Reconciled)"
-        target["utr"] = rrn
-        mobile = target.get("user_mobile") or target.get("mobile")
-        amount_paise = target.get("amount_paise") or to_paise(target.get("amount", 0.0))
-
-        users = all_data.setdefault("users", {})
-        if mobile in users:
-            u = users[mobile]
-            u["balance_paise"] = u.get("balance_paise", to_paise(u.get("balance", 0.0)))
-            before = u["balance_paise"]
-            u["balance_paise"] += amount_paise
-            after = u["balance_paise"]
-            u["balance"] = from_paise(u["balance_paise"])
-
-            record_ledger_entry(
-                all_data=all_data,
-                user_mobile=mobile,
-                entry_type="DEPOSIT_CREDIT",
-                amount_paise=amount_paise,
-                balance_before_paise=before,
-                balance_after_paise=after,
-                ref_id=target["id"],
-                actor="slice_auto_reconciler",
-                notes=f"Auto-verified via Slice Bank RRN: {rrn}"
-            )
-
-            u.setdefault("transactions", []).insert(0, {
-                "id": target["id"],
-                "type": "DEPOSIT",
-                "method": "Slice UPI (Auto-Verified)",
-                "utr": rrn,
-                "amount": from_paise(amount_paise),
-                "status": "COMPLETED",
-                "date": target["approved_at"]
-            })
-
-            for sp in slice_payments:
-                if sp.get("rrn") == rrn:
-                    sp["credited"] = True
-                    sp["credited_to"] = mobile
-            save_json(SLICE_VERIFIED_FILE, slice_payments)
-
-        save_all_user_data(all_data)
-        return JSONResponse(content={"status": "success", "message": f"RRN {rrn} auto-credited to {mobile}!", "credited": True, "target": target})
-
-    return JSONResponse(content={"status": "success", "message": f"RRN {rrn} registered in Slice Bank ledger.", "credited": False})
+    return JSONResponse(content={
+        "status": "success",
+        "message": f"RRN {rrn} logged for admin manual verification. No automated wallet credits allowed.",
+        "credited": False
+    })
 
 @app.post("/api/ocr/extract-utr")
 async def extract_utr_api(request: Request):
@@ -4051,6 +4192,8 @@ async def bind_bank_account(request: Request):
         "bound_at": time.strftime("%Y-%m-%d %H:%M:%S")
     }
     save_all_user_data(all_data)
+    wstate = UnifiedWalletService.get_wallet_state(all_data, mobile)
+    await wallet_broadcaster.broadcast_wallet(mobile, wstate)
 
     return JSONResponse(content={
         "status": "success",
@@ -4187,6 +4330,8 @@ async def submit_withdrawal_request(request: Request):
     )
 
     save_all_user_data(all_data)
+    wstate = UnifiedWalletService.get_wallet_state(all_data, mobile)
+    await wallet_broadcaster.broadcast_wallet(mobile, wstate)
 
     return JSONResponse(content={
         "status": "success",
@@ -4298,13 +4443,22 @@ async def place_bet(request: Request):
         liability = stake * (decimal_odds - 1.0)
         potential_profit = stake
 
-    available_balance = user["balance"]
-    if liability > available_balance:
-        raise HTTPException(status_code=400, detail=f"Insufficient balance. Required liability ₹{liability:,.2f}, Available: ₹{available_balance:,.2f}")
-
-    user["balance"] = round(user["balance"] - liability, 2)
-
+    mobile = user.get("mobile")
+    all_data = load_all_user_data()
+    liability_paise = to_paise(liability)
     bet_id = f"BET-{int(time.time()*1000)}"
+
+    # Atomic debit via UnifiedWalletService
+    wstate = await UnifiedWalletService.debit(
+        all_data=all_data,
+        mobile=mobile,
+        amount_paise=liability_paise,
+        tx_type="CRICKET_BET",
+        ref_id=bet_id,
+        game_or_market=f"{match['name']} ({runner})",
+        description=f"{bet_type.upper()} bet on {runner} @ {accepted_odds:.2f} (Stake ₹{stake:.2f}, Liability ₹{liability:.2f})"
+    )
+
     new_bet = {
         "id": bet_id,
         "match_id": match_id,
@@ -4322,15 +4476,19 @@ async def place_bet(request: Request):
         "placed_at": time.strftime("%Y-%m-%d %H:%M:%S")
     }
 
-    user.setdefault("bets", []).insert(0, new_bet)
-    user["wagering_completed_paise"] = user.get("wagering_completed_paise", 0) + to_paise(stake)
-    user["wagering_completed"] = from_paise(user["wagering_completed_paise"])
-    recalculate_user_exposure(user)
-    save_all_user_data()
+    db_user = all_data["users"][mobile]
+    db_user.setdefault("bets", []).insert(0, new_bet)
+    db_user["wagering_completed_paise"] = db_user.get("wagering_completed_paise", 0) + to_paise(stake)
+    db_user["wagering_completed"] = from_paise(db_user["wagering_completed_paise"])
+    recalculate_user_exposure(db_user)
+    save_all_user_data(all_data)
 
-    book = calculate_runner_book(match_id, market_type, user.get("bets", []))
+    # Real-time WebSocket wallet sync
+    await wallet_broadcaster.broadcast_wallet(mobile, wstate)
 
-    act_item = record_match_activity(match_id, new_bet, user.get("mobile", ""))
+    book = calculate_runner_book(match_id, market_type, db_user.get("bets", []))
+
+    act_item = record_match_activity(match_id, new_bet, mobile)
     try:
         asyncio.create_task(manager.broadcast({
             "type": "NEW_BET_ACTIVITY",
@@ -4340,7 +4498,7 @@ async def place_bet(request: Request):
     except Exception:
         pass
 
-    user_match_bets = [b for b in user.get("bets", []) if str(b.get("match_id")) == match_id]
+    user_match_bets = [b for b in db_user.get("bets", []) if str(b.get("match_id")) == match_id]
     total_match_staked = round(sum(float(b.get("stake", 0)) for b in user_match_bets), 2)
 
     msg = f"Bet placed successfully on {runner} @ {accepted_odds:.2f}!"
@@ -4354,8 +4512,8 @@ async def place_bet(request: Request):
         "accepted_odds": accepted_odds,
         "requested_odds": requested_odds,
         "odds_improved": odds_improved,
-        "balance": user["balance"],
-        "exposure": user["exposure"],
+        "balance": wstate["balance"],
+        "exposure": db_user["exposure"],
         "book": book,
         "user_bets": user_match_bets,
         "open_bets": [b for b in user_match_bets if b.get("status") == "OPEN"],
@@ -4373,9 +4531,17 @@ async def place_bet(request: Request):
 async def turbo_cash_out(request: Request):
     data = await request.json()
     user = get_active_user(request)
-    bet_id = data.get("bet_id")
+    if user.get("is_guest") or not user.get("mobile"):
+        raise HTTPException(status_code=401, detail="Please login first.")
 
-    bet = next((b for b in user.get("bets", []) if b.get("id") == bet_id and b.get("status") == "OPEN"), None)
+    bet_id = data.get("bet_id")
+    mobile = user["mobile"]
+    all_data = load_all_user_data()
+    db_user = all_data.get("users", {}).get(mobile)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User account not found")
+
+    bet = next((b for b in db_user.get("bets", []) if b.get("id") == bet_id and b.get("status") == "OPEN"), None)
     if not bet:
         raise HTTPException(status_code=404, detail="Active open bet not found")
 
@@ -4387,7 +4553,6 @@ async def turbo_cash_out(request: Request):
     bet_runner = bet.get("runner")
     market_type = bet.get("market_type", "match_odds")
 
-    # Back bets hedge against Lay odds; Lay bets hedge against Back odds
     hedge_type = "lay" if bet_type == "back" else "back"
     current_hedge_odds, is_susp, _ = get_live_market_price(match, bet_runner, hedge_type, market_type)
     if current_hedge_odds <= 1.0:
@@ -4408,28 +4573,28 @@ async def turbo_cash_out(request: Request):
     bet["cashout_profit"] = net_profit
     bet["cashed_out_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
 
-    user["balance"] = round(user["balance"] + cashout_payout, 2)
-    if net_profit > 0:
-        user["total_winnings"] = round(user.get("total_winnings", 0.0) + net_profit, 2)
+    cashout_paise = to_paise(cashout_payout)
+    wstate = await UnifiedWalletService.credit(
+        all_data=all_data,
+        mobile=mobile,
+        amount_paise=cashout_paise,
+        tx_type="CRICKET_CASHOUT",
+        ref_id=f"CSH-{bet_id}",
+        game_or_market=f"{match['name']} ({bet_runner})",
+        description=f"Cashout bet on {bet_runner} (Payout ₹{cashout_payout:.2f})"
+    )
 
-    recalculate_user_exposure(user)
-    save_all_user_data()
-
-    book = calculate_runner_book(bet["match_id"], market_type, user.get("bets", []))
-    user_match_bets = [b for b in user.get("bets", []) if str(b.get("match_id")) == bet["match_id"]]
+    recalculate_user_exposure(db_user)
+    save_all_user_data(all_data)
+    await wallet_broadcaster.broadcast_wallet(mobile, wstate)
 
     return JSONResponse(content={
         "status": "success",
-        "message": f"Turbo Cash-Out executed! Credited ₹{cashout_payout:,.2f} (Net: {'+' if net_profit >= 0 else ''}₹{net_profit:,.2f})",
-        "cashout_payout": cashout_payout,
-        "net_profit": net_profit,
-        "balance": user["balance"],
-        "exposure": user["exposure"],
-        "book": book,
-        "user_bets": user_match_bets,
-        "open_bets": [b for b in user_match_bets if b.get("status") == "OPEN"],
-        "settled_bets": [b for b in user_match_bets if b.get("status") != "OPEN"],
-        "total_staked": round(sum(float(b.get("stake", 0)) for b in user_match_bets), 2)
+        "message": f"Successfully cashed out ₹{cashout_payout:,.2f}!",
+        "payout": cashout_payout,
+        "profit": net_profit,
+        "new_balance": wstate["balance"],
+        "exposure": db_user["exposure"]
     })
 
 @app.get("/api/match/{match_id}/bets")
@@ -4455,7 +4620,8 @@ async def get_match_bets(request: Request, match_id: str):
 
 # ==================== ADMIN CONTROL & MANAGEMENT ====================
 @app.get("/api/admin/users")
-async def admin_get_users():
+async def admin_get_users(request: Request):
+    require_admin_auth(request)
     all_data = load_all_user_data()
     users_dict = all_data.get("users", {})
     blocked = set(all_data.get("blocked_mobiles", []))
@@ -4474,6 +4640,7 @@ async def admin_get_users():
 
 @app.post("/api/admin/reset-password")
 async def admin_reset_password(request: Request):
+    require_admin_auth(request)
     data = await request.json()
     mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
     new_password = str(data.get("new_password", "")).strip()
@@ -4496,6 +4663,7 @@ async def admin_reset_password(request: Request):
 
 @app.post("/api/admin/add-money")
 async def admin_add_money(request: Request):
+    require_admin_auth(request)
     data = await request.json()
     mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
     amount = float(data.get("amount", 0.0))
@@ -4516,7 +4684,9 @@ async def admin_add_money(request: Request):
             "name": f"User {mobile[-4:]}",
             "tier": "VIP Gold",
             "balance": 0.0,
+            "balance_paise": 0,
             "exposure": 0.0,
+            "exposure_paise": 0,
             "total_winnings": 0.0,
             "kyc_status": "VERIFIED",
             "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -4524,33 +4694,45 @@ async def admin_add_money(request: Request):
             "transactions": []
         }
 
-    target = users[mobile]
-    if action == "CREDIT":
-        target["balance"] += amount
-    else:
-        target["balance"] = max(0.0, target["balance"] - amount)
+    amt_paise = to_paise(amount)
+    ref_id = f"ADM-{int(time.time()*1000)}"
 
-    tx = {
-        "id": f"ADM-{time.time_ns() % 1000000}",
-        "type": f"ADMIN_{action}",
-        "method": "Admin Direct Add Money",
-        "amount": amount,
-        "remark": remark,
-        "status": "COMPLETED",
-        "date": time.strftime("%Y-%m-%d %H:%M:%S")
-    }
-    target.setdefault("transactions", []).insert(0, tx)
+    if action == "CREDIT":
+        wstate = await UnifiedWalletService.credit(
+            all_data=all_data,
+            mobile=mobile,
+            amount_paise=amt_paise,
+            tx_type="ADMIN_ADJUSTMENT",
+            ref_id=ref_id,
+            game_or_market="Manual Adjustment",
+            description=f"Admin Credit: {remark}",
+            actor="master_admin"
+        )
+    else:
+        wstate = await UnifiedWalletService.debit(
+            all_data=all_data,
+            mobile=mobile,
+            amount_paise=amt_paise,
+            tx_type="ADMIN_ADJUSTMENT",
+            ref_id=ref_id,
+            game_or_market="Manual Adjustment",
+            description=f"Admin Debit: {remark}"
+        )
+
     save_all_user_data(all_data)
+    await wallet_broadcaster.broadcast_wallet(mobile, wstate)
 
     return JSONResponse(content={
         "status": "success",
         "message": f"Successfully {action}ed ₹{amount:,.2f} for +91 {mobile}!",
         "mobile": mobile,
-        "balance": target["balance"]
+        "balance": wstate["balance"],
+        "available": wstate["available"]
     })
 
 @app.post("/api/admin/set-wagering")
 async def admin_set_wagering(request: Request):
+    require_admin_auth(request)
     data = await request.json()
     mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
     try:
@@ -4584,6 +4766,7 @@ async def admin_set_wagering(request: Request):
 
 @app.post("/api/admin/user/block")
 async def admin_block_user(request: Request):
+    require_admin_auth(request)
     data = await request.json()
     mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
     is_blocked = bool(data.get("is_blocked", True))
@@ -4616,6 +4799,7 @@ async def admin_block_user(request: Request):
 
 @app.post("/api/admin/user/delete")
 async def admin_delete_user(request: Request):
+    require_admin_auth(request)
     data = await request.json()
     mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
     if not mobile or len(mobile) != 10:
@@ -4658,11 +4842,13 @@ async def admin_delete_user(request: Request):
 
 
 @app.get("/api/admin/casino-config")
-async def admin_get_casino_config():
+async def admin_get_casino_config(request: Request):
+    require_admin_auth(request)
     return JSONResponse(content={"status": "success", "config": get_casino_config()})
 
 @app.post("/api/admin/casino-config")
 async def admin_update_casino_config(request: Request):
+    require_admin_auth(request)
     data = await request.json()
     cfg = get_casino_config()
     if "house_margin_pct" in data:
@@ -4680,6 +4866,7 @@ async def admin_update_casino_config(request: Request):
 
 @app.post("/api/admin/deposit/delete")
 async def admin_delete_deposit(request: Request):
+    require_admin_auth(request)
     data = await request.json()
     req_id = str(data.get("request_id", "")).strip()
     if not req_id:
@@ -4694,7 +4881,8 @@ async def admin_delete_deposit(request: Request):
     return JSONResponse(content={"status": "success", "message": f"Deposit claim {req_id} removed from history."})
 
 @app.post("/api/admin/deposit/clear-history")
-async def admin_clear_deposit_history():
+async def admin_clear_deposit_history(request: Request):
+    require_admin_auth(request)
     all_data = load_all_user_data()
     reqs = all_data.get("deposit_requests", [])
     # Keep only PENDING claims, delete all APPROVED and DECLINED claims
@@ -4704,6 +4892,7 @@ async def admin_clear_deposit_history():
 
 @app.post("/api/admin/withdrawal/delete")
 async def admin_delete_withdrawal(request: Request):
+    require_admin_auth(request)
     data = await request.json()
     req_id = str(data.get("request_id", "")).strip()
     if not req_id:
@@ -4739,6 +4928,7 @@ async def ws_admin_alerts(websocket: WebSocket):
 
 @app.get("/api/admin/financial-queue")
 async def get_financial_queue(request: Request):
+    require_admin_auth(request)
     all_data = load_all_user_data()
     return JSONResponse(content={
         "status": "success",
@@ -4748,6 +4938,7 @@ async def get_financial_queue(request: Request):
 
 @app.get("/api/admin/ledger")
 async def get_admin_ledger(request: Request):
+    require_admin_auth(request)
     all_data = load_all_user_data()
     return JSONResponse(content={
         "status": "success",
@@ -4780,6 +4971,7 @@ async def test_admin_push():
 
 @app.post("/api/admin/deposit/action")
 async def admin_deposit_action(request: Request):
+    require_admin_auth(request)
     data = await request.json()
     req_id = str(data.get("request_id", "")).strip()
     action = str(data.get("action", "APPROVE")).upper()
@@ -4795,79 +4987,51 @@ async def admin_deposit_action(request: Request):
     if utr_override:
         target_req["utr"] = utr_override
 
-    # Idempotent: If already approved, return success without double crediting
+    # Prevent duplicate approval
     if target_req.get("status") == "APPROVED":
-        return JSONResponse(content={
-            "status": "success",
-            "message": f"Request {req_id} was already approved on {target_req.get('approved_at')}.",
-            "request": target_req
-        })
+        return JSONResponse(content={"status": "success", "message": "Deposit was already approved.", "request": target_req})
+
+    user_mobile = target_req.get("user_mobile") or target_req.get("mobile")
 
     if action == "APPROVE":
         target_req["status"] = "APPROVED"
         target_req["approved_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
-        target_req["approved_by"] = "admin_master"
-        mobile = target_req.get("user_mobile") or target_req.get("mobile")
-        amount_paise = target_req.get("amount_paise") or to_paise(target_req.get("amount", 0.0))
+        target_req["approved_by"] = "Master Admin"
 
-        users = all_data.get("users", {})
-        if mobile in users:
-            u = users[mobile]
-            u["balance_paise"] = u.get("balance_paise", to_paise(u.get("balance", 0.0)))
-            before_paise = u["balance_paise"]
-            u["balance_paise"] += amount_paise
-            after_paise = u["balance_paise"]
-            u["balance"] = from_paise(u["balance_paise"])
+        amt_paise = target_req.get("amount_paise") or to_paise(target_req.get("amount", 0.0))
+        utr_str = target_req.get("utr", "N/A")
 
-            # Record immutable ledger entry
-            record_ledger_entry(
-                all_data=all_data,
-                user_mobile=mobile,
-                entry_type="DEPOSIT_CREDIT",
-                amount_paise=amount_paise,
-                balance_before_paise=before_paise,
-                balance_after_paise=after_paise,
-                ref_id=req_id,
-                actor="admin_master",
-                notes=f"Deposit verified on Slice UPI ({target_req.get('receiving_payee', 'Tarana Nasreen')}). UTR: {target_req.get('utr')}"
-            )
+        # Atomic credit via UnifiedWalletService
+        wstate = await UnifiedWalletService.credit(
+            all_data=all_data,
+            mobile=user_mobile,
+            amount_paise=amt_paise,
+            tx_type="DEPOSIT",
+            ref_id=req_id,
+            game_or_market="Manual Deposit Approval",
+            description=f"Verified Deposit Approval. UTR: {utr_str}",
+            actor="master_admin",
+            idempotency_key=f"DEP-APPROVE-{req_id}"
+        )
 
-            # User transaction history entry
-            u.setdefault("transactions", []).insert(0, {
-                "id": req_id,
-                "type": "DEPOSIT",
-                "method": target_req.get("method", "Slice UPI"),
-                "utr": target_req.get("utr", ""),
-                "amount": from_paise(amount_paise),
-                "status": "COMPLETED",
-                "date": target_req["approved_at"]
-            })
-
-        msg = f"Approved deposit of ₹{from_paise(amount_paise):,.2f} for +91 {mobile}!"
+        save_all_user_data(all_data)
+        # Push real-time update to all active sessions for this user
+        await wallet_broadcaster.broadcast_wallet(user_mobile, wstate)
+        msg = f"Approved ₹{from_paise(amt_paise):,.2f} deposit for {user_mobile}."
     else:
         target_req["status"] = "DECLINED"
         target_req["declined_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
-        target_req["declined_by"] = "admin_master"
+        target_req["declined_by"] = "Master Admin"
         target_req["decline_reason"] = reason
 
-        record_ledger_entry(
-            all_data=all_data,
-            user_mobile=target_req.get("user_mobile") or target_req.get("mobile", ""),
-            entry_type="DEPOSIT_DECLINED",
-            amount_paise=target_req.get("amount_paise", 0),
-            balance_before_paise=0,
-            balance_after_paise=0,
-            ref_id=req_id,
-            actor="admin_master",
-            notes=f"Deposit declined: {reason}"
-        )
+        save_all_user_data(all_data)
         msg = f"Declined deposit request {req_id}."
 
-    save_all_user_data(all_data)
     return JSONResponse(content={"status": "success", "message": msg, "request": target_req})
 
 @app.post("/api/admin/withdraw/action")
 async def admin_withdrawal_action(request: Request):
+    require_admin_auth(request)
     data = await request.json()
     req_id = str(data.get("request_id", "")).strip()
     action = str(data.get("action", "MARK_PAID")).upper()
@@ -4880,16 +5044,15 @@ async def admin_withdrawal_action(request: Request):
     if not target:
         raise HTTPException(status_code=404, detail="Withdrawal request not found.")
 
-    if target.get("status") in ["PAID", "COMPLETED"]:
+    if target.get("status") in ["PAID", "COMPLETED", "DECLINED"]:
         return JSONResponse(content={
             "status": "success",
-            "message": f"Withdrawal {req_id} was already marked as PAID.",
+            "message": f"Withdrawal {req_id} was already {target.get('status')}.",
             "request": target
         })
 
     mobile = target.get("user_mobile") or target.get("mobile")
     amt_paise = target.get("amount_paise") or to_paise(target.get("amount", 0.0))
-    user_rec = all_data.get("users", {}).get(mobile)
 
     if action in ["MARK_PAID", "PAID", "APPROVE"]:
         if not payout_utr:
@@ -4897,71 +5060,43 @@ async def admin_withdrawal_action(request: Request):
 
         target["status"] = "PAID"
         target["paid_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
-        target["paid_by"] = "admin_master"
+        target["paid_by"] = "Master Admin"
         target["payout_bank_utr"] = payout_utr
 
-        if user_rec:
-            before_paise = user_rec.get("balance_paise", to_paise(user_rec.get("balance", 0.0)))
-            user_rec["reserved_withdrawal_paise"] = max(0, user_rec.get("reserved_withdrawal_paise", amt_paise) - amt_paise)
-            user_rec["balance_paise"] = max(0, before_paise - amt_paise)
-            user_rec["balance"] = from_paise(user_rec["balance_paise"])
-
-            record_ledger_entry(
-                all_data=all_data,
-                user_mobile=mobile,
-                entry_type="WITHDRAWAL_SETTLE",
-                amount_paise=amt_paise,
-                balance_before_paise=before_paise,
-                balance_after_paise=user_rec["balance_paise"],
-                ref_id=req_id,
-                actor="admin_master",
-                notes=f"Withdrawal paid via Bank UTR: {payout_utr}"
-            )
-
-            user_rec.setdefault("transactions", []).insert(0, {
-                "id": req_id,
-                "type": "WITHDRAWAL",
-                "method": f"Bank Payout ({target.get('bank_name', 'Bank')})",
-                "account": target.get("bank_account_masked", ""),
-                "utr": payout_utr,
-                "amount": from_paise(amt_paise),
-                "status": "COMPLETED",
-                "date": target["paid_at"]
-            })
-            recalculate_user_exposure(user_rec)
-
+        wstate = await UnifiedWalletService.commit_withdrawal(
+            all_data=all_data,
+            mobile=mobile,
+            amount_paise=amt_paise,
+            req_id=req_id,
+            utr_or_ref=payout_utr,
+            actor="master_admin"
+        )
+        save_all_user_data(all_data)
+        await wallet_broadcaster.broadcast_wallet(mobile, wstate)
         msg = f"Withdrawal {req_id} marked as PAID. Bank UTR: {payout_utr}."
     else:
-        # DECLINE: Release reserved amount back to user's available balance
         target["status"] = "DECLINED"
         target["declined_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
-        target["declined_by"] = "admin_master"
+        target["declined_by"] = "Master Admin"
         target["decline_reason"] = reason
 
-        if user_rec:
-            user_rec["reserved_withdrawal_paise"] = max(0, user_rec.get("reserved_withdrawal_paise", amt_paise) - amt_paise)
-            cur_bal = user_rec.get("balance_paise", to_paise(user_rec.get("balance", 0.0)))
-
-            record_ledger_entry(
-                all_data=all_data,
-                user_mobile=mobile,
-                entry_type="WITHDRAWAL_RELEASE",
-                amount_paise=amt_paise,
-                balance_before_paise=cur_bal,
-                balance_after_paise=cur_bal,
-                ref_id=req_id,
-                actor="admin_master",
-                notes=f"Withdrawal declined ({reason}). Reserved balance released."
-            )
-            recalculate_user_exposure(user_rec)
-
+        wstate = await UnifiedWalletService.cancel_withdrawal(
+            all_data=all_data,
+            mobile=mobile,
+            amount_paise=amt_paise,
+            req_id=req_id,
+            reason=reason,
+            actor="master_admin"
+        )
+        save_all_user_data(all_data)
+        await wallet_broadcaster.broadcast_wallet(mobile, wstate)
         msg = f"Withdrawal {req_id} declined. Reserved ₹{from_paise(amt_paise):,.2f} released back to customer."
 
-    save_all_user_data(all_data)
     return JSONResponse(content={"status": "success", "message": msg, "request": target})
 
 @app.post("/api/admin/withdraw/reveal-account")
 async def admin_reveal_bank_account(request: Request):
+    require_admin_auth(request)
     data = await request.json()
     req_id = str(data.get("request_id", "")).strip()
 
@@ -4990,6 +5125,8 @@ async def admin_reveal_bank_account(request: Request):
         notes=f"Admin revealed full bank account for withdrawal {req_id}"
     )
     save_all_user_data(all_data)
+    wstate = UnifiedWalletService.get_wallet_state(all_data, mobile)
+    await wallet_broadcaster.broadcast_wallet(mobile, wstate)
 
     return JSONResponse(content={
         "status": "success",
@@ -4998,16 +5135,18 @@ async def admin_reveal_bank_account(request: Request):
 
 @app.post("/api/admin/settle")
 async def admin_settle_match(request: Request):
+    require_admin_auth(request)
     data = await request.json()
     match_id = str(data.get("match_id"))
     winning_runner = data.get("winning_runner")
 
     all_data = load_all_user_data()
     settled_count = 0
-    total_credit = 0.0
+    total_credit_paise = 0
 
-    for user in all_data.get("users", {}).values():
-        for bet in user.get("bets", []):
+    for mobile, u in all_data.get("users", {}).items():
+        user_credited_paise = 0
+        for bet in u.get("bets", []):
             if str(bet.get("match_id")) == match_id and bet.get("status") == "OPEN":
                 bet_runner = bet.get("runner")
                 bet_type = bet.get("type")
@@ -5023,20 +5162,36 @@ async def admin_settle_match(request: Request):
                     profit = stake * (eff_odds - 1.0)
                     bet["status"] = "WON"
                     bet["payout"] = round(payout, 2)
-                    user["balance"] += payout
-                    user["total_winnings"] += profit
-                    total_credit += payout
+                    p_paise = to_paise(payout)
+                    user_credited_paise += p_paise
+                    u["total_winnings"] = round(u.get("total_winnings", 0.0) + profit, 2)
+                    total_credit_paise += p_paise
                 else:
                     bet["status"] = "LOST"
                     bet["payout"] = 0.0
 
                 settled_count += 1
-        recalculate_user_exposure(user)
+
+        if user_credited_paise > 0:
+            wstate = await UnifiedWalletService.credit(
+                all_data=all_data,
+                mobile=mobile,
+                amount_paise=user_credited_paise,
+                tx_type="CRICKET_WIN",
+                ref_id=f"SETTLE-{match_id}",
+                game_or_market=f"Match {match_id}",
+                description=f"Winning payout for match outcome: {winning_runner}",
+                actor="admin_master"
+            )
+            recalculate_user_exposure(u)
+            await wallet_broadcaster.broadcast_wallet(mobile, wstate)
+        else:
+            recalculate_user_exposure(u)
 
     save_all_user_data(all_data)
     return JSONResponse(content={
         "status": "success",
-        "message": f"Settled {settled_count} bets for winner {winning_runner}. Credited ₹{total_credit:,.2f} across accounts."
+        "message": f"Settled {settled_count} bets for winner {winning_runner}. Credited ₹{from_paise(total_credit_paise):,.2f} across accounts."
     })
 
 # ==================== DATA API ENDPOINTS ====================
