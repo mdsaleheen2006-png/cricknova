@@ -1,55 +1,16 @@
 [
   {
-    "id": "crash",
-    "slug": "crash",
-    "name": "Cricknova Crash • Live Rocket Multiplier",
-    "category": "crash",
-    "provider": "CrickNova Originals",
-    "badge": "HOT MULTIPLIER",
-    "players": 1940,
-    "icon": "🚀",
-    "gradient": "linear-gradient(135deg, #10b981, #064e3b)",
-    "description": "Watch the multiplier rocket soar! Cash out before the crash to win up to 1,000,000x.",
-    "play_url": "/casino-games/#/crash"
-  },
-  {
-    "id": "roulette-3d",
-    "slug": "roulette-3d",
-    "name": "3D Roulette Royale • European Table",
-    "category": "roulette",
+    "id": "jhandi",
+    "slug": "jhandi-munda",
+    "name": "Jhandi Munda • Royal 3D Dice",
+    "category": "dice",
     "provider": "CrickNova 3D Studio",
-    "badge": "3D PHYSICS",
-    "players": 1120,
-    "icon": "🎡",
-    "gradient": "linear-gradient(135deg, #dc2626, #450a0a)",
-    "description": "Realistic 3D roulette wheel with ball physics, dynamic camera views, and authentic casino room sound.",
-    "play_url": "/roulette-3d/"
-  },
-  {
-    "id": "plinko",
-    "slug": "plinko",
-    "name": "Cricknova Plinko • Gravity Drop",
-    "category": "arcade",
-    "provider": "CrickNova Originals",
-    "badge": "1000X MULTI",
-    "players": 1350,
-    "icon": "⚪",
-    "gradient": "linear-gradient(135deg, #6366f1, #312e81)",
-    "description": "Drop balls through peg pyramids with configurable risk levels and massive edge multipliers.",
-    "play_url": "/casino-games/#/plinko"
-  },
-  {
-    "id": "mines",
-    "slug": "mines",
-    "name": "Cricknova Mines • 5x5 Grid Cashout",
-    "category": "arcade",
-    "provider": "CrickNova Originals",
-    "badge": "POPULAR #1",
-    "players": 1620,
-    "icon": "💎",
-    "gradient": "linear-gradient(135deg, #f59e0b, #78350f)",
-    "description": "Uncover sparkling gems and dodge the hidden mines. Cash out anytime as payout compounds!",
-    "play_url": "/casino-games/#/mines"
+    "badge": "30s AUTO LIVE",
+    "players": 1850,
+    "icon": "🚩",
+    "gradient": "linear-gradient(135deg, #7c0e1d, #290207)",
+    "description": "Authentic Indian 6-symbol 3D dice table with 30s auto live roll and real-time multiplayer betting.",
+    "play_url": "/casino/jhandi-munda"
   },
   {
     "id": "flight",
@@ -65,19 +26,6 @@
     "play_url": "/casino/flight"
   },
   {
-    "id": "gold",
-    "slug": "gold",
-    "name": "Temple of Gems • Multiplier Wheel",
-    "category": "slots",
-    "provider": "JILI Style",
-    "badge": "⭐ POPULAR #1",
-    "players": 980,
-    "icon": "💎",
-    "gradient": "linear-gradient(135deg, #b45309, #78350f)",
-    "description": "3 classic reels with golden multiplier wheel feature up to 1000x.",
-    "play_url": "/casino/gold"
-  },
-  {
     "id": "andar",
     "slug": "andar",
     "name": "Speed Andar Bahar • Live Table",
@@ -91,19 +39,6 @@
     "play_url": "/casino/andar"
   },
   {
-    "id": "wheel",
-    "slug": "wheel",
-    "name": "Lucky Roulette • European 36x",
-    "category": "roulette",
-    "provider": "Live Studio",
-    "badge": "36X ODDS",
-    "players": 820,
-    "icon": "🎯",
-    "gradient": "linear-gradient(135deg, #ffd700, #b45309)",
-    "description": "European single zero 0-36 roulette with straight up, red/black, dozens, and columns.",
-    "play_url": "/casino/wheel"
-  },
-  {
     "id": "storm",
     "slug": "storm",
     "name": "Storm of the Nile • 6-Reel Megaways",
@@ -115,18 +50,5 @@
     "gradient": "linear-gradient(135deg, #0891b2, #164e63)",
     "description": "Six reels Egyptian Nile theme with wild scarabs, cascades, and free spins multiplier.",
     "play_url": "/casino/storm"
-  },
-  {
-    "id": "bingo",
-    "slug": "bingo",
-    "name": "Super Bingo • Fast Balls 90",
-    "category": "arcade",
-    "provider": "VIP Arcade",
-    "badge": "INSTANT WIN",
-    "players": 510,
-    "icon": "🎱",
-    "gradient": "linear-gradient(135deg, #10b981, #064e3b)",
-    "description": "Instant live bingo with multiple cards, bonus balls, and progressive jackpot lines.",
-    "play_url": "/casino/bingo"
   }
 ]

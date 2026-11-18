@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>CrickNova | Jhandi Munda Royal 3D Casino</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --crimson-dark: #45060e;
+      --crimson-mid: #6d0b19;
+      --crimson-bright: #991224;
+      --gold-light: #ffe484;
+      --gold-mid: #eab308;
+      --gold-dark: #a16207;
+    }
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at 50% 20%, #7c0e1d 0%, #3a040b 70%, #1a0104 100%);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .font-royal {
+      font-family: 'Cinzel', serif;
+    }
+
+    /* 3D Arena Wrapper */
+    .arena-wrapper {
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(ellipse at 50% 45%, #8a1122 0%, #48050e 75%, #290207 100%);
+      border-top: 2px solid rgba(255, 215, 0, 0.35);
+      border-bottom: 3px solid #c99838;
+      box-shadow: inset 0 12px 35px rgba(0,0,0,0.75);
+    }
+
+    /* 3D WebGL Carpet Stage */
+    .carpet-3d {
+      width: 96%;
+      max-width: 540px;
+      height: 225px;
+      margin: 4px auto 34px auto;
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 45%, #233c7a 0%, #111d3d 85%);
+      border: 4px solid #d4a346;
+      box-shadow:
+        0 18px 32px rgba(0, 0, 0, 0.85),
+        inset 0 0 0 3px #101b37,
+        inset 0 0 28px rgba(0,0,0,0.8);
+    }
+
+    #webglCanvasContainer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 5;
+    }
+    #webglCanvasContainer canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
+    /* 5-Second Pre-Roll Blind / Shaker Curtain Overlay */
+    .blind-shaker-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 15;
+      background: radial-gradient(circle at center, rgba(18, 10, 4, 0.88) 0%, rgba(10, 4, 2, 0.96) 100%);
+      backdrop-filter: blur(6px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .blind-shaker-overlay.hidden-overlay {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(1.04);
+    }
+    @keyframes vigorousShake {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      20% { transform: translate(-7px, -5px) rotate(-6deg); }
+      40% { transform: translate(7px, 4px) rotate(6deg); }
+      60% { transform: translate(-6px, 5px) rotate(-5deg); }
+      80% { transform: translate(6px, -4px) rotate(5deg); }
+    }
+    .shaker-cup-anim {
+      animation: vigorousShake 0.28s infinite ease-in-out;
+    }
+
+    /* Betting Board White 3D Cards */
+    .bet-card {
+      background: linear-gradient(180deg, #ffffff 0%, #f4f5f7 76%, #d5d9e2 100%);
+      border-radius: 20px;
+      border: 3.5px solid #e2e8f0;
+      box-shadow:
+        0 7px 0 #94a3b8,
+        0 12px 20px rgba(0, 0, 0, 0.58),
+        inset 0 2px 5px #ffffff;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.2s ease, border-color 0.2s ease, filter 0.2s ease;
+      overflow: hidden;
+    }
+    .bet-card:active {
+      transform: translateY(3px);
+      box-shadow:
+        0 4px 0 #94a3b8,
+        0 6px 12px rgba(0, 0, 0, 0.55),
+        inset 0 2px 5px #ffffff;
+    }
+    .bet-card.locked-card {
+      cursor: not-allowed;
+      filter: brightness(0.88);
+    }
+    .bet-card.winner-glow {
+      border-color: #facc15;
+      box-shadow:
+        0 6px 0 #ca8a04,
+        0 0 28px 6px rgba(250, 204, 21, 0.9),
+        inset 0 0 18px rgba(250, 204, 21, 0.45);
+      animation: pulseWin 0.75s ease-in-out infinite alternate;
+    }
+    @keyframes pulseWin {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.035); }
+    }
+
+    /* Casino Chip Stack Styling */
+    .casino-chip {
+      border-radius: 9999px;
+      border: 3px dashed rgba(255, 255, 255, 0.88);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.6), inset 0 0 0 3px rgba(0,0,0,0.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .casino-chip.active-chip {
+      transform: scale(1.14) translateY(-3px);
+      box-shadow: 0 0 16px 3px rgba(250, 204, 21, 0.92), 0 6px 12px rgba(0,0,0,0.7);
+      border-style: solid;
+      border-color: #fef08a;
+    }
+
+    /* Wood / Gold Bottom Dock */
+    .wood-dock {
+      background: linear-gradient(180deg, #5e3a18 0%, #3d230c 45%, #261405 100%);
+      border-top: 3px solid #d4a346;
+      box-shadow: 0 -6px 25px rgba(0,0,0,0.75);
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-start min-h-screen">
+
+  <!-- Main Mobile / Desktop Casino Cabinet Container -->
+  <div class="w-full max-w-md sm:max-w-lg min-h-screen flex flex-col justify-between bg-[#4c0711] shadow-2xl border-x border-amber-500/20 relative overflow-hidden">
+
+    <!-- 1. TOP CASINO HEADER BAR -->
+    <header class="bg-gradient-to-b from-[#1e1e26] to-[#111116] px-3 py-2 flex items-center justify-between border-b border-amber-500/30 z-20">
+      <div class="flex items-center gap-2">
+        <a href="/casino" class="bg-black/60 hover:bg-black/80 text-amber-300 font-extrabold text-xs px-2.5 py-1.5 rounded-lg border border-amber-500/40 flex items-center gap-1 shadow" title="Back to Casino Lobby">
+          <span>‹</span> <span>Lobby</span>
+        </a>
+        <div class="flex flex-col">
+          <span class="font-royal text-amber-400 font-black text-sm tracking-wider leading-none flex items-center gap-1">
+            <span>🚩</span> JHANDI MUNDA
+          </span>
+          <span class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1 mt-0.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> 30s Auto Spin Live
+          </span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <!-- Add Funds / Deposit Button -->
+        <a href="/?deposit=1" id="btnAddCash" class="bg-gradient-to-b from-amber-400 to-orange-600 hover:from-amber-300 hover:to-orange-500 text-black font-extrabold text-xs px-2.5 py-1.5 rounded-lg shadow flex items-center gap-1 border border-yellow-200" title="Deposit Real Funds">
+          <span>👛</span>
+          <span>+₹</span>
+        </a>
+
+        <!-- Jackpot Pool Indicator -->
+        <div class="bg-black/60 border border-amber-500/40 rounded-lg px-2 py-1 flex flex-col items-center leading-tight">
+          <span class="text-[9px] text-amber-300 uppercase font-bold">Jackpot</span>
+          <span id="jackpotDisplay" class="text-[11px] font-black text-yellow-400">₹98.52</span>
+        </div>
+
+        <!-- Sound Toggle -->
+        <button id="btnSoundToggle" onclick="toggleSound()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 flex items-center justify-center text-sm" title="Mute / Unmute Sound">
+          🔊
+        </button>
+
+        <!-- Rules & Payouts Modal Button -->
+        <button id="btnRulesModal" onclick="openRulesModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 flex items-center justify-center text-xs font-bold text-amber-300" title="Game Rules & Payouts">
+          ?
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. LIVE SYMBOL PROBABILITY / HOT-COLD BAR -->
+    <div class="bg-[#5c0813] px-2 py-1.5 border-b border-amber-500/30 flex items-center justify-between gap-1 z-10 shadow-md">
+      <div id="probBarContainer" class="flex items-center justify-around flex-1 gap-1 overflow-x-auto">
+        <!-- Populated dynamically by renderProbabilityBar() -->
+      </div>
+      <button id="btnHistoryModal" onclick="openHistoryModal()" class="w-6 h-6 rounded bg-amber-500/20 border border-amber-400/50 flex items-center justify-center text-amber-300 text-xs hover:bg-amber-500/30 shrink-0" title="View Round History">
+        ▼
+      </button>
+    </div>
+
+    <!-- 3. 3D WEBGL DICE CARPET ARENA & 30-SECOND LIVE ROUND CLOCK -->
+    <section class="arena-wrapper px-2 pt-1.5 pb-2 flex flex-col justify-between">
+      <!-- Top Row: Live 30s Round Status Bar & Progress Meter -->
+      <div class="flex flex-col gap-1 px-1.5 z-20 mb-1">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5 bg-black/55 border border-amber-400/40 px-2.5 py-0.5 rounded-full shadow">
+            <span id="gameStateDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="gameStateText" class="text-[11px] font-extrabold text-amber-200 tracking-wide">BETTING OPEN • PLACE BETS</span>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-400/60 bg-emerald-950/80 text-emerald-300">
+              ⏱️ 30s Auto Spin
+            </span>
+            <span id="timerCountdownBadge" class="bg-gradient-to-b from-amber-400 to-orange-600 text-black font-black text-xs px-2.5 py-0.5 rounded-full border border-yellow-200 shadow-md min-w-[42px] text-center">
+              30s
+            </span>
+          </div>
+        </div>
+
+        <!-- 30-Second Round Visual Progress Bar (Green 30->6s, Red Blind Lock 5->1s) -->
+        <div class="w-full h-1.5 bg-black/60 rounded-full overflow-hidden border border-amber-500/25">
+          <div id="roundTimerProgressBar" class="h-full bg-gradient-to-r from-emerald-400 via-yellow-400 to-amber-500 transition-all duration-500" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <!-- Left Live Players & Center True 3D WebGL Carpet -->
+      <div class="relative flex items-center justify-center">
+        <!-- Left Floating Players Column -->
+        <div class="absolute left-1 top-1.5 z-20 flex flex-col items-center gap-1.5 pointer-events-none">
+          <div class="flex flex-col items-center">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-300 p-0.5 shadow-md">
+              <div class="w-full h-full rounded-full bg-rose-950 flex items-center justify-center text-xs">👩🏽</div>
+            </div>
+            <span class="text-[8px] font-bold text-amber-100 bg-black/70 px-1 rounded -mt-1">**SCx</span>
+          </div>
+          <div class="flex flex-col items-center">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-300 p-0.5 shadow-md">
+              <div class="w-full h-full rounded-full bg-slate-900 flex items-center justify-center text-xs">👨🏽</div>
+            </div>
+            <span class="text-[8px] font-bold text-amber-100 bg-black/70 px-1 rounded -mt-1">**hV9</span>
+          </div>
+          <div class="flex flex-col items-center">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-300 p-0.5 shadow-md">
+              <div class="w-full h-full rounded-full bg-emerald-950 flex items-center justify-center text-xs">👩🏻</div>
+            </div>
+            <span class="text-[8px] font-bold text-amber-100 bg-black/70 px-1 rounded -mt-1">**CIJ</span>
+          </div>
+          <div class="bg-black/70 border border-amber-500/40 rounded-md px-1.5 py-0.5 text-[9px] text-amber-300 font-bold flex items-center gap-0.5">
+            <span>👥</span> <span id="onlinePlayersCount">7</span>
+          </div>
+        </div>
+
+        <!-- TRUE 3D WEBGL CARPET & DICE ARENA -->
+        <div class="carpet-3d" id="carpetArena">
+          <!-- Three.js WebGL 3D Renderer Mount -->
+          <div id="webglCanvasContainer"></div>
+
+          <div id="diceStage" class="hidden"></div>
+
+          <!-- 5-SECOND PRE-ROLL BLIND CURTAIN (Hides dice & locks betting from 5s down to 0s!) -->
+          <div id="blindShakerOverlay" class="blind-shaker-overlay hidden-overlay">
+            <div class="shaker-cup-anim w-20 h-20 rounded-full bg-gradient-to-b from-yellow-300 via-amber-500 to-amber-800 border-4 border-yellow-100 shadow-[0_0_35px_rgba(250,204,21,0.9)] flex items-center justify-center text-4xl mb-2">
+              🏺
+            </div>
+            <div class="bg-red-600/90 border border-yellow-300 text-white font-black text-xs px-3.5 py-1 rounded-full tracking-wider uppercase shadow-lg">
+              🔒 BETTING CLOSED • SHAKING (<span id="blindCountdownNum">5</span>s)
+            </div>
+            <p class="text-[11px] text-amber-200/90 font-semibold mt-1">
+              Dice hidden! Next round bets open after roll...
+            </p>
+          </div>
+        </div>
+
+        <!-- Right Quick Action Floating Buttons (Manual ROLL button deleted as requested; auto-spin only!) -->
+        <div class="absolute right-1 top-4 z-20 flex flex-col items-center gap-1.5">
+          <button id="btnRandomBet" onclick="placeQuickRandomBet()" class="px-2.5 py-1.5 rounded-lg bg-black/75 hover:bg-black/90 border border-amber-400/50 text-[11px] font-bold text-amber-200 shadow" title="Quick Lucky Bet">
+            ⚡ Lucky
+          </button>
+        </div>
+      </div>
+
+      <!-- 6 Rolled Result Dice Row (Bottom of Arena, hidden during the 5s blind pre-roll window!) -->
+      <div class="flex items-center justify-center gap-2 -mt-6 z-20 px-2">
+        <div id="rolledTrayRow" class="flex items-center justify-center gap-1.5 sm:gap-2 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-amber-500/50 shadow-xl min-h-[54px]">
+          <!-- 6 Result Face Tiles populated dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. PAYOUT MULTIPLIER ODDS BAR -->
+    <div class="bg-gradient-to-r from-[#51060f] via-[#7a0c1b] to-[#51060f] py-1.5 px-2 border-b border-amber-500/30 flex items-center justify-center gap-1.5 sm:gap-2.5 text-[11px] sm:text-xs font-extrabold shadow-inner">
+      <div id="oddBadge2" class="flex items-center gap-1 px-1.5 py-0.5 rounded transition-all">
+        <span class="bg-sky-500 text-white text-[10px] font-black px-1.5 py-0.2 rounded shadow">2</span>
+        <span class="text-amber-200">1:2.5</span>
+      </div>
+      <span class="text-amber-500/40">|</span>
+      <div id="oddBadge3" class="flex items-center gap-1 px-1.5 py-0.5 rounded transition-all">
+        <span class="bg-sky-500 text-white text-[10px] font-black px-1.5 py-0.2 rounded shadow">3</span>
+        <span class="text-amber-200">1:5</span>
+      </div>
+      <span class="text-amber-500/40">|</span>
+      <div id="oddBadge4" class="flex items-center gap-1 px-1.5 py-0.5 rounded transition-all">
+        <span class="bg-sky-500 text-white text-[10px] font-black px-1.5 py-0.2 rounded shadow">4</span>
+        <span class="text-amber-200">1:10</span>
+      </div>
+      <span class="text-amber-500/40">|</span>
+      <div id="oddBadge5" class="flex items-center gap-1 px-1.5 py-0.5 rounded transition-all">
+        <span class="bg-sky-500 text-white text-[10px] font-black px-1.5 py-0.2 rounded shadow">5</span>
+        <span class="text-amber-200">1:20</span>
+      </div>
+      <span class="text-amber-500/40">|</span>
+      <div id="oddBadge6" class="flex items-center gap-1 px-1.5 py-0.5 rounded transition-all">
+        <span class="bg-sky-500 text-white text-[10px] font-black px-1.5 py-0.2 rounded shadow">6</span>
+        <span class="text-amber-300 font-black">1:100</span>
+      </div>
+    </div>
+
+    <!-- 5. 6-SYMBOL BETTING BOARD GRID (2x3) -->
+    <main class="flex-1 bg-[#650915] p-2.5 flex flex-col justify-center relative">
+      <!-- Floating Win Announcement Banner -->
+      <div id="winBannerOverlay" class="hidden absolute inset-x-4 top-2 z-30 pointer-events-none flex justify-center">
+        <div id="winBannerBox" class="bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 text-black font-black text-sm px-5 py-2 rounded-full shadow-[0_0_30px_rgba(250,204,21,0.95)] border-2 border-white flex items-center gap-2">
+          <span>🏆</span>
+          <span id="winBannerText">YOU WON ₹250!</span>
+        </div>
+      </div>
+
+      <div id="bettingGrid" class="grid grid-cols-3 gap-2.5 sm:gap-3 my-auto">
+        <!-- 6 Cards injected by renderBettingBoard() -->
+      </div>
+    </main>
+
+    <!-- 6. BALANCE / TOTAL BET / MIN-MAX INFO STRIP -->
+    <div class="bg-gradient-to-r from-[#573414] via-[#7c4d21] to-[#573414] px-3 py-1.5 border-t border-amber-300/40 flex items-center justify-between text-xs font-bold text-amber-100">
+      <div class="flex items-center gap-3">
+        <div>
+          <span class="text-amber-300/90 text-[11px]">Wallet Balance</span>
+          <span id="balanceText" class="text-yellow-300 font-black ml-1">₹{{ "%.2f"|format(user.balance if user and user.balance is defined else 600.0) }}</span>
+        </div>
+        <div>
+          <span class="text-amber-300/90 text-[11px]">Total Bet</span>
+          <span id="totalBetText" class="text-white font-black ml-1">₹0</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-[11px]">
+        <span class="text-amber-300">▲ Min <strong class="text-emerald-300">10</strong></span>
+        <span class="text-amber-300">Max <strong class="text-orange-300">5000</strong></span>
+      </div>
+    </div>
+
+    <!-- 7. CHIP DENOMINATION SELECTOR STRIP -->
+    <div class="bg-[#2c1808] px-3 py-1.5 border-t border-amber-500/20 flex items-center justify-between gap-1.5">
+      <span class="text-[10px] font-bold text-amber-300/80 uppercase tracking-wider">Select Chip:</span>
+      <div id="chipSelectorBar" class="flex items-center gap-2">
+        <!-- Chip buttons 10, 20, 50, 100, 500, 1000 populated by renderChipSelector() -->
+      </div>
+    </div>
+
+    <!-- 8. BOTTOM WOODEN CASINO CONTROLS DOCK -->
+    <footer class="wood-dock px-3 pt-2 pb-3 flex flex-col gap-1.5 z-20">
+      <div class="flex items-center justify-between gap-1.5">
+        <!-- User Profile Avatar -->
+        <div class="flex flex-col items-center">
+          <div class="w-11 h-11 rounded-full bg-gradient-to-b from-amber-300 to-amber-700 p-0.5 shadow-lg relative">
+            <div class="w-full h-full rounded-full bg-slate-900 flex items-center justify-center text-lg">😎</div>
+            <span class="absolute -bottom-0.5 right-0 w-3 h-3 rounded-full bg-emerald-500 border border-black"></span>
+          </div>
+          <span class="text-[10px] font-bold text-amber-100 mt-0.5 tracking-tight max-w-[70px] truncate text-center">
+            {{ user.name if user and user.name else (user.mobile if user and user.mobile else 'VIP Player') }}
+          </span>
+        </div>
+
+        <!-- AUTO BET BUTTON -->
+        <button id="btnAutoPlay" onclick="toggleAutoPlay()" class="w-13 h-13 px-3 py-2 rounded-full bg-gradient-to-b from-amber-600/80 to-amber-900/90 hover:from-amber-500 hover:to-amber-800 border-2 border-amber-400/70 shadow-lg flex flex-col items-center justify-center active:scale-95 transition">
+          <span class="text-sm font-black text-amber-100 leading-none">🔄</span>
+          <span id="autoPlayLabel" class="text-[10px] font-bold text-amber-200 mt-0.5">auto</span>
+        </button>
+
+        <!-- CENTER ACTIVE CASINO CHIP PEDESTAL -->
+        <div class="bg-gradient-to-b from-amber-700/60 to-black/70 p-1.5 rounded-t-full border-t-2 border-x-2 border-amber-400/60 -mt-3 shadow-2xl">
+          <button id="btnCenterChip" onclick="cycleSelectedChip()" class="w-16 h-16 rounded-full casino-chip bg-emerald-600 text-white flex flex-col items-center justify-center shadow-xl active:scale-95" title="Click to switch chip value">
+            <span class="bg-white text-black rounded-full w-10 h-10 flex items-center justify-center font-black text-sm shadow-inner" id="centerChipText">10</span>
+          </button>
+        </div>
+
+        <!-- x2 DOUBLE BUTTON -->
+        <button id="btnDoubleBet" onclick="doubleAllBets()" class="w-12 h-12 rounded-full bg-gradient-to-b from-[#492b10] to-[#261404] hover:from-[#5c3715] hover:to-[#331b06] border-2 border-amber-500/50 shadow-lg flex flex-col items-center justify-center active:scale-95 transition">
+          <span class="text-xs font-black text-amber-100 leading-none">×2</span>
+          <span class="text-[9px] font-semibold text-amber-300/90 mt-0.5">double</span>
+        </button>
+
+        <!-- UNDO BUTTON -->
+        <button id="btnUndoBet" onclick="undoLastBet()" class="w-12 h-12 rounded-full bg-gradient-to-b from-[#492b10] to-[#261404] hover:from-[#5c3715] hover:to-[#331b06] border-2 border-amber-500/50 shadow-lg flex flex-col items-center justify-center active:scale-95 transition">
+          <span class="text-sm font-black text-amber-100 leading-none">↩</span>
+          <span class="text-[9px] font-semibold text-amber-300/90 mt-0.5">undo</span>
+        </button>
+
+        <!-- CLEAR BUTTON -->
+        <button id="btnClearBet" onclick="clearAllBets()" class="w-12 h-12 rounded-full bg-gradient-to-b from-[#492b10] to-[#261404] hover:from-[#5c3715] hover:to-[#331b06] border-2 border-amber-500/50 shadow-lg flex flex-col items-center justify-center active:scale-95 transition">
+          <span class="text-xs font-black text-red-400 leading-none">✖</span>
+          <span class="text-[9px] font-semibold text-amber-300/90 mt-0.5">clear</span>
+        </button>
+      </div>
+
+      <!-- Round Serial Number & Repeat Last Bet Row -->
+      <div class="flex items-center justify-between text-[10px] text-amber-200/70 px-1 pt-0.5">
+        <button id="btnRebet" onclick="rebetLastRound()" class="text-amber-300 hover:text-yellow-200 underline font-semibold">
+          🔁 Repeat Last Bet
+        </button>
+        <span id="roundNumberText" class="font-mono">No.634442401502499213</span>
+      </div>
+    </footer>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- B. RULES & PAYOUT ODDS MODAL -->
+    <div id="rulesModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-gradient-to-b from-[#5d0a16] to-[#2b0308] border-2 border-amber-400 rounded-2xl max-w-md w-full p-5 shadow-2xl text-white max-h-[85vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-amber-500/30 pb-3 mb-3">
+          <h3 class="font-royal text-lg font-black text-amber-300">📜 Jhandi Munda Rules & 30s Auto Spin</h3>
+          <button id="btnCloseRules" onclick="closeRulesModal()" class="w-7 h-7 rounded-full bg-black/50 text-amber-200 font-bold">✕</button>
+        </div>
+        <div class="space-y-3 text-xs text-amber-100/90 leading-relaxed">
+          <p><strong>30-Second Automatic Casino Round:</strong> Every round runs automatically on a <strong>30-second timer</strong>. You have <strong>25 seconds</strong> (`30s` down to `6s`) to place bets. There is no manual spin button; the game spins and rolls automatically every 30 seconds! At the <strong>final 5 seconds (`5s` to `1s`)</strong>, betting closes and the Royal Shaker Cup covers & shakes the dice in suspense before revealing the 6 3D dice outcome!</p>
+          <div class="bg-black/40 p-3 rounded-xl border border-amber-500/30">
+            <div class="font-bold text-amber-300 mb-1.5">Payout Multipliers (Total Return incl. Stake):</div>
+            <ul class="space-y-1">
+              <li class="flex justify-between"><span>2 Matching Dice:</span> <strong class="text-yellow-300">1 : 2.5 (2.5× Bet)</strong></li>
+              <li class="flex justify-between"><span>3 Matching Dice:</span> <strong class="text-yellow-300">1 : 5 (5× Bet)</strong></li>
+              <li class="flex justify-between"><span>4 Matching Dice:</span> <strong class="text-yellow-300">1 : 10 (10× Bet)</strong></li>
+              <li class="flex justify-between"><span>5 Matching Dice:</span> <strong class="text-yellow-300">1 : 20 (20× Bet)</strong></li>
+              <li class="flex justify-between"><span>6 Matching Dice:</span> <strong class="text-yellow-300">1 : 100 (100× Bet + Jackpot!)</strong></li>
+            </ul>
+          </div>
+          <div class="bg-black/40 p-3 rounded-xl border border-amber-500/30 flex items-center justify-between">
+            <div>
+              <div class="font-bold text-amber-300">Single Die Match Rule (Optional)</div>
+              <div class="text-[11px] text-amber-200/75">Standard rule pays on 2+ dice. Enable 1-Die payout (1:2) if desired.</div>
+            </div>
+            <button id="btnSingleMatchRule" onclick="toggleSingleMatchRule()" class="px-3 py-1.5 rounded-lg bg-slate-800 border border-amber-400/50 font-bold text-xs text-amber-300">
+              OFF
+            </button>
+          </div>
+        </div>
+        <button id="btnCloseRulesDone" onclick="closeRulesModal()" class="mt-4 w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-black text-xs">GOT IT</button>
+      </div>
+    </div>
+
+    <!-- C. ROUND HISTORY LOG MODAL -->
+    <div id="historyModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-gradient-to-b from-[#5d0a16] to-[#2b0308] border-2 border-amber-400 rounded-2xl max-w-md w-full p-5 shadow-2xl text-white max-h-[82vh] flex flex-col">
+        <div class="flex items-center justify-between border-b border-amber-500/30 pb-3 mb-3">
+          <h3 class="font-royal text-lg font-black text-amber-300">📊 Match Roll History</h3>
+          <button id="btnCloseHistory" onclick="closeHistoryModal()" class="w-7 h-7 rounded-full bg-black/50 text-amber-200 font-bold">✕</button>
+        </div>
+        <div id="historyListContainer" class="flex-1 overflow-y-auto space-y-2 pr-1 text-xs">
+          <!-- Populated dynamically -->
+        </div>
+        <button id="btnCloseHistoryDone" onclick="closeHistoryModal()" class="mt-4 w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-black text-xs">CLOSE</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. TRADITIONAL JHANDI MUNDA FOLK-ART SVG SYMBOLS (FOR UI CARDS & TRAYS)
+    // =========================================================================
+    const SYMBOLS = [
+      {
+        id: 'club',
+        name: 'Chidi (Club)',
+        color: '#1e293b',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+          <g fill="none" stroke="#1e293b" stroke-linecap="round">
+            <circle cx="50" cy="27" r="17" stroke-width="5.5"/>
+            <circle cx="50" cy="27" r="10" stroke-width="4.5"/>
+            <circle cx="50" cy="27" r="3.5" fill="#1e293b"/>
+            <circle cx="31" cy="56" r="17" stroke-width="5.5"/>
+            <circle cx="31" cy="56" r="10" stroke-width="4.5"/>
+            <circle cx="31" cy="56" r="3.5" fill="#1e293b"/>
+            <circle cx="69" cy="56" r="17" stroke-width="5.5"/>
+            <circle cx="69" cy="56" r="10" stroke-width="4.5"/>
+            <circle cx="69" cy="56" r="3.5" fill="#1e293b"/>
+            <circle cx="50" cy="46" r="5" fill="#1e293b"/>
+            <polygon points="50,62 34,85 66,85" fill="#1e293b" stroke="#1e293b" stroke-width="2" stroke-linejoin="round"/>
+          </g>
+        </svg>`
+      },
+      {
+        id: 'crown',
+        name: 'Munda (Crown)',
+        color: '#1e293b',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+          <g>
+            <path d="M50 11 V27 M43 18 H57" stroke="#1e293b" stroke-width="5.5" stroke-linecap="round"/>
+            <path d="M22 65 C14 42, 27 25, 42 36 C46 39, 54 39, 58 36 C73 25, 86 42, 78 65 Z" fill="#ffffff" stroke="#1e293b" stroke-width="5.5" stroke-linejoin="round"/>
+            <path d="M29 61 C25 46, 34 36, 45 45" fill="none" stroke="#dc2626" stroke-width="5" stroke-linecap="round"/>
+            <path d="M71 61 C75 46, 66 36, 55 45" fill="none" stroke="#dc2626" stroke-width="5" stroke-linecap="round"/>
+            <path d="M36 61 L42 48 M50 61 V45 M64 61 L58 48" stroke="#dc2626" stroke-width="4.5" stroke-linecap="round"/>
+            <circle cx="15" cy="48" r="3" fill="#1e293b"/>
+            <circle cx="17" cy="38" r="3" fill="#1e293b"/>
+            <circle cx="24" cy="30" r="3" fill="#1e293b"/>
+            <circle cx="34" cy="27" r="3" fill="#1e293b"/>
+            <circle cx="85" cy="48" r="3" fill="#1e293b"/>
+            <circle cx="83" cy="38" r="3" fill="#1e293b"/>
+            <circle cx="76" cy="30" r="3" fill="#1e293b"/>
+            <circle cx="66" cy="27" r="3" fill="#1e293b"/>
+            <rect x="24" y="65" width="52" height="17" rx="5" fill="#1e293b"/>
+            <circle cx="33" cy="73.5" r="3" fill="#ffffff"/>
+            <circle cx="44" cy="73.5" r="3" fill="#ffffff"/>
+            <circle cx="56" cy="73.5" r="3" fill="#ffffff"/>
+            <circle cx="67" cy="73.5" r="3" fill="#ffffff"/>
+          </g>
+        </svg>`
+      },
+      {
+        id: 'spade',
+        name: 'Hukum (Spade)',
+        color: '#1e293b',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+          <g fill="none" stroke="#1e293b">
+            <path d="M50 12 C28 34, 15 50, 22 65 C27 75, 41 74, 47 65 L35 85 H65 L53 65 C59 74, 73 75, 78 65 C85 50, 72 34, 50 12 Z" stroke-width="5.5" stroke-linejoin="round" fill="#ffffff"/>
+            <path d="M50 16 L33 43 M50 16 L67 43 M42 28 L58 43 M58 28 L42 43 M37 36 L63 36" stroke-width="3.5"/>
+            <circle cx="35" cy="56" r="12" stroke-width="4.5" fill="#ffffff"/>
+            <circle cx="35" cy="56" r="6.5" stroke-width="3.5"/>
+            <circle cx="35" cy="56" r="2.5" fill="#1e293b"/>
+            <circle cx="65" cy="56" r="12" stroke-width="4.5" fill="#ffffff"/>
+            <circle cx="65" cy="56" r="6.5" stroke-width="3.5"/>
+            <circle cx="65" cy="56" r="2.5" fill="#1e293b"/>
+            <polygon points="50,66 35,85 65,85" fill="#1e293b"/>
+          </g>
+        </svg>`
+      },
+      {
+        id: 'diamond',
+        name: 'Eent (Diamond)',
+        color: '#dc2626',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+          <g>
+            <path d="M50 11 Q66 34 89 50 Q66 66 50 89 Q34 66 11 50 Q34 34 50 11 Z" fill="#dc2626" stroke="#b91c1c" stroke-width="3" stroke-linejoin="round"/>
+            <g fill="#ffffff">
+              <rect x="47" y="23" width="6" height="6" transform="rotate(45 50 26)"/>
+              <rect x="38" y="32" width="6" height="6" transform="rotate(45 41 35)"/>
+              <rect x="56" y="32" width="6" height="6" transform="rotate(45 59 35)"/>
+              <rect x="29" y="41" width="6" height="6" transform="rotate(45 32 44)"/>
+              <rect x="65" y="41" width="6" height="6" transform="rotate(45 68 44)"/>
+              <rect x="20" y="47" width="6" height="6" transform="rotate(45 23 50)"/>
+              <rect x="74" y="47" width="6" height="6" transform="rotate(45 77 50)"/>
+              <rect x="29" y="53" width="6" height="6" transform="rotate(45 32 56)"/>
+              <rect x="65" y="53" width="6" height="6" transform="rotate(45 68 56)"/>
+              <rect x="38" y="62" width="6" height="6" transform="rotate(45 41 65)"/>
+              <rect x="56" y="62" width="6" height="6" transform="rotate(45 59 65)"/>
+              <rect x="47" y="71" width="6" height="6" transform="rotate(45 50 74)"/>
+            </g>
+            <circle cx="50" cy="50" r="10" fill="#dc2626" stroke="#ffffff" stroke-width="4"/>
+            <circle cx="50" cy="50" r="4" fill="#ffffff"/>
+          </g>
+        </svg>`
+      },
+      {
+        id: 'flag',
+        name: 'Jhandi (Flag)',
+        color: '#1e293b',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+          <g>
+            <path d="M40 20 C24 22, 16 38, 17 55 L46 47 Z" fill="#ffffff" stroke="#1e293b" stroke-width="5" stroke-linejoin="round"/>
+            <path d="M37 27 C27 29, 22 39, 23 49 L41 44 Z" fill="#dc2626"/>
+            <path d="M25 38 L39 34 M31 28 L34 46" stroke="#ffffff" stroke-width="2.5"/>
+            <path d="M60 20 C76 22, 84 38, 83 55 L54 47 Z" fill="#ffffff" stroke="#1e293b" stroke-width="5" stroke-linejoin="round"/>
+            <path d="M63 27 C73 29, 78 39, 77 49 L59 44 Z" fill="#dc2626"/>
+            <path d="M75 38 L61 34 M69 28 L66 46" stroke="#ffffff" stroke-width="2.5"/>
+            <line x1="38" y1="16" x2="64" y2="84" stroke="#1e293b" stroke-width="5.5" stroke-linecap="round"/>
+            <line x1="62" y1="16" x2="36" y2="84" stroke="#1e293b" stroke-width="5.5" stroke-linecap="round"/>
+            <circle cx="36" cy="84" r="4" fill="#1e293b"/>
+            <circle cx="64" cy="84" r="4" fill="#1e293b"/>
+            <path d="M50 63 V82 M45 73 L50 79 L55 73" stroke="#dc2626" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </g>
+        </svg>`
+      },
+      {
+        id: 'heart',
+        name: 'Paan (Heart)',
+        color: '#dc2626',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full">
+          <g fill="none">
+            <path d="M50 86 C26 68, 14 48, 17 31 C20 17, 37 15, 50 29 C63 15, 80 17, 83 31 C86 48, 74 68, 50 86 Z" fill="#ffffff" stroke="#dc2626" stroke-width="6" stroke-linejoin="round"/>
+            <path d="M27 52 L58 78 M36 48 L67 70 M73 52 L42 78 M64 48 L33 70 M50 48 V83" stroke="#dc2626" stroke-width="4.5"/>
+            <circle cx="34" cy="36" r="12.5" fill="#ffffff" stroke="#dc2626" stroke-width="5"/>
+            <circle cx="34" cy="36" r="7" stroke="#dc2626" stroke-width="4"/>
+            <circle cx="34" cy="36" r="2.8" fill="#dc2626"/>
+            <circle cx="66" cy="36" r="12.5" fill="#ffffff" stroke="#dc2626" stroke-width="5"/>
+            <circle cx="66" cy="36" r="7" stroke="#dc2626" stroke-width="4"/>
+            <circle cx="66" cy="36" r="2.8" fill="#dc2626"/>
+          </g>
+        </svg>`
+      }
+    ];
+
+    const CHIP_VALUES = [
+      { val: 10,   bg: 'bg-emerald-600', ring: 'border-emerald-300', text: '10' },
+      { val: 20,   bg: 'bg-sky-600',     ring: 'border-sky-300',     text: '20' },
+      { val: 50,   bg: 'bg-purple-600',  ring: 'border-purple-300',  text: '50' },
+      { val: 100,  bg: 'bg-rose-600',    ring: 'border-rose-300',    text: '100' },
+      { val: 500,  bg: 'bg-amber-600',   ring: 'border-amber-200',   text: '500' },
+      { val: 1000, bg: 'bg-teal-700',    ring: 'border-yellow-300',  text: '1K' }
+    ];
+
+    // =========================================================================
+    // 2. GAME STATE & 30-SECOND AUTOMATIC ROUND ENGINE
+    // =========================================================================
+    const ROUND_TOTAL_SECONDS = 30;
+    const BLIND_LOCK_SECONDS = 5; // Last 5 seconds before roll: betting locked & dice hidden!
+
+    const userLoggedIn = {{ 'true' if user and not user.is_guest else 'false' }};
+    const initialServerBalance = Number("{{ user.balance if user and user.balance is defined else 600.0 }}");
+
+    const state = {
+      balance: initialServerBalance,
+      jackpot: 98.52,
+      selectedChipIndex: 0,
+      isRolling: false,
+      isBettingLocked: false,
+      soundEnabled: true,
+      singleMatchPays: false,
+      autoPlay: false,
+      // 30s Automatic Round Timer strictly ON (no manual spin button)
+      liveTimerMode: true,
+      liveTimerSeconds: ROUND_TOTAL_SECONDS,
+      liveTimerInterval: null,
+      roundSerial: 634442401502499213n,
+
+      bets: { club: 0, crown: 0, spade: 0, diamond: 0, flag: 0, heart: 0 },
+      crowdBets: { club: 1250, crown: 3400, spade: 2100, diamond: 1800, flag: 5600, heart: 2450 },
+      betActionStack: [],
+      lastRoundBets: { club: 0, crown: 0, spade: 0, diamond: 0, flag: 0, heart: 0 },
+
+      currentDice: ['flag', 'flag', 'flag', 'flag', 'flag', 'spade'],
+
+      symbolHistory: {
+        club:    [0, 0, 0, 0, 0],
+        crown:   [0, 3, 2, 0, 0],
+        spade:   [0, 0, 2, 2, 0],
+        diamond: [0, 0, 0, 0, 5],
+        flag:    [5, 0, 0, 0, 0],
+        heart:   [0, 0, 0, 2, 0]
+      },
+
+      symbolAppearances: {
+        club: 14,
+        crown: 18,
+        spade: 20,
+        diamond: 16,
+        flag: 16,
+        heart: 16
+      },
+
+      roundLogs: [
+        { serial: '634442401502499212', dice: ['flag','flag','flag','flag','flag','spade'], bet: 40, win: 800 }
+      ]
+    };
+
+    // =========================================================================
+    // 3. SYNTHESIZED WEB AUDIO CASINO SOUND ENGINE
+    // =========================================================================
+    let audioCtx = null;
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) audioCtx = new AudioContextClass();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playSound(type) {
+      if (!state.soundEnabled) return;
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        if (type === 'chip') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(1450, now);
+          osc.frequency.exponentialRampToValueAtTime(2200, now + 0.055);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.065);
+        } else if (type === 'tick') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, now);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } else if (type === 'lock') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(580, now);
+          osc.frequency.setValueAtTime(440, now + 0.08);
+          gain.gain.setValueAtTime(0.14, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.19);
+        } else if (type === 'shake') {
+          for (let i = 0; i < 6; i++) {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            const start = now + i * 0.08;
+            osc.frequency.setValueAtTime(220 + Math.random() * 200, start);
+            osc.frequency.exponentialRampToValueAtTime(105, start + 0.06);
+            gain.gain.setValueAtTime(0.15, start);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + 0.07);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(start);
+            osc.stop(start + 0.075);
+          }
+        } else if (type === 'win') {
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            const t = now + idx * 0.09;
+            osc.frequency.setValueAtTime(freq, t);
+            gain.gain.setValueAtTime(0.22, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(t);
+            osc.stop(t + 0.3);
+          });
+        } else if (type === 'clear') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(420, now);
+          osc.frequency.exponentialRampToValueAtTime(210, now + 0.11);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.12);
+        }
+      } catch (e) {}
+    }
+
+    // =========================================================================
+    // 4. TRUE 3D WEBGL DICE ENGINE (THREE.JS r128)
+    // =========================================================================
+    const FACE_ORDER_THREE = ['spade', 'diamond', 'flag', 'crown', 'club', 'heart'];
+
+    const TOP_FACE_EULER = {
+      flag:    { rx: 0,             rz: 0 },
+      crown:   { rx: Math.PI,       rz: 0 },
+      club:    { rx: -Math.PI / 2,  rz: 0 },
+      heart:   { rx: Math.PI / 2,   rz: 0 },
+      spade:   { rx: 0,             rz: Math.PI / 2 },
+      diamond: { rx: 0,             rz: -Math.PI / 2 }
+    };
+
+    let threeScene = null;
+    let threeCamera = null;
+    let threeRenderer = null;
+    let diceMeshes = [];
+    let dicePhysics = [];
+
+    function createDieFaceTexture(symbolId) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      const bgGrad = ctx.createRadialGradient(220, 190, 40, 256, 256, 360);
+      bgGrad.addColorStop(0, '#ffffff');
+      bgGrad.addColorStop(0.7, '#f8fafc');
+      bgGrad.addColorStop(0.92, '#e2e8f0');
+      bgGrad.addColorStop(1, '#94a3b8');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, 512, 512);
+
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 22;
+      ctx.strokeRect(11, 11, 490, 490);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(42, 42, 428, 428, 68);
+      const wellGrad = ctx.createLinearGradient(42, 42, 470, 470);
+      wellGrad.addColorStop(0, '#f1f5f9');
+      wellGrad.addColorStop(0.25, '#ffffff');
+      wellGrad.addColorStop(1, '#f8fafc');
+      ctx.fillStyle = wellGrad;
+      ctx.fill();
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.45)';
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(56, 56);
+      ctx.scale(4.0, 4.0);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      if (symbolId === 'club') {
+        const centers = [[50, 27], [31, 56], [69, 56]];
+        ctx.strokeStyle = '#0f172a';
+        centers.forEach(([cx, cy]) => {
+          ctx.lineWidth = 5.5;
+          ctx.beginPath(); ctx.arc(cx, cy, 16.5, 0, Math.PI * 2); ctx.stroke();
+          ctx.lineWidth = 4.2;
+          ctx.beginPath(); ctx.arc(cx, cy, 9.8, 0, Math.PI * 2); ctx.stroke();
+          ctx.fillStyle = '#0f172a';
+          ctx.beginPath(); ctx.arc(cx, cy, 3.8, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath(); ctx.arc(50, 46, 5.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(50, 61); ctx.lineTo(33, 86); ctx.lineTo(67, 86); ctx.closePath();
+        ctx.fill();
+      } else if (symbolId === 'crown') {
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 5.5;
+        ctx.beginPath();
+        ctx.moveTo(50, 10); ctx.lineTo(50, 26);
+        ctx.moveTo(42, 17); ctx.lineTo(58, 17);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(22, 65);
+        ctx.bezierCurveTo(13, 42, 27, 24, 42, 36);
+        ctx.bezierCurveTo(46, 39, 54, 39, 58, 36);
+        ctx.bezierCurveTo(73, 24, 87, 42, 78, 65);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = 4.8;
+        ctx.beginPath();
+        ctx.moveTo(29, 60); ctx.bezierCurveTo(24, 45, 34, 35, 45, 45);
+        ctx.moveTo(71, 60); ctx.bezierCurveTo(76, 45, 66, 35, 55, 45);
+        ctx.moveTo(37, 60); ctx.lineTo(43, 47);
+        ctx.moveTo(50, 60); ctx.lineTo(50, 44);
+        ctx.moveTo(63, 60); ctx.lineTo(57, 47);
+        ctx.stroke();
+
+        const pearls = [[15,48],[17,38],[24,30],[34,27],[85,48],[83,38],[76,30],[66,27]];
+        ctx.fillStyle = '#0f172a';
+        pearls.forEach(([px, py]) => {
+          ctx.beginPath(); ctx.arc(px, py, 3.2, 0, Math.PI * 2); ctx.fill();
+        });
+
+        ctx.beginPath();
+        ctx.roundRect(23, 65, 54, 17, 5);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        [33, 44, 56, 67].forEach(jx => {
+          ctx.beginPath(); ctx.arc(jx, 73.5, 3.2, 0, Math.PI * 2); ctx.fill();
+        });
+      } else if (symbolId === 'spade') {
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 5.5;
+        ctx.beginPath();
+        ctx.moveTo(50, 11);
+        ctx.bezierCurveTo(28, 33, 14, 50, 22, 65);
+        ctx.bezierCurveTo(27, 75, 41, 74, 47, 65);
+        ctx.lineTo(35, 85); ctx.lineTo(65, 85); ctx.lineTo(53, 65);
+        ctx.bezierCurveTo(59, 74, 73, 75, 78, 65);
+        ctx.bezierCurveTo(86, 50, 72, 33, 50, 11);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(50, 16); ctx.lineTo(33, 43);
+        ctx.moveTo(50, 16); ctx.lineTo(67, 43);
+        ctx.moveTo(41, 28); ctx.lineTo(59, 43);
+        ctx.moveTo(59, 28); ctx.lineTo(41, 43);
+        ctx.moveTo(36, 36); ctx.lineTo(64, 36);
+        ctx.stroke();
+
+        [[35, 56], [65, 56]].forEach(([ex, ey]) => {
+          ctx.fillStyle = '#ffffff';
+          ctx.lineWidth = 4.5;
+          ctx.beginPath(); ctx.arc(ex, ey, 11.8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.lineWidth = 3.5;
+          ctx.beginPath(); ctx.arc(ex, ey, 6.2, 0, Math.PI * 2); ctx.stroke();
+          ctx.fillStyle = '#0f172a';
+          ctx.beginPath(); ctx.arc(ex, ey, 2.6, 0, Math.PI * 2); ctx.fill();
+        });
+
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.moveTo(50, 66); ctx.lineTo(34, 85); ctx.lineTo(66, 85); ctx.closePath();
+        ctx.fill();
+      } else if (symbolId === 'diamond') {
+        ctx.fillStyle = '#dc2626';
+        ctx.strokeStyle = '#991b1b';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(50, 10);
+        ctx.quadraticCurveTo(67, 34, 90, 50);
+        ctx.quadraticCurveTo(67, 66, 50, 90);
+        ctx.quadraticCurveTo(33, 66, 10, 50);
+        ctx.quadraticCurveTo(33, 34, 50, 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        const dots = [
+          [50,25],[41,34],[59,34],[32,43],[68,43],[23,50],[77,50],
+          [32,57],[68,57],[41,66],[59,66],[50,75]
+        ];
+        ctx.fillStyle = '#ffffff';
+        dots.forEach(([dx, dy]) => {
+          ctx.save();
+          ctx.translate(dx, dy);
+          ctx.rotate(Math.PI / 4);
+          ctx.fillRect(-3.4, -3.4, 6.8, 6.8);
+          ctx.restore();
+        });
+
+        ctx.fillStyle = '#dc2626';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 4.2;
+        ctx.beginPath(); ctx.arc(50, 50, 10.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(50, 50, 4.2, 0, Math.PI * 2); ctx.fill();
+      } else if (symbolId === 'flag') {
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(40, 20);
+        ctx.bezierCurveTo(23, 22, 15, 38, 17, 55);
+        ctx.lineTo(46, 47);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.moveTo(37, 27);
+        ctx.bezierCurveTo(26, 29, 21, 39, 23, 49);
+        ctx.lineTo(41, 44);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(60, 20);
+        ctx.bezierCurveTo(77, 22, 85, 38, 83, 55);
+        ctx.lineTo(54, 47);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.moveTo(63, 27);
+        ctx.bezierCurveTo(74, 29, 79, 39, 77, 49);
+        ctx.lineTo(59, 44);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2.6;
+        ctx.beginPath();
+        ctx.moveTo(24, 38); ctx.lineTo(39, 34);
+        ctx.moveTo(31, 28); ctx.lineTo(34, 47);
+        ctx.moveTo(76, 38); ctx.lineTo(61, 34);
+        ctx.moveTo(69, 28); ctx.lineTo(66, 47);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 5.8;
+        ctx.beginPath();
+        ctx.moveTo(38, 15); ctx.lineTo(64, 84);
+        ctx.moveTo(62, 15); ctx.lineTo(36, 84);
+        ctx.stroke();
+
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath(); ctx.arc(36, 84, 4.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(64, 84, 4.2, 0, Math.PI * 2); ctx.fill();
+
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = 3.8;
+        ctx.beginPath();
+        ctx.moveTo(50, 62); ctx.lineTo(50, 82);
+        ctx.moveTo(44, 73); ctx.lineTo(50, 80); ctx.lineTo(56, 73);
+        ctx.stroke();
+      } else if (symbolId === 'heart') {
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(50, 86);
+        ctx.bezierCurveTo(25, 68, 13, 48, 17, 31);
+        ctx.bezierCurveTo(20, 17, 37, 15, 50, 29);
+        ctx.bezierCurveTo(63, 15, 80, 17, 83, 31);
+        ctx.bezierCurveTo(87, 48, 75, 68, 50, 86);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.lineWidth = 4.5;
+        ctx.beginPath();
+        ctx.moveTo(27, 52); ctx.lineTo(58, 78);
+        ctx.moveTo(36, 48); ctx.lineTo(67, 70);
+        ctx.moveTo(73, 52); ctx.lineTo(42, 78);
+        ctx.moveTo(64, 48); ctx.lineTo(33, 70);
+        ctx.moveTo(50, 48); ctx.lineTo(50, 83);
+        ctx.stroke();
+
+        [[34, 36], [66, 36]].forEach(([hx, hy]) => {
+          ctx.fillStyle = '#ffffff';
+          ctx.lineWidth = 5;
+          ctx.beginPath(); ctx.arc(hx, hy, 12.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.lineWidth = 3.8;
+          ctx.beginPath(); ctx.arc(hx, hy, 6.8, 0, Math.PI * 2); ctx.stroke();
+          ctx.fillStyle = '#dc2626';
+          ctx.beginPath(); ctx.arc(hx, hy, 2.8, 0, Math.PI * 2); ctx.fill();
+        });
+      }
+
+      ctx.restore();
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.anisotropy = 4;
+      texture.needsUpdate = true;
+      return texture;
+    }
+
+    function createCarpetFloorTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      const grad = ctx.createRadialGradient(512, 256, 50, 512, 256, 520);
+      grad.addColorStop(0, '#27468c');
+      grad.addColorStop(0.65, '#192d5e');
+      grad.addColorStop(1, '#0e1a38');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1024, 512);
+
+      ctx.strokeStyle = 'rgba(250, 204, 21, 0.14)';
+      ctx.lineWidth = 2;
+      const step = 32;
+      for (let x = -512; x < 1536; x += step) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0); ctx.lineTo(x + 512, 512);
+        ctx.moveTo(x + 512, 0); ctx.lineTo(x, 512);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = '#eab308';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(24, 20, 976, 472);
+      ctx.strokeStyle = 'rgba(254, 240, 138, 0.45)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(42, 36, 940, 440);
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    const DICE_3D_SLOTS = [
+      { x: -2.25, z: -0.75 },
+      { x:  0.00, z: -1.05 },
+      { x:  2.25, z: -0.75 },
+      { x: -1.95, z:  0.95 },
+      { x:  0.15, z:  0.85 },
+      { x:  2.20, z:  0.95 }
+    ];
+
+    function initDice3D() {
+      const container = document.getElementById('webglCanvasContainer');
+      if (!container || typeof THREE === 'undefined') return;
+      container.innerHTML = '';
+
+      const width = container.clientWidth || 460;
+      const height = container.clientHeight || 225;
+
+      threeScene = new THREE.Scene();
+
+      threeCamera = new THREE.PerspectiveCamera(36, width / height, 0.1, 100);
+      threeCamera.position.set(0, 8.2, 6.4);
+      threeCamera.lookAt(0, -0.2, 0.15);
+
+      threeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      threeRenderer.setSize(width, height);
+      threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      threeRenderer.shadowMap.enabled = true;
+      threeRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(threeRenderer.domElement);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.78);
+      threeScene.add(ambientLight);
+
+      const mainSpot = new THREE.DirectionalLight(0xfff7ed, 0.92);
+      mainSpot.position.set(4, 12, 6);
+      mainSpot.castShadow = true;
+      mainSpot.shadow.mapSize.width = 1024;
+      mainSpot.shadow.mapSize.height = 1024;
+      mainSpot.shadow.camera.near = 2;
+      mainSpot.shadow.camera.far = 25;
+      const d = 6;
+      mainSpot.shadow.camera.left = -d;
+      mainSpot.shadow.camera.right = d;
+      mainSpot.shadow.camera.top = d;
+      mainSpot.shadow.camera.bottom = -d;
+      threeScene.add(mainSpot);
+
+      const warmRimLight = new THREE.PointLight(0xfacc15, 0.45, 20);
+      warmRimLight.position.set(-5, 5, -4);
+      threeScene.add(warmRimLight);
+
+      const floorGeo = new THREE.PlaneGeometry(11.5, 6.2);
+      const floorMat = new THREE.MeshStandardMaterial({
+        map: createCarpetFloorTexture(),
+        roughness: 0.75,
+        metalness: 0.05
+      });
+      const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+      floorMesh.rotation.x = -Math.PI / 2;
+      floorMesh.position.y = -0.68;
+      floorMesh.receiveShadow = true;
+      threeScene.add(floorMesh);
+
+      const materials = FACE_ORDER_THREE.map(symId => {
+        return new THREE.MeshStandardMaterial({
+          map: createDieFaceTexture(symId),
+          roughness: 0.16,
+          metalness: 0.06
+        });
+      });
+
+      diceMeshes = [];
+      dicePhysics = [];
+
+      const boxGeo = new THREE.BoxGeometry(1.32, 1.32, 1.32);
+
+      for (let i = 0; i < 6; i++) {
+        const mesh = new THREE.Mesh(boxGeo, materials);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        threeScene.add(mesh);
+        diceMeshes.push(mesh);
+
+        dicePhysics.push({
+          x: DICE_3D_SLOTS[i].x,
+          y: 0,
+          z: DICE_3D_SLOTS[i].z,
+          targetX: DICE_3D_SLOTS[i].x,
+          targetZ: DICE_3D_SLOTS[i].z,
+          rx: 0, ry: 0, rz: 0,
+          targetRx: 0, targetRy: 0, targetRz: 0,
+          bouncePhase: 0,
+          isTumbling: false
+        });
+      }
+
+      snapDice3DToOutcome(state.currentDice);
+
+      window.addEventListener('resize', () => {
+        if (!threeRenderer || !threeCamera || !container) return;
+        const w = container.clientWidth || 460;
+        const h = container.clientHeight || 225;
+        threeCamera.aspect = w / h;
+        threeCamera.updateProjectionMatrix();
+        threeRenderer.setSize(w, h);
+      });
+
+      animateThreeLoop();
+    }
+
+    function snapDice3DToOutcome(outcomeArray) {
+      for (let i = 0; i < 6; i++) {
+        const symId = outcomeArray[i] || 'flag';
+        const euler = TOP_FACE_EULER[symId] || TOP_FACE_EULER.flag;
+        const slot = DICE_3D_SLOTS[i];
+        const p = dicePhysics[i];
+        const m = diceMeshes[i];
+        if (!p || !m) continue;
+
+        const yaw = (Math.random() * 0.45 - 0.225);
+        p.x = slot.x;
+        p.y = 0;
+        p.z = slot.z;
+        p.targetX = slot.x;
+        p.targetZ = slot.z;
+        p.rx = euler.rx;
+        p.ry = yaw;
+        p.rz = euler.rz;
+        p.targetRx = euler.rx;
+        p.targetRy = yaw;
+        p.targetRz = euler.rz;
+        p.isTumbling = false;
+
+        m.position.set(p.x, p.y, p.z);
+        m.rotation.set(p.rx, p.ry, p.rz);
+      }
+    }
+
+    function launch3DDicePhysicsRoll(outcomeArray) {
+      for (let i = 0; i < 6; i++) {
+        const symId = outcomeArray[i] || 'flag';
+        const euler = TOP_FACE_EULER[symId] || TOP_FACE_EULER.flag;
+        const slot = DICE_3D_SLOTS[i];
+        const p = dicePhysics[i];
+        if (!p) continue;
+
+        p.x = (Math.random() - 0.5) * 3.8;
+        p.z = (Math.random() - 0.5) * 1.8;
+        p.y = 2.4 + Math.random() * 1.1;
+
+        p.targetX = slot.x + (Math.random() * 0.36 - 0.18);
+        p.targetZ = slot.z + (Math.random() * 0.28 - 0.14);
+
+        const extraSpinsX = (2 + Math.floor(Math.random() * 2)) * Math.PI * 2;
+        const extraSpinsZ = (2 + Math.floor(Math.random() * 2)) * Math.PI * 2;
+        const finalYaw = (Math.random() * 0.5 - 0.25);
+
+        p.rx = euler.rx + extraSpinsX;
+        p.ry = finalYaw + Math.PI * 2;
+        p.rz = euler.rz + extraSpinsZ;
+
+        p.targetRx = euler.rx;
+        p.targetRy = finalYaw;
+        p.targetRz = euler.rz;
+        p.bouncePhase = 0;
+        p.isTumbling = true;
+      }
+    }
+
+    function animateThreeLoop() {
+      requestAnimationFrame(animateThreeLoop);
+      if (!threeRenderer || !threeScene || !threeCamera) return;
+
+      for (let i = 0; i < diceMeshes.length; i++) {
+        const m = diceMeshes[i];
+        const p = dicePhysics[i];
+        if (!m || !p) continue;
+
+        if (p.isTumbling) {
+          p.bouncePhase += 0.065;
+          p.x += (p.targetX - p.x) * 0.13;
+          p.z += (p.targetZ - p.z) * 0.13;
+          p.rx += (p.targetRx - p.rx) * 0.12;
+          p.ry += (p.targetRy - p.ry) * 0.12;
+          p.rz += (p.targetRz - p.rz) * 0.12;
+
+          const decay = Math.max(0, 1 - p.bouncePhase / 3.2);
+          p.y = Math.abs(Math.sin(p.bouncePhase * 3.4)) * 2.2 * decay * decay;
+
+          if (decay <= 0.01 && Math.abs(p.rx - p.targetRx) < 0.02) {
+            p.x = p.targetX;
+            p.z = p.targetZ;
+            p.y = 0;
+            p.rx = p.targetRx;
+            p.ry = p.targetRy;
+            p.rz = p.targetRz;
+            p.isTumbling = false;
+          }
+
+          m.position.set(p.x, p.y, p.z);
+          m.rotation.set(p.rx, p.ry, p.rz);
+        }
+      }
+
+      threeRenderer.render(threeScene, threeCamera);
+    }
+
+    // =========================================================================
+    // 5. UI RENDERERS (TRAY, PROBABILITY BAR, BETTING BOARD, CHIPS)
+    // =========================================================================
+    function renderRolledTray(hideForBlindPhase = false) {
+      const tray = document.getElementById('rolledTrayRow');
+      if (!tray) return;
+
+      if (hideForBlindPhase) {
+        let blindHtml = '';
+        for (let i = 0; i < 6; i++) {
+          blindHtml += `
+            <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-b from-amber-700 to-amber-950 p-1.5 border-2 border-amber-400/70 shadow-md flex items-center justify-center text-amber-200 font-black text-base animate-pulse">
+              ?
+            </div>
+          `;
+        }
+        tray.innerHTML = blindHtml;
+        return;
+      }
+
+      const counts = getDiceCounts(state.currentDice);
+      let html = '';
+      state.currentDice.forEach((symId) => {
+        const sym = SYMBOLS.find(s => s.id === symId) || SYMBOLS[4];
+        const isWinningFace = counts[symId] >= (state.singleMatchPays ? 1 : 2);
+        const borderHighlight = isWinningFace
+          ? 'border-yellow-400 ring-2 ring-yellow-300/80 scale-105'
+          : 'border-slate-300';
+        html += `
+          <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-b from-white to-slate-200 p-1.5 border-2 ${borderHighlight} shadow-md flex items-center justify-center transition-transform">
+            ${sym.svg}
+          </div>
+        `;
+      });
+      tray.innerHTML = html;
+    }
+
+    function renderProbabilityBar() {
+      const container = document.getElementById('probBarContainer');
+      const total = Object.values(state.symbolAppearances).reduce((a, b) => a + b, 0) || 1;
+      let html = '';
+      SYMBOLS.forEach(sym => {
+        const pct = Math.round((state.symbolAppearances[sym.id] / total) * 100);
+        html += `
+          <div class="flex items-center gap-1 bg-black/35 px-1.5 py-0.5 rounded-md border border-amber-500/20">
+            <div class="w-4 h-4 bg-white rounded p-0.5 shrink-0">${sym.svg}</div>
+            <span class="text-[10px] sm:text-[11px] font-bold text-amber-100">${pct}%</span>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function formatChipAmount(num) {
+      if (num >= 1000) {
+        return (num / 1000).toFixed(num % 1000 === 0 ? 0 : 1) + 'K';
+      }
+      return String(num);
+    }
+
+    function renderBettingBoard(winningCounts = {}) {
+      const grid = document.getElementById('bettingGrid');
+      let html = '';
+
+      SYMBOLS.forEach(sym => {
+        const userBet = state.bets[sym.id] || 0;
+        const crowdBet = state.crowdBets[sym.id] + userBet;
+        const hist = state.symbolHistory[sym.id] || [0, 0, 0, 0, 0];
+        const matchCount = winningCounts[sym.id] || 0;
+        const isWin = matchCount >= (state.singleMatchPays ? 1 : 2);
+
+        let badgesHtml = '';
+        hist.forEach(val => {
+          if (val >= 2 || (state.singleMatchPays && val === 1)) {
+            badgesHtml += `<span class="w-4 h-4 sm:w-5 sm:h-5 rounded bg-sky-500 text-white font-black text-[10px] sm:text-[11px] flex items-center justify-center shadow">${val}</span>`;
+          } else {
+            badgesHtml += `<span class="w-4 h-4 sm:w-5 sm:h-5 rounded bg-slate-400/80 text-white font-bold text-[10px] sm:text-[11px] flex items-center justify-center">X</span>`;
+          }
+        });
+
+        const userChipOverlay = userBet > 0 ? `
+          <div class="absolute left-1.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full casino-chip bg-teal-600 text-white text-[11px] z-20">
+            <span class="bg-white text-black rounded-full w-7 h-7 flex items-center justify-center font-black text-[10px] shadow">${formatChipAmount(userBet)}</span>
+          </div>
+        ` : '';
+
+        const crowdChipOverlay = `
+          <div class="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full border-2 border-dashed border-slate-400/80 bg-white/90 text-slate-700 flex items-center justify-center font-extrabold text-[9px] shadow-md z-10">
+            ${formatChipAmount(crowdBet)}
+          </div>
+        `;
+
+        const winRibbon = isWin ? `
+          <div class="absolute top-1.5 inset-x-2 bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 text-black font-black text-[10px] py-0.5 rounded-full text-center shadow-md z-20">
+            ${matchCount}× HIT! (${getMultiplierForCount(matchCount)}×)
+          </div>
+        ` : '';
+
+        const lockBadge = state.isBettingLocked ? `
+          <div class="absolute top-1.5 right-1.5 bg-red-600/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full z-20">🔒</div>
+        ` : '';
+
+        html += `
+          <div id="betCard_${sym.id}" onclick="placeBetOnSymbol('${sym.id}')" class="bet-card h-36 sm:h-40 flex flex-col items-center justify-between p-2.5 select-none ${isWin ? 'winner-glow' : ''} ${state.isBettingLocked ? 'locked-card' : ''}">
+            ${winRibbon}
+            ${lockBadge}
+            ${userChipOverlay}
+            ${crowdChipOverlay}
+            <div class="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center my-auto">
+              ${sym.svg}
+            </div>
+            <div class="flex items-center justify-center gap-1 z-10">
+              ${badgesHtml}
+            </div>
+          </div>
+        `;
+      });
+
+      grid.innerHTML = html;
+    }
+
+    function renderChipSelector() {
+      const bar = document.getElementById('chipSelectorBar');
+      let html = '';
+      CHIP_VALUES.forEach((chip, idx) => {
+        const isSelected = idx === state.selectedChipIndex;
+        html += `
+          <button id="chipBtn_${chip.val}" onclick="selectChip(${idx})" class="w-8 h-8 rounded-full casino-chip ${chip.bg} text-white text-[10px] ${isSelected ? 'active-chip' : 'opacity-80 hover:opacity-100'}">
+            <span class="bg-white text-black rounded-full w-5 h-5 flex items-center justify-center font-black text-[9px]">${chip.text}</span>
+          </button>
+        `;
+      });
+      bar.innerHTML = html;
+
+      const activeChip = CHIP_VALUES[state.selectedChipIndex];
+      const centerBtn = document.getElementById('btnCenterChip');
+      const centerTxt = document.getElementById('centerChipText');
+      if (centerBtn && centerTxt) {
+        centerBtn.className = `w-16 h-16 rounded-full casino-chip ${activeChip.bg} text-white flex flex-col items-center justify-center shadow-xl active:scale-95`;
+        centerTxt.textContent = activeChip.text;
+      }
+    }
+
+    function updateBalanceAndBetReadouts() {
+      const totalBet = Object.values(state.bets).reduce((a, b) => a + b, 0);
+      document.getElementById('balanceText').textContent = `₹${state.balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('totalBetText').textContent = `₹${totalBet.toLocaleString('en-IN')}`;
+      document.getElementById('jackpotDisplay').textContent = `₹${state.jackpot.toFixed(2)}`;
+      document.getElementById('roundNumberText').textContent = `No.${state.roundSerial.toString()}`;
+    }
+
+    // =========================================================================
+    // 6. BETTING CONTROLS (LOCKED DURING FINAL 5 SECONDS BEFORE ROLL)
+    // =========================================================================
+    function selectChip(index) {
+      state.selectedChipIndex = index;
+      playSound('chip');
+      renderChipSelector();
+    }
+
+    function cycleSelectedChip() {
+      state.selectedChipIndex = (state.selectedChipIndex + 1) % CHIP_VALUES.length;
+      playSound('chip');
+      renderChipSelector();
+    }
+
+    function placeBetOnSymbol(symbolId) {
+      if (state.isRolling || state.isBettingLocked) {
+        showStatusMessage('🔒 BETTING CLOSED (LAST 5s)! WAIT FOR NEXT ROUND', 'text-red-300');
+        return;
+      }
+      const chipVal = CHIP_VALUES[state.selectedChipIndex].val;
+      const currentTotal = Object.values(state.bets).reduce((a, b) => a + b, 0);
+
+      if (state.balance < chipVal) {
+        showStatusMessage('LOW BALANCE! PLEASE DEPOSIT', 'text-red-300');
+        window.location.href = '/?deposit=1';
+        return;
+      }
+      if (currentTotal + chipVal > 5000) {
+        showStatusMessage('MAX TABLE BET ₹5,000 REACHED', 'text-orange-300');
+        return;
+      }
+
+      document.getElementById('winBannerOverlay').classList.add('hidden');
+
+      state.balance -= chipVal;
+      state.bets[symbolId] += chipVal;
+      state.betActionStack.push({ symbolId, amount: chipVal });
+
+      playSound('chip');
+      renderBettingBoard();
+      updateBalanceAndBetReadouts();
+
+      // Synchronize bet with server
+      if (userLoggedIn) {
+        fetch('/api/casino/bet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            game_id: 'jhandi',
+            stake: chipVal,
+            bet_type: symbolId
+          })
+        }).then(r => r.json()).then(data => {
+          if (data && typeof data.new_balance === 'number') {
+            state.balance = data.new_balance;
+            updateBalanceAndBetReadouts();
+          }
+        }).catch(err => console.warn('bet sync error:', err));
+      }
+    }
+
+    function doubleAllBets() {
+      if (state.isRolling || state.isBettingLocked) {
+        showStatusMessage('🔒 BETTING CLOSED! WAIT FOR NEXT ROUND', 'text-red-300');
+        return;
+      }
+      const currentTotal = Object.values(state.bets).reduce((a, b) => a + b, 0);
+      if (currentTotal === 0) {
+        showStatusMessage('PLACE A BET FIRST TO DOUBLE', 'text-amber-300');
+        return;
+      }
+      if (state.balance < currentTotal) {
+        showStatusMessage('NOT ENOUGH BALANCE TO DOUBLE', 'text-red-300');
+        return;
+      }
+      if (currentTotal * 2 > 5000) {
+        showStatusMessage('MAX BET LIMIT IS ₹5,000', 'text-orange-300');
+        return;
+      }
+
+      SYMBOLS.forEach(sym => {
+        const amt = state.bets[sym.id];
+        if (amt > 0) {
+          state.balance -= amt;
+          state.bets[sym.id] += amt;
+          state.betActionStack.push({ symbolId: sym.id, amount: amt });
+
+          if (userLoggedIn) {
+            fetch('/api/casino/bet', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                game_id: 'jhandi',
+                stake: amt,
+                bet_type: sym.id
+              })
+            }).catch(err => console.warn('double bet sync error:', err));
+          }
+        }
+      });
+
+      playSound('chip');
+      renderBettingBoard();
+      updateBalanceAndBetReadouts();
+    }
+
+    function undoLastBet() {
+      if (state.isRolling || state.isBettingLocked || state.betActionStack.length === 0) return;
+      const last = state.betActionStack.pop();
+      if (last && state.bets[last.symbolId] >= last.amount) {
+        state.bets[last.symbolId] -= last.amount;
+        state.balance += last.amount;
+        playSound('clear');
+        renderBettingBoard();
+        updateBalanceAndBetReadouts();
+      }
+    }
+
+    function clearAllBets() {
+      if (state.isRolling || state.isBettingLocked) return;
+      const currentTotal = Object.values(state.bets).reduce((a, b) => a + b, 0);
+      if (currentTotal === 0) return;
+
+      state.balance += currentTotal;
+      SYMBOLS.forEach(s => { state.bets[s.id] = 0; });
+      state.betActionStack = [];
+
+      playSound('clear');
+      renderBettingBoard();
+      updateBalanceAndBetReadouts();
+      showStatusMessage('BETS CLEARED', 'text-amber-200');
+    }
+
+    function rebetLastRound() {
+      if (state.isRolling || state.isBettingLocked) return;
+      const needed = Object.values(state.lastRoundBets).reduce((a, b) => a + b, 0);
+      if (needed === 0) {
+        placeQuickRandomBet();
+        return;
+      }
+      const currentTotal = Object.values(state.bets).reduce((a, b) => a + b, 0);
+      if (state.balance + currentTotal < needed) {
+        showStatusMessage('INSUFFICIENT BALANCE FOR REBET', 'text-red-300');
+        return;
+      }
+      state.balance += currentTotal;
+      state.betActionStack = [];
+      SYMBOLS.forEach(s => {
+        const amt = state.lastRoundBets[s.id] || 0;
+        state.bets[s.id] = amt;
+        state.balance -= amt;
+        if (amt > 0) {
+          state.betActionStack.push({ symbolId: s.id, amount: amt });
+          if (userLoggedIn) {
+            fetch('/api/casino/bet', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                game_id: 'jhandi',
+                stake: amt,
+                bet_type: s.id
+              })
+            }).catch(err => console.warn('rebet sync error:', err));
+          }
+        }
+      });
+      playSound('chip');
+      renderBettingBoard();
+      updateBalanceAndBetReadouts();
+    }
+
+    function placeQuickRandomBet() {
+      if (state.isRolling || state.isBettingLocked) return;
+      const chipVal = CHIP_VALUES[state.selectedChipIndex].val;
+      if (state.balance < chipVal) {
+        window.location.href = '/?deposit=1';
+        return;
+      }
+      const randomSym = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)].id;
+      placeBetOnSymbol(randomSym);
+    }
+
+    // =========================================================================
+    // 7. 30-SECOND AUTOMATIC ROUND LOOP + 5-SECOND PRE-ROLL BLIND SHAKER
+    // =========================================================================
+    function start30SecondAutoLoop() {
+      if (state.liveTimerInterval) clearInterval(state.liveTimerInterval);
+      state.liveTimerInterval = setInterval(() => {
+        if (!state.liveTimerMode || state.isRolling) return;
+
+        state.liveTimerSeconds -= 1;
+
+        if (state.liveTimerSeconds > BLIND_LOCK_SECONDS) {
+          const randSym = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)].id;
+          state.crowdBets[randSym] += Math.floor(Math.random() * 5 + 1) * 50;
+
+          if (state.autoPlay && state.liveTimerSeconds === 24) {
+            const currentTotal = Object.values(state.bets).reduce((a, b) => a + b, 0);
+            if (currentTotal === 0) {
+              rebetLastRound();
+            }
+          }
+          renderBettingBoard();
+        }
+
+        if (state.liveTimerSeconds <= BLIND_LOCK_SECONDS && state.liveTimerSeconds > 0) {
+          if (!state.isBettingLocked) {
+            state.isBettingLocked = true;
+            playSound('lock');
+            renderBettingBoard();
+          }
+          playSound('tick');
+          setBlindShakerVisibility(true, state.liveTimerSeconds);
+          const userBetTotal = Object.values(state.bets).reduce((a, b) => a + b, 0);
+          const betNote = userBetTotal > 0 ? `YOUR BET: ₹${userBetTotal}` : 'NO BET (NEXT ROUND IN 5s)';
+          showStatusMessage(`🔒 NO MORE BETS (${state.liveTimerSeconds}s) • ${betNote}`, 'text-red-300');
+        }
+
+        // Automatic roll when 30-second timer hits 0!
+        if (state.liveTimerSeconds <= 0) {
+          execute3DRollAndSettle();
+        }
+
+        updateTimerUI();
+      }, 1000);
+    }
+
+    function setBlindShakerVisibility(visible, secondsLeft = 5) {
+      const overlay = document.getElementById('blindShakerOverlay');
+      const numEl = document.getElementById('blindCountdownNum');
+      if (numEl) numEl.textContent = String(secondsLeft);
+      if (!overlay) return;
+      if (visible) {
+        overlay.classList.remove('hidden-overlay');
+        renderRolledTray(true);
+      } else {
+        overlay.classList.add('hidden-overlay');
+      }
+    }
+
+    function updateTimerUI() {
+      const badge = document.getElementById('timerCountdownBadge');
+      const bar = document.getElementById('roundTimerProgressBar');
+      const dot = document.getElementById('gameStateDot');
+
+      if (badge) {
+        badge.textContent = `${Math.max(0, state.liveTimerSeconds)}s`;
+        if (state.liveTimerSeconds <= BLIND_LOCK_SECONDS) {
+          badge.className = 'bg-red-600 text-white font-black text-xs px-2.5 py-0.5 rounded-full border border-yellow-300 shadow-md min-w-[42px] text-center animate-bounce';
+        } else {
+          badge.className = 'bg-gradient-to-b from-amber-400 to-orange-600 text-black font-black text-xs px-2.5 py-0.5 rounded-full border border-yellow-200 shadow-md min-w-[42px] text-center';
+        }
+      }
+
+      if (bar) {
+        const pct = Math.max(0, Math.min(100, (state.liveTimerSeconds / ROUND_TOTAL_SECONDS) * 100));
+        bar.style.width = `${pct}%`;
+        bar.className = state.liveTimerSeconds <= BLIND_LOCK_SECONDS
+          ? 'h-full bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 transition-all duration-500'
+          : 'h-full bg-gradient-to-r from-emerald-400 via-yellow-400 to-amber-500 transition-all duration-500';
+      }
+
+      if (dot) {
+        dot.className = state.liveTimerSeconds <= BLIND_LOCK_SECONDS
+          ? 'w-2 h-2 rounded-full bg-red-500 animate-ping'
+          : 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+      }
+    }
+
+    function getDiceCounts(diceArray) {
+      const counts = { club: 0, crown: 0, spade: 0, diamond: 0, flag: 0, heart: 0 };
+      diceArray.forEach(id => { counts[id] = (counts[id] || 0) + 1; });
+      return counts;
+    }
+
+    function getMultiplierForCount(count) {
+      if (count === 1) return state.singleMatchPays ? 2.0 : 0;
+      if (count === 2) return 2.5;
+      if (count === 3) return 5;
+      if (count === 4) return 10;
+      if (count === 5) return 20;
+      if (count >= 6) return 100;
+      return 0;
+    }
+
+    function highlightOddsBar(counts) {
+      [2, 3, 4, 5, 6].forEach(n => {
+        const el = document.getElementById(`oddBadge${n}`);
+        if (el) el.className = 'flex items-center gap-1 px-1.5 py-0.5 rounded transition-all';
+      });
+      Object.values(counts).forEach(c => {
+        if (c >= 2 && c <= 6) {
+          const el = document.getElementById(`oddBadge${c}`);
+          if (el) {
+            el.className = 'flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-400/30 ring-1 ring-yellow-300 scale-105 transition-all';
+          }
+        }
+      });
+    }
+
+    function showStatusMessage(msg, colorClass = 'text-amber-200') {
+      const el = document.getElementById('gameStateText');
+      if (el) {
+        el.textContent = msg;
+        el.className = `text-[11px] font-extrabold tracking-wide ${colorClass}`;
+      }
+    }
+
+    function execute3DRollAndSettle() {
+      if (state.isRolling) return;
+      state.isRolling = true;
+      state.isBettingLocked = true;
+
+      const totalBet = Object.values(state.bets).reduce((a, b) => a + b, 0);
+      if (totalBet > 0) {
+        state.lastRoundBets = { ...state.bets };
+      }
+
+      document.getElementById('winBannerOverlay').classList.add('hidden');
+
+      const outcome = [];
+      for (let i = 0; i < 6; i++) {
+        const randSym = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)].id;
+        outcome.push(randSym);
+      }
+
+      setBlindShakerVisibility(false);
+      showStatusMessage('🎲 AUTO-ROLLING 6 3D DICE ON CARPET...', 'text-yellow-300');
+      playSound('shake');
+      launch3DDicePhysicsRoll(outcome);
+
+      state.jackpot += Math.max(0.15, totalBet * 0.01);
+
+      setTimeout(() => {
+        state.currentDice = outcome;
+        outcome.forEach(symId => {
+          state.symbolAppearances[symId] = (state.symbolAppearances[symId] || 0) + 1;
+        });
+
+        renderRolledTray(false);
+        renderProbabilityBar();
+
+        const counts = getDiceCounts(outcome);
+        highlightOddsBar(counts);
+
+        SYMBOLS.forEach(sym => {
+          const c = counts[sym.id] || 0;
+          const arr = state.symbolHistory[sym.id];
+          arr.shift();
+          arr.push(c >= 2 ? c : (state.singleMatchPays && c === 1 ? 1 : 0));
+        });
+
+        let totalWin = 0;
+        const winningSymbols = [];
+        SYMBOLS.forEach(sym => {
+          const betAmt = state.bets[sym.id] || 0;
+          const matchCount = counts[sym.id] || 0;
+          const mult = getMultiplierForCount(matchCount);
+          if (betAmt > 0 && mult > 0) {
+            const payout = betAmt * mult;
+            totalWin += payout;
+            winningSymbols.push(`${sym.name.split(' ')[0]} (${matchCount}×)`);
+          }
+          state.crowdBets[sym.id] = Math.floor(600 + Math.random() * 1400);
+        });
+
+        state.balance += totalWin;
+        state.roundSerial += 1n;
+
+        // Credit real winnings to server wallet
+        if (userLoggedIn && totalWin > 0) {
+          fetch('/api/casino/settle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              game_id: 'jhandi',
+              outcome: 'WIN',
+              stake: totalBet,
+              payout: totalWin
+            })
+          }).then(r => r.json()).then(data => {
+            if (data && typeof data.new_balance === 'number') {
+              state.balance = data.new_balance;
+              updateBalanceAndBetReadouts();
+            }
+          }).catch(err => console.warn('settle sync error:', err));
+        }
+
+        state.roundLogs.unshift({
+          serial: state.roundSerial.toString(),
+          dice: [...outcome],
+          bet: totalBet,
+          win: totalWin
+        });
+        if (state.roundLogs.length > 25) state.roundLogs.pop();
+
+        SYMBOLS.forEach(s => { state.bets[s.id] = 0; });
+        state.betActionStack = [];
+        state.isBettingLocked = false;
+        state.isRolling = false;
+        state.liveTimerSeconds = ROUND_TOTAL_SECONDS;
+
+        renderBettingBoard(counts);
+        updateBalanceAndBetReadouts();
+        updateTimerUI();
+
+        if (totalWin > 0) {
+          playSound('win');
+          const bannerOverlay = document.getElementById('winBannerOverlay');
+          const bannerText = document.getElementById('winBannerText');
+          bannerText.textContent = `WON ₹${totalWin.toLocaleString('en-IN')}! • ${winningSymbols.join(', ')}`;
+          bannerOverlay.classList.remove('hidden');
+          showStatusMessage(`🏆 WINNER +₹${totalWin.toLocaleString('en-IN')}! NEXT 30s ROUND OPEN`, 'text-emerald-300');
+        } else if (totalBet > 0) {
+          showStatusMessage('NEXT 30s ROUND OPEN • PLACE YOUR BETS!', 'text-amber-200');
+        } else {
+          const topHits = SYMBOLS.filter(s => counts[s.id] >= 2).map(s => `${s.name.split(' ')[0]} ×${counts[s.id]}`);
+          showStatusMessage(
+            topHits.length
+              ? `RESULT: ${topHits.join(', ')} • NEXT 30s BETTING OPEN`
+              : 'NEXT 30s ROUND OPEN • PLACE YOUR BETS',
+            'text-amber-200'
+          );
+        }
+
+        document.getElementById('onlinePlayersCount').textContent = String(6 + Math.floor(Math.random() * 6));
+      }, 1150);
+    }
+
+    // =========================================================================
+    // 8. AUTO-BET & AUDIO TOGGLES
+    // =========================================================================
+    function toggleAutoPlay() {
+      state.autoPlay = !state.autoPlay;
+      const btn = document.getElementById('btnAutoPlay');
+      const lbl = document.getElementById('autoPlayLabel');
+
+      if (state.autoPlay) {
+        btn.className = 'w-13 h-13 px-3 py-2 rounded-full bg-gradient-to-b from-emerald-500 to-emerald-800 border-2 border-yellow-300 shadow-[0_0_15px_rgba(16,185,129,0.8)] flex flex-col items-center justify-center active:scale-95 transition';
+        lbl.textContent = 'ON';
+        showStatusMessage('AUTO-BET ON: REPEATS BET EVERY 30s ROUND', 'text-emerald-300');
+        if (!state.isRolling && !state.isBettingLocked) {
+          const currentTotal = Object.values(state.bets).reduce((a, b) => a + b, 0);
+          if (currentTotal === 0) rebetLastRound();
+        }
+      } else {
+        btn.className = 'w-13 h-13 px-3 py-2 rounded-full bg-gradient-to-b from-amber-600/80 to-amber-900/90 hover:from-amber-500 hover:to-amber-800 border-2 border-amber-400/70 shadow-lg flex flex-col items-center justify-center active:scale-95 transition';
+        lbl.textContent = 'auto';
+        showStatusMessage('AUTO-BET OFF (30s ROUND TIMER STILL RUNNING)', 'text-amber-200');
+      }
+    }
+
+    function toggleSound() {
+      state.soundEnabled = !state.soundEnabled;
+      document.getElementById('btnSoundToggle').textContent = state.soundEnabled ? '🔊' : '🔇';
+    }
+
+    function toggleSingleMatchRule() {
+      state.singleMatchPays = !state.singleMatchPays;
+      const btn = document.getElementById('btnSingleMatchRule');
+      btn.textContent = state.singleMatchPays ? 'ON (1:2)' : 'OFF';
+      btn.className = state.singleMatchPays
+        ? 'px-3 py-1.5 rounded-lg bg-emerald-700 border border-emerald-300 font-bold text-xs text-white'
+        : 'px-3 py-1.5 rounded-lg bg-slate-800 border border-amber-400/50 font-bold text-xs text-amber-300';
+      renderRolledTray(state.isBettingLocked);
+      renderBettingBoard();
+    }
+
+    function openRulesModal() {
+      document.getElementById('rulesModal').classList.remove('hidden');
+    }
+    function closeRulesModal() {
+      document.getElementById('rulesModal').classList.add('hidden');
+    }
+
+    function openHistoryModal() {
+      const container = document.getElementById('historyListContainer');
+      let html = '';
+      state.roundLogs.forEach(item => {
+        const icons = item.dice.map(id => {
+          const s = SYMBOLS.find(x => x.id === id) || SYMBOLS[0];
+          return `<div class="w-6 h-6 bg-white rounded p-0.5 border border-slate-300">${s.svg}</div>`;
+        }).join('');
+        html += `
+          <div class="bg-black/45 border border-amber-500/30 rounded-xl p-2.5 flex items-center justify-between gap-2">
+            <div>
+              <div class="text-[10px] text-amber-300/70 font-mono">No.${item.serial}</div>
+              <div class="flex items-center gap-1 mt-1">${icons}</div>
+            </div>
+            <div class="text-right">
+              <div class="text-[11px] text-amber-200">Bet: <strong>₹${item.bet}</strong></div>
+              <div class="text-xs font-black ${item.win > 0 ? 'text-emerald-400' : 'text-slate-400'}">
+                ${item.win > 0 ? '+₹' + item.win : '₹0'}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html || '<p class="text-center text-amber-200/60">No rounds played yet.</p>';
+      document.getElementById('historyModal').classList.remove('hidden');
+    }
+    function closeHistoryModal() {
+      document.getElementById('historyModal').classList.add('hidden');
+    }
+
+    window.onload = function() {
+      initDice3D();
+      renderProbabilityBar();
+      renderRolledTray(false);
+      renderBettingBoard({ flag: 5, spade: 1 });
+      renderChipSelector();
+      updateBalanceAndBetReadouts();
+      updateTimerUI();
+      start30SecondAutoLoop();
+
+      // Poll live balance
+      try {
+        fetch('/api/auth/me', { credentials: 'same-origin' })
+          .then(r => r.json())
+          .then(d => {
+            if (d && d.user && typeof d.user.balance === 'number') {
+              state.balance = d.user.balance;
+              updateBalanceAndBetReadouts();
+            }
+          }).catch(() => {});
+      } catch(e) {}
+    };
+  </script>
+</body>
+</html>

@@ -1493,6 +1493,13 @@ async def match_detail(request: Request, match_id: str):
 # ============================================================================
 
 GAME_ALIASES = {
+    # Jhandi Munda Royal 3D Dice (30s Auto Spin)
+    "jhandi": "jhandi",
+    "jhandi-munda": "jhandi",
+    "jhandimunda": "jhandi",
+    "jhandi-munda-3d": "jhandi",
+    "dice": "jhandi",
+    "jhandi_munda": "jhandi",
     # 0. Integrated Originals & 3D Games
     "crash": "crash",
     "cricknova-crash": "crash",
@@ -1916,20 +1923,35 @@ def evaluate_bet_payout(game_id: str, outcome: Dict[str, Any], bet_type: str) ->
 
     return 0.0
 
+
+@app.get("/casino/jhandi", response_class=HTMLResponse)
+@app.get("/casino/jhandi-munda", response_class=HTMLResponse)
+@app.get("/jhandi-munda", response_class=HTMLResponse)
+async def jhandi_munda_page(request: Request):
+    user = get_active_user(request)
+    recalculate_user_exposure(user)
+    save_all_user_data()
+    all_data = load_all_user_data()
+    payment_config = all_data.get("payment_config", {})
+    return templates.TemplateResponse(
+        request=request,
+        name="jhandi_munda.html",
+        context={
+            "user": user,
+            "payment_config": payment_config
+        }
+    )
+
 @app.get("/casino", response_class=HTMLResponse)
 @app.get("/casino/{game_slug}", response_class=HTMLResponse)
 async def casino_arena(request: Request, game_slug: str = "lobby"):
     if game_slug in GAME_ALIASES:
         game_slug = GAME_ALIASES[game_slug]
 
-    if game_slug == "crash":
-        return RedirectResponse(url="/casino-games/#/crash", status_code=302)
-    elif game_slug == "plinko":
-        return RedirectResponse(url="/casino-games/#/plinko", status_code=302)
-    elif game_slug == "mines":
-        return RedirectResponse(url="/casino-games/#/mines", status_code=302)
-    elif game_slug in ("roulette-3d", "roulette_3d"):
-        return RedirectResponse(url="/roulette-3d/", status_code=302)
+    if game_slug in ("jhandi", "jhandi-munda", "jhandimunda", "dice"):
+        return RedirectResponse(url="/casino/jhandi-munda", status_code=302)
+    elif game_slug in ("crash", "plinko", "mines", "roulette-3d", "roulette_3d", "gold", "wheel", "bingo"):
+        return RedirectResponse(url="/casino", status_code=302)
 
     user = get_active_user(request)
     recalculate_user_exposure(user)
