@@ -2563,8 +2563,8 @@ async def get_user_state_api(request: Request):
 # ==================== YOUPI SLICE MANUAL REVIEW GATEWAY ====================
 YOUPI_GATEWAY_URL = os.environ.get("YOUPI_GATEWAY_URL", "https://youpi-slice-gateway.onrender.com").rstrip("/")
 YOUPI_MERCHANT_ID = os.environ.get("YOUPI_MERCHANT_ID", "00000000-0000-0000-0000-000000000001")
-YOUPI_MERCHANT_API_KEY = os.environ.get("YOUPI_MERCHANT_API_KEY", "")
-YOUPI_WEBHOOK_SECRET = os.environ.get("YOUPI_WEBHOOK_SECRET", "")
+YOUPI_MERCHANT_API_KEY = os.environ.get("YOUPI_MERCHANT_API_KEY", "") or os.environ.get("DEFAULT_MERCHANT_API_KEY", "")
+YOUPI_WEBHOOK_SECRET = os.environ.get("YOUPI_WEBHOOK_SECRET", "") or os.environ.get("COIN_STORE_WEBHOOK_SECRET", "")
 YOUPI_RECEIVING_VPA = os.environ.get("YOUPI_RECEIVING_VPA", "9693554087@slc")
 YOUPI_RECEIVING_PAYEE = os.environ.get("YOUPI_RECEIVING_PAYEE", "Tarana Nasreen")
 YOUPI_RECEIVING_ACCOUNT_ID = os.environ.get("YOUPI_RECEIVING_ACCOUNT_ID", "da864feb-15d4-47cd-8afa-e64d05ad8e91")
