@@ -89,3 +89,51 @@
     background: transparent !important;
   }
 }
+
+/* CRICKNOVA PLINKO FINAL BOARD-FIRST FIX */
+@media (max-width: 768px), (max-width: 932px) and (orientation: portrait) {
+  .plinko-page .plinko-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding: 0 4px !important;
+  }
+  .plinko-page .plinko-game-wrapper {
+    order: 1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+  }
+  .plinko-page .plinko-bet-sheet,
+  .plinko-page .mobile-bet-sheet {
+    order: 2 !important;
+    position: static !important;
+    width: 100% !important;
+    margin-top: 10px !important;
+  }
+  .plinko-page .plinko-content {
+    justify-content: flex-start !important;
+    padding: 2px 0 6px !important;
+  }
+  .plinko-page .plinko-board-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+  }
+  .plinko-page .plinko-canvas-container {
+    width: 100% !important;
+    max-height: 48vh !important;
+    aspect-ratio: 760 / 570 !important;
+    margin: 0 auto !important;
+  }
+  .plinko-page .plinko-canvas {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+  }
+  .plinko-page .bins-row {
+    margin-top: 2px !important;
+    height: 24px !important;
+    gap: 2px !important;
+  }
+}

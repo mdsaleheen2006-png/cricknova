@@ -44,3 +44,43 @@
     overflow: visible !important;
   }
 }
+
+/* CRICKNOVA MINES FINAL GRID-FIRST FIX */
+@media (max-width: 768px), (max-width: 932px) and (orientation: portrait) {
+  .mines-game .game-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    padding: 0 6px !important;
+    overflow: visible !important;
+  }
+  .mines-game .mines-display-wrapper {
+    order: 1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    min-height: auto !important;
+  }
+  .mines-game .mines-bet-sheet,
+  .mines-game .mobile-bet-sheet {
+    order: 2 !important;
+    position: static !important;
+    width: 100% !important;
+    margin-top: 10px !important;
+  }
+  .mines-game .mines-display {
+    width: min(100%, 340px) !important;
+    aspect-ratio: 1 !important;
+    margin: 0 auto !important;
+    padding: 4px !important;
+  }
+  .mines-game .mines-grid {
+    gap: 6px !important;
+    padding: 6px !important;
+  }
+  .mines-game .mine-tile {
+    min-height: 48px !important;
+    border-radius: 10px !important;
+    aspect-ratio: 1 !important;
+  }
+}
