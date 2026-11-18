@@ -22,7 +22,7 @@
         {
           "id": "CAS-477101",
           "type": "CASINO_BET",
-          "method": "ZOO-ROULETTE (lion: \u20b9100, beasts: \u20b9200)",
+          "method": "ZOO-ROULETTE (lion: ₹100, beasts: ₹200)",
           "amount": 300.0,
           "status": "COMPLETED",
           "date": "2026-11-18 02:43:32"
@@ -39,7 +39,7 @@
           "id": "WTH-20261118-14921",
           "type": "WITHDRAWAL",
           "method": "Bank Payout (HDFC Bank)",
-          "account": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u20224892",
+          "account": "••••••••••4892",
           "utr": "IMPS202611189912",
           "amount": 500.0,
           "status": "COMPLETED",
@@ -149,7 +149,7 @@
           "balance_after_paise": 10229000,
           "reference_id": "WTH-20261118-14921",
           "actor": "customer",
-          "notes": "Withdrawal request reserved to \u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u20224892",
+          "notes": "Withdrawal request reserved to ••••••••••4892",
           "timestamp": "2026-11-18 02:08:58",
           "created_timestamp": 1794947938
         },
@@ -170,7 +170,7 @@
       "bank_account": {
         "holder_name": "Md Saleheen",
         "account_encrypted": "egdEbbSTwa9QMInEQ9K3z3GvxXa0g9tYTjKCexOfpnmU8cNhMWUKCWak",
-        "account_masked": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u20224892",
+        "account_masked": "••••••••••4892",
         "ifsc": "HDFC0001234",
         "bank_name": "HDFC Bank",
         "bound_at": "2026-11-18 02:08:58"
@@ -281,7 +281,7 @@
       "amount": 2000.0,
       "method": "UPI / PhonePe",
       "utr": "UTR78923481239",
-      "notes": "Sent \u20b92,000 via PhonePe - please add to wallet",
+      "notes": "Sent ₹2,000 via PhonePe - please add to wallet",
       "status": "PENDING",
       "created_at": "2026-11-17 19:45:00"
     }
@@ -352,7 +352,7 @@
       "balance_after_paise": 10229000,
       "reference_id": "WTH-20261118-14921",
       "actor": "customer",
-      "notes": "Withdrawal request reserved to \u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u20224892",
+      "notes": "Withdrawal request reserved to ••••••••••4892",
       "timestamp": "2026-11-18 02:08:58",
       "created_timestamp": 1794947938
     },
@@ -380,7 +380,7 @@
       "amount_paise": 50000,
       "status": "PAID",
       "bank_account_encrypted": "egdEbbSTwa9QMInEQ9K3z3GvxXa0g9tYTjKCexOfpnmU8cNhMWUKCWak",
-      "bank_account_masked": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u20224892",
+      "bank_account_masked": "••••••••••4892",
       "bank_holder_name": "Md Saleheen",
       "bank_ifsc": "HDFC0001234",
       "bank_name": "HDFC Bank",

@@ -8,23 +8,19 @@
   <link rel="icon" type="image/png" href="/static/icon-192.png">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#060a12">
-  <script>
-    (function() {
-      function checkDevice() {
-        var isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (isMobile) {
-          document.documentElement.classList.add('is-mobile-device');
-          document.documentElement.classList.remove('is-desktop-device');
-        } else {
-          document.documentElement.classList.add('is-desktop-device');
-          document.documentElement.classList.remove('is-mobile-device');
-        }
-      }
-      checkDevice();
-      window.addEventListener('resize', checkDevice);
-    })();
-  </script>
   <style>
+    :root {
+      --bg-deep: #060a12;
+      --bg-card: #091222;
+      --border-dark: #1b263b;
+      --border-light: #2a3b5c;
+      --winbuzz-gold: #f5a623;
+      --winbuzz-gold-glow: rgba(245, 166, 35, 0.4);
+      --color-green: #00c853;
+      --text-muted: #94a3b8;
+      --text-dim: #cbd5e1;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
     body {
       background: radial-gradient(circle at 50% 20%, #101c33 0%, #060a12 80%);
       min-height: 100vh;
@@ -33,24 +29,25 @@
       justify-content: center;
       align-items: center;
       padding: 16px;
+      color: #fff;
     }
     .login-container {
       width: 100%;
-      max-width: 420px;
-      background: #091222;
+      max-width: 440px;
+      background: var(--bg-card);
       border: 1px solid var(--border-light);
-      border-radius: 12px;
+      border-radius: 14px;
       overflow: hidden;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      box-shadow: 0 15px 45px rgba(0,0,0,0.85);
     }
     .login-top {
       background: #060a14;
-      padding: 20px 16px 14px;
+      padding: 22px 16px 16px;
       text-align: center;
       border-bottom: 1px solid var(--border-dark);
     }
     .login-logo {
-      font-size: 24px;
+      font-size: 26px;
       font-weight: 900;
       color: #fff;
       letter-spacing: 1px;
@@ -59,36 +56,41 @@
       color: var(--winbuzz-gold);
     }
     .login-subtitle {
-      font-size: 11px;
+      font-size: 11.5px;
       color: var(--text-muted);
-      margin-top: 4px;
-      font-weight: 600;
+      margin-top: 5px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
     }
     .login-nav-tabs {
       display: flex;
-      background: #080f1e;
+      background: #070d1a;
       border-bottom: 1px solid var(--border-dark);
+      overflow-x: auto;
     }
+    .login-nav-tabs::-webkit-scrollbar { display: none; }
     .login-nav-tab {
       flex: 1;
+      min-width: 90px;
       padding: 12px 6px;
       text-align: center;
       background: transparent;
       border: none;
       border-bottom: 3px solid transparent;
       color: var(--text-muted);
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 900;
       cursor: pointer;
+      white-space: nowrap;
       transition: all 0.15s;
     }
     .login-nav-tab.active {
       color: var(--winbuzz-gold);
       border-bottom-color: var(--winbuzz-gold);
-      background: rgba(245, 166, 35, 0.06);
+      background: rgba(245, 166, 35, 0.08);
     }
     .login-body {
-      padding: 20px 18px;
+      padding: 22px 20px;
     }
     .login-panel {
       display: none;
@@ -97,15 +99,16 @@
       display: block;
     }
     .form-group {
-      margin-bottom: 14px;
+      margin-bottom: 15px;
     }
     .form-label {
-      font-size: 10.5px;
+      font-size: 11px;
       font-weight: 800;
       color: var(--text-dim);
       display: block;
-      margin-bottom: 4px;
+      margin-bottom: 5px;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     .form-input-wrap {
       display: flex;
@@ -119,19 +122,19 @@
       color: #fff;
       font-weight: 800;
       font-size: 13px;
-      border-radius: 4px 0 0 4px;
+      border-radius: 6px 0 0 6px;
       display: flex;
       align-items: center;
     }
     .form-input {
       width: 100%;
-      padding: 10px 12px;
+      padding: 11px 12px;
       background: #040810;
       border: 1px solid var(--border-light);
       color: #fff;
       font-size: 13.5px;
-      font-weight: 800;
-      border-radius: 4px;
+      font-weight: 700;
+      border-radius: 6px;
       outline: none;
       transition: border-color 0.15s;
     }
@@ -139,177 +142,227 @@
       border-color: var(--winbuzz-gold);
     }
     .form-input-wrap .form-input {
-      border-radius: 0 4px 4px 0;
-    }
-    .pwd-toggle-btn {
-      position: absolute;
-      right: 12px;
-      top: 10px;
-      background: transparent;
-      border: none;
-      color: var(--text-dim);
-      font-size: 15px;
-      cursor: pointer;
+      border-radius: 0 6px 6px 0;
     }
     .btn-submit-main {
       width: 100%;
-      padding: 12px;
+      padding: 13px;
       background: var(--winbuzz-gold);
       color: #000;
       font-size: 13px;
       font-weight: 900;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
       letter-spacing: 0.5px;
       transition: all 0.15s;
-      margin-top: 4px;
+      margin-top: 6px;
     }
     .btn-submit-main:hover {
       background: #e5971a;
-      box-shadow: 0 0 14px var(--winbuzz-gold-glow);
+      box-shadow: 0 0 16px var(--winbuzz-gold-glow);
     }
-    .btn-register-green {
-      background: var(--color-green);
+    .btn-submit-green {
+      background: linear-gradient(135deg, #00c853, #009624);
+      color: #fff;
+      box-shadow: 0 3px 12px rgba(0, 200, 83, 0.35);
     }
-    .btn-register-green:hover {
-      background: #00c853;
-      box-shadow: 0 0 14px var(--color-green-glow);
+    .btn-submit-green:hover {
+      background: linear-gradient(135deg, #00e676, #00c853);
     }
-    .btn-demo-login {
-      width: 100%;
-      padding: 10px;
-      background: transparent;
-      border: 1px solid #1e3a6a;
-      color: #00b0ff;
+    .btn-inline-otp {
+      background: #1e293b;
+      border: 1px solid var(--winbuzz-gold);
+      color: var(--winbuzz-gold);
+      padding: 0 14px;
       font-size: 11.5px;
       font-weight: 800;
-      border-radius: 4px;
+      border-radius: 0 6px 6px 0;
       cursor: pointer;
-      margin-top: 10px;
+      white-space: nowrap;
       transition: all 0.15s;
+    }
+    .btn-inline-otp:hover {
+      background: var(--winbuzz-gold);
+      color: #000;
+    }
+    .btn-inline-otp:disabled {
+      background: #0f172a;
+      border-color: #334155;
+      color: #64748b;
+      cursor: not-allowed;
+    }
+    .bonus-tag {
+      background: rgba(0, 200, 83, 0.12);
+      border: 1px solid var(--color-green);
+      color: var(--color-green);
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 14px;
+      text-align: center;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       gap: 6px;
     }
-    .btn-demo-login:hover {
-      background: rgba(0, 176, 255, 0.1);
-      border-color: #00b0ff;
+    .notice-box {
+      background: #070e1c;
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 11.5px;
+      color: var(--text-dim);
+      line-height: 1.5;
+      margin-bottom: 14px;
     }
-    .login-helper-links {
+    .links-bar {
+      margin-top: 14px;
       display: flex;
       justify-content: space-between;
-      margin-top: 14px;
-      font-size: 11px;
+      font-size: 11.5px;
     }
-    .login-helper-links a {
+    .links-bar a {
       color: var(--winbuzz-gold);
       text-decoration: none;
       font-weight: 700;
     }
-    .login-helper-links a:hover {
+    .links-bar a:hover {
       text-decoration: underline;
     }
-    .whatsapp-badge-card {
-      margin-top: 14px;
-      background: #06130d;
-      border: 1px solid rgba(0, 230, 118, 0.3);
-      padding: 10px 12px;
+    .btn-wa-support {
+      width: 100%;
+      padding: 11px;
+      background: #25d366;
+      color: #fff;
+      font-size: 12.5px;
+      font-weight: 800;
+      border: none;
       border-radius: 6px;
+      cursor: pointer;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
+      gap: 8px;
       text-decoration: none;
-      color: #cbd5e1;
-      font-size: 11px;
-      transition: all 0.15s;
-    }
-    .whatsapp-badge-card:hover {
-      border-color: var(--color-green);
-      background: #091a12;
-    }
-    .apk-dl-strip {
-      background: #040810;
-      padding: 12px 16px;
-      text-align: center;
-      border-top: 1px solid var(--border-dark);
-      font-size: 11px;
-    }
-    .apk-dl-strip a {
-      color: #00b0ff;
-      font-weight: 800;
-      text-decoration: none;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
 
   <div class="login-container">
-    <!-- TOP HEADER -->
+    <!-- Header -->
     <div class="login-top">
-      <a href="/" style="text-decoration: none;">
-        <div class="login-logo">CRICKNOVA<span>.BUZZ</span></div>
-      </a>
-      <div class="login-subtitle">India's #1 Secure Betting Exchange & Live Sports</div>
+      <div class="login-logo">CRICK<span>NOVA</span></div>
+      <div class="login-subtitle">⚡ OFFICIAL BETTING EXCHANGE & 30 VIP CASINO</div>
     </div>
 
-    <!-- TABS: LOGIN vs REGISTER (WINBUZZ STANDARD) -->
+    <!-- Navigation Tabs -->
     <div class="login-nav-tabs">
-      <button class="login-nav-tab active" id="tab-login" onclick="showLoginTab('login')">
-        🔑 LOGIN
-      </button>
-      <button class="login-nav-tab" id="tab-register" onclick="showLoginTab('register')">
-        ⚡ SIGN UP (GET ₹500 BONUS)
-      </button>
+      <button class="login-nav-tab active" id="tab-btn-login" onclick="switchLoginTab('login')">🔑 LOGIN</button>
+      <button class="login-nav-tab" id="tab-btn-email-otp" onclick="switchLoginTab('email-otp')">✉️ EMAIL OTP</button>
+      <button class="login-nav-tab" id="tab-btn-register" onclick="switchLoginTab('register')">⚡ 1-CLICK</button>
+      <button class="login-nav-tab" id="tab-btn-forgot" onclick="switchLoginTab('forgot')">🔒 FORGOT?</button>
     </div>
 
     <div class="login-body">
-      
-      <!-- ==================== 1. LOGIN WITH PASSWORD ==================== -->
+
+      <!-- ==================== TAB 1: PASSWORD LOGIN (MOBILE OR EMAIL) ==================== -->
       <div id="panel-login" class="login-panel active">
         <form onsubmit="doPasswordLogin(event)">
           <div class="form-group">
-            <label class="form-label">MOBILE NUMBER</label>
-            <div class="form-input-wrap">
-              <span class="input-prefix">+91</span>
-              <input type="tel" id="login-phone" placeholder="9876543210" maxlength="10" required class="form-input">
-            </div>
+            <label class="form-label">MOBILE NUMBER OR EMAIL</label>
+            <input type="text" id="login-identifier" placeholder="9876543210 or name@gmail.com" required class="form-input">
           </div>
 
           <div class="form-group">
             <label class="form-label">PASSWORD</label>
-            <div style="position: relative;">
-              <input type="password" id="login-pwd" placeholder="Enter your password" required class="form-input" style="padding-right: 36px;">
-              <button type="button" class="pwd-toggle-btn" onclick="togglePwdVisibility('login-pwd', this)">👁️</button>
-            </div>
+            <input type="password" id="login-pwd" placeholder="Enter your password" required class="form-input">
           </div>
 
-          <button type="submit" id="btn-login-submit" class="btn-submit-main">
+          <button type="submit" class="btn-submit-main" id="btn-login-submit">
             LOG IN NOW 🚀
           </button>
+
+          <div class="links-bar">
+            <a href="#" onclick="switchLoginTab('forgot'); return false;">Forgot Password?</a>
+            <a href="#" onclick="switchLoginTab('email-otp'); return false;">Sign Up with Email OTP →</a>
+          </div>
+
+          <div style="margin-top: 14px; text-align: center;">
+            <button type="button" onclick="doDemoLogin()" style="background: transparent; border: 1px dashed var(--border-light); color: var(--text-muted); padding: 8px 14px; border-radius: 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; width: 100%;">
+              ⚡ Instant Demo Player Login (₹50,000 Free Credits)
+            </button>
+          </div>
         </form>
-
-        <!-- Demo Login Button -->
-        <button type="button" class="btn-demo-login" onclick="doDemoLogin()">
-          <span>🎮</span> Instant Demo Play (₹50,000 Play Wallet)
-        </button>
-
-        <div class="login-helper-links">
-          <a href="javascript:void(0)" onclick="showLoginTab('register')">New Customer? Sign Up →</a>
-          <a href="javascript:void(0)" onclick="showLoginTab('forgot')" style="color: var(--text-muted);">Forgot Password?</a>
-        </div>
       </div>
 
-      <!-- ==================== 2. REGISTER / SIGN UP (WINBUZZ 1-STEP) ==================== -->
+      <!-- ==================== TAB 2: EMAIL OTP VERIFICATION & SIGN UP ==================== -->
+      <div id="panel-email-otp" class="login-panel">
+        <div class="bonus-tag">
+          <span>🎁</span>
+          <span>Instant ₹500 Welcome Bonus On Email Verification</span>
+        </div>
+
+        <form onsubmit="doEmailOtpVerify(event)">
+          <div class="form-group">
+            <label class="form-label">EMAIL ADDRESS</label>
+            <div class="form-input-wrap">
+              <input type="email" id="email-signup-inp" placeholder="yourname@gmail.com" required class="form-input" style="border-radius: 6px 0 0 6px;">
+              <button type="button" class="btn-inline-otp" id="btn-send-email-otp" onclick="triggerSendEmailOtp()">
+                SEND OTP 📩
+              </button>
+            </div>
+            <div id="email-otp-status" style="font-size: 11px; margin-top: 5px; font-weight: 700; display: none;"></div>
+          </div>
+
+          <div id="email-otp-step2" style="display: none;">
+            <div class="form-group">
+              <label class="form-label">6-DIGIT EMAIL VERIFICATION CODE</label>
+              <input type="text" id="email-otp-code" placeholder="Enter 6-digit OTP" maxlength="6" class="form-input" style="font-size: 16px; font-weight: 900; letter-spacing: 4px; text-align: center;">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">CREATE PASSWORD (MIN 6 CHARS)</label>
+              <input type="password" id="email-signup-pwd" placeholder="Choose a secure password" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">MOBILE NUMBER (OPTIONAL)</label>
+              <div class="form-input-wrap">
+                <span class="input-prefix">+91</span>
+                <input type="tel" id="email-signup-mobile" placeholder="9876543210 (Optional)" maxlength="10" class="form-input">
+              </div>
+            </div>
+
+            <button type="submit" class="btn-submit-main btn-submit-green" id="btn-email-verify-submit">
+              ✨ VERIFY OTP & CREATE ACCOUNT (₹500 BONUS)
+            </button>
+          </div>
+
+          <div class="notice-box" style="margin-top: 14px;">
+            ℹ️ OTP will be sent directly to your email inbox from <strong>CrickNova Official</strong>. Please check your Inbox and Spam folder.
+          </div>
+
+          <div class="links-bar">
+            <span>Already have an account?</span>
+            <a href="#" onclick="switchLoginTab('login'); return false;">Login with Password →</a>
+          </div>
+        </form>
+      </div>
+
+      <!-- ==================== TAB 3: 1-CLICK MOBILE SIGN UP ==================== -->
       <div id="panel-register" class="login-panel">
-        <div style="background: rgba(0, 230, 118, 0.12); border: 1px solid var(--color-green); border-radius: 6px; padding: 10px 12px; font-size: 11px; margin-bottom: 14px; color: #fff;">
-          🎁 <strong>Instant 1-Click Sign Up:</strong> Apna 10-digit mobile number aur password dalein. Turant account ban jayega aur <strong>₹500 Welcome Bonus</strong> wallet me add hoga! Kisi OTP waiting ki jarurat nahi.
+        <div class="bonus-tag">
+          <span>⚡</span>
+          <span>Instant 1-Click ID Creation • ₹500 Bonus</span>
         </div>
 
         <form onsubmit="doInstantRegister(event)">
           <div class="form-group">
-            <label class="form-label">10-DIGIT MOBILE NUMBER</label>
+            <label class="form-label">MOBILE NUMBER</label>
             <div class="form-input-wrap">
               <span class="input-prefix">+91</span>
               <input type="tel" id="reg-phone" placeholder="9876543210" maxlength="10" required class="form-input">
@@ -317,154 +370,99 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">CREATE PASSWORD (MIN 6 CHARACTERS)</label>
-            <div style="position: relative;">
-              <input type="password" id="reg-pwd" placeholder="Set password for your account" required class="form-input" style="padding-right: 36px;">
-              <button type="button" class="pwd-toggle-btn" onclick="togglePwdVisibility('reg-pwd', this)">👁️</button>
-            </div>
+            <label class="form-label">CREATE PASSWORD (MIN 6 CHARS)</label>
+            <input type="password" id="reg-pwd" placeholder="Choose password" required class="form-input">
           </div>
 
           <div class="form-group">
             <label class="form-label">CONFIRM PASSWORD</label>
-            <div style="position: relative;">
-              <input type="password" id="reg-pwd-confirm" placeholder="Re-enter password" required class="form-input" style="padding-right: 36px;">
-              <button type="button" class="pwd-toggle-btn" onclick="togglePwdVisibility('reg-pwd-confirm', this)">👁️</button>
-            </div>
+            <input type="password" id="reg-pwd-confirm" placeholder="Re-enter password" required class="form-input">
           </div>
 
-          <button type="submit" id="btn-reg-instant" class="btn-submit-main btn-register-green">
+          <button type="submit" class="btn-submit-main btn-submit-green" id="btn-reg-instant">
             ⚡ CREATE ACCOUNT & PLAY (₹500 BONUS) 🚀
           </button>
+
+          <div class="links-bar">
+            <span>Already have an account?</span>
+            <a href="#" onclick="switchLoginTab('login'); return false;">Login with Password →</a>
+          </div>
+        </form>
+      </div>
+
+      <!-- ==================== TAB 4: FORGOT PASSWORD (EMAIL OTP & SUPPORT) ==================== -->
+      <div id="panel-forgot" class="login-panel">
+        <div class="notice-box">
+          🔒 <strong>SECURE PASSWORD RESET</strong><br>
+          Enter your registered email address to receive a secure 6-digit reset code in your inbox.
+        </div>
+
+        <form onsubmit="doEmailPasswordReset(event)">
+          <div class="form-group">
+            <label class="form-label">REGISTERED EMAIL</label>
+            <div class="form-input-wrap">
+              <input type="email" id="forgot-email-inp" placeholder="yourname@gmail.com" required class="form-input" style="border-radius: 6px 0 0 6px;">
+              <button type="button" class="btn-inline-otp" id="btn-send-reset-otp" onclick="triggerSendResetOtp()">
+                SEND CODE 📩
+              </button>
+            </div>
+            <div id="forgot-otp-status" style="font-size: 11px; margin-top: 5px; font-weight: 700; display: none;"></div>
+          </div>
+
+          <div id="forgot-step2" style="display: none;">
+            <div class="form-group">
+              <label class="form-label">6-DIGIT RESET CODE FROM EMAIL</label>
+              <input type="text" id="forgot-otp-code" placeholder="Enter 6-digit OTP" maxlength="6" class="form-input" style="font-size: 16px; font-weight: 900; letter-spacing: 4px; text-align: center;">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">NEW PASSWORD (MIN 6 CHARS)</label>
+              <input type="password" id="forgot-new-pwd" placeholder="Enter new password" class="form-input">
+            </div>
+
+            <button type="submit" class="btn-submit-main" id="btn-reset-submit">
+              🔐 UPDATE PASSWORD & LOGIN
+            </button>
+          </div>
         </form>
 
-        <div style="margin-top: 12px; text-align: center;">
-          <a href="https://wa.me/919693554087?text=Hi%20CrickNova%2C%20I%20want%20to%20register%20my%20ID%20on%20WhatsApp" target="_blank" style="color: var(--color-green); font-size: 11px; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
-            <span>💬</span> Or Get Direct ID on WhatsApp (+91 9693554087) →
+        <div style="margin-top: 18px; border-top: 1px solid var(--border-dark); padding-top: 14px;">
+          <div style="font-size: 11px; color: var(--text-muted); text-align: center; margin-bottom: 6px;">
+            Need manual assistance from admin?
+          </div>
+          <a href="https://wa.me/919693554087?text=Hi%20CrickNova%20Support%2C%20I%20need%20help%20logging%20in%20to%20my%20account" target="_blank" class="btn-wa-support">
+            💬 CONTACT CRICKNOVA SUPPORT (WHATSAPP)
           </a>
         </div>
 
-        <div class="login-helper-links" style="justify-content: center; margin-top: 14px;">
-          <span>Already have an account? <a href="javascript:void(0)" onclick="showLoginTab('login')">Log In with Password →</a></span>
+        <div class="links-bar" style="margin-top: 12px; justify-content: center;">
+          <a href="#" onclick="switchLoginTab('login'); return false;">← Back to Login</a>
         </div>
       </div>
 
-      <!-- ==================== 3. FORGOT PASSWORD & SECURITY SUPPORT ==================== -->
-      <div id="panel-forgot" class="login-panel">
-        <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 6px; padding: 12px 14px; margin-bottom: 14px; color: #fff;">
-          <div style="font-weight: 900; font-size: 13px; color: #f87171; display: flex; align-items: center; gap: 6px;">
-            <span>🔒</span> Account Security & Funds Protection
-          </div>
-          <div style="font-size: 11.5px; color: #cbd5e1; margin-top: 6px; line-height: 1.5;">
-            Aapke wallet aur balance ki 100% suraksha ke liye automated password reset band hai taaki koi dusra vyakti aapka account login na kar sake.
-            <br><br>
-            <strong>Agar password yaad hai toh direct Password se Login hoga. Agar password bhool gaye hain, toh CrickNova Official Support Team se WhatsApp par baat karein.</strong>
-          </div>
-        </div>
-
-        <div style="background: #080f1e; border: 1px solid var(--border-light); border-radius: 6px; padding: 14px; margin-bottom: 12px;">
-          <label class="form-label" style="color: var(--winbuzz-gold);">APNA REGISTERED MOBILE NUMBER DALEIN</label>
-          <div class="form-input-wrap" style="margin-bottom: 12px;">
-            <span class="input-prefix">+91</span>
-            <input type="tel" id="forgot-phone" placeholder="Enter your 10-digit mobile" maxlength="10" class="form-input">
-          </div>
-
-          <button type="button" class="btn-submit-main btn-register-green" onclick="doContactSupportForgot()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <span>💬</span> CONTACT CRICKNOVA SUPPORT TEAM
-          </button>
-        </div>
-
-        <div class="login-helper-links" style="justify-content: center; margin-top: 14px;">
-          <a href="javascript:void(0)" onclick="showLoginTab('login')" style="color: var(--winbuzz-gold); font-weight: 800;">← Back to Login with Password</a>
-        </div>
-      </div>
-
-      <!-- WHATSAPP DIRECT AGENT ASSISTANCE --><!-- WHATSAPP DIRECT AGENT ASSISTANCE -->
-      <a href="https://wa.me/919693554087?text=Hi%20CrickNova,%20I%20need%20help%20with%20Login%20or%20Add%20Money" target="_blank" class="whatsapp-badge-card">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 18px;">💬</span>
-          <div>
-            <strong style="color: var(--color-green);">Need Instant ID / Add Money?</strong>
-            <div style="font-size: 9.5px; color: var(--text-dim);">Chat 24/7 with Official WhatsApp Support</div>
-          </div>
-        </div>
-        <span style="color: var(--color-green); font-weight: 800;">CHAT →</span>
-      </a>
-
-    </div>
-
-    <!-- APK DOWNLOAD FOOTER -->
-    <div class="apk-dl-strip">
-      <span>Playing on Mobile? </span>
-      <a href="/download/cricknova.apk">📥 Download CrickNova APK</a>
-      <span style="margin: 0 4px; color: var(--text-dim);">•</span>
-      <a href="/" style="color: var(--winbuzz-gold);">Return to Exchange →</a>
     </div>
   </div>
 
   <script>
-        function showLoginTab(tab) {
+    // Tab Switcher
+    function switchLoginTab(tab) {
       document.querySelectorAll('.login-nav-tab').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.login-panel').forEach(p => p.classList.remove('active'));
 
-      if (tab === 'login') {
-        const tabEl = document.getElementById('tab-login');
-        if (tabEl) tabEl.classList.add('active');
-        document.getElementById('panel-login').classList.add('active');
-      } else if (tab === 'register') {
-        const tabEl = document.getElementById('tab-register');
-        if (tabEl) tabEl.classList.add('active');
-        document.getElementById('panel-register').classList.add('active');
-      } else if (tab === 'forgot') {
-        // Show forgot / support panel
-        const panelForgot = document.getElementById('panel-forgot');
-        if (panelForgot) panelForgot.classList.add('active');
-        // prefill phone if entered in login
-        const loginPhone = document.getElementById('login-phone').value.trim();
-        if (loginPhone) {
-          document.getElementById('forgot-phone').value = loginPhone;
-        }
-      }
+      const btn = document.getElementById('tab-btn-' + tab);
+      const panel = document.getElementById('panel-' + tab);
+      if (btn) btn.classList.add('active');
+      if (panel) panel.classList.add('active');
     }
 
-    function doContactSupportForgot() {
-      const phone = document.getElementById('forgot-phone').value.trim();
-      let text = 'Hi CrickNova Support, I forgot my account password. Please help me recover my account.';
-      if (phone && phone.length === 10) {
-        text = `Hi CrickNova Support, I forgot my account password for registered mobile +91 ${phone}. Please help me reset my password.`;
-      }
-      const url = `https://wa.me/919693554087?text=${encodeURIComponent(text)}`;
-      window.open(url, '_blank');
-    }`);
-      const panelEl = document.getElementById(`panel-${tab}`);
-      if (tabEl) tabEl.classList.add('active');
-      if (panelEl) panelEl.classList.add('active');
-    }
-
-    function togglePwdVisibility(inputId, btn) {
-      const input = document.getElementById(inputId);
-      if (input.type === 'password') {
-        input.type = 'text';
-        btn.innerText = '🙈';
-      } else {
-        input.type = 'password';
-        btn.innerText = '👁️';
-      }
-    }
-
-    // 1. Password Login
+    // 1. Password Login (Mobile or Email)
     async function doPasswordLogin(e) {
       e.preventDefault();
-      const mobile = document.getElementById('login-phone').value.trim();
+      const identifier = document.getElementById('login-identifier').value.trim();
       const password = document.getElementById('login-pwd').value.trim();
 
-      if (!mobile || mobile.length !== 10) {
-        alert('Please enter a valid 10-digit mobile number');
-        return;
-      }
-      if (!password) {
-        alert('Please enter your password');
-        return;
-      }
+      if (!identifier) return alert('Please enter your mobile number or email');
+      if (!password) return alert('Please enter your password');
 
       const btn = document.getElementById('btn-login-submit');
       btn.disabled = true;
@@ -474,25 +472,16 @@
         const res = await fetch('/api/auth/login-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mobile: mobile, password: password })
+          body: JSON.stringify({ identifier: identifier, password: password })
         });
         const data = await res.json();
         if (res.ok) {
           window.location.href = '/';
         } else {
           alert('❌ ' + (data.detail || 'Login failed'));
-          if (data.detail && (data.detail.includes('No account found') || data.detail.includes('not found'))) {
-            if (confirm('No account found for +91 ' + mobile + '. Would you like to Sign Up with WhatsApp OTP now?')) {
-              showLoginTab('register');
-              document.getElementById('reg-phone').value = mobile;
-            }
-          } else if (data.detail && data.detail.includes('no password set')) {
-            showLoginTab('otp');
-            document.getElementById('otp-phone').value = mobile;
-          }
         }
       } catch (err) {
-        alert('Network error while logging in: ' + err.message);
+        alert('Network error: ' + err.message);
       } finally {
         btn.disabled = false;
         btn.innerText = 'LOG IN NOW 🚀';
@@ -507,36 +496,106 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ mobile: '9876543210', otp: '123456' })
         });
-        const data = await res.json();
-        if (res.ok) {
-          window.location.href = '/';
-        } else {
-          alert('Demo login failed: ' + data.detail);
-        }
+        if (res.ok) window.location.href = '/';
       } catch (e) {
         window.location.href = '/';
       }
     }
 
-        // 3. Instant 1-Click Registration (Winbuzz Style)
+    // 3. Send Email OTP for Sign Up
+    async function triggerSendEmailOtp() {
+      const email = document.getElementById('email-signup-inp').value.trim();
+      if (!email || !email.includes('@') || !email.includes('.')) {
+        return alert('Please enter a valid email address');
+      }
+
+      const btn = document.getElementById('btn-send-email-otp');
+      const status = document.getElementById('email-otp-status');
+      btn.disabled = true;
+      btn.innerText = 'SENDING...';
+
+      try {
+        const res = await fetch('/api/auth/send-email-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, purpose: 'SIGNUP' })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          status.style.display = 'block';
+          status.style.color = '#00e701';
+          status.innerText = '✅ Code sent! Please check your Inbox / Spam.';
+          document.getElementById('email-otp-step2').style.display = 'block';
+
+          let countdown = 60;
+          const timer = setInterval(() => {
+            countdown--;
+            if (countdown > 0) {
+              btn.innerText = `RESEND (${countdown}s)`;
+            } else {
+              clearInterval(timer);
+              btn.disabled = false;
+              btn.innerText = 'RESEND OTP 📩';
+            }
+          }, 1000);
+        } else {
+          alert('❌ ' + (data.detail || 'Failed to send OTP'));
+          btn.disabled = false;
+          btn.innerText = 'SEND OTP 📩';
+        }
+      } catch (err) {
+        alert('Network error: ' + err.message);
+        btn.disabled = false;
+        btn.innerText = 'SEND OTP 📩';
+      }
+    }
+
+    // 4. Verify Email OTP & Sign Up
+    async function doEmailOtpVerify(e) {
+      e.preventDefault();
+      const email = document.getElementById('email-signup-inp').value.trim();
+      const otp = document.getElementById('email-otp-code').value.trim();
+      const pwd = document.getElementById('email-signup-pwd').value.trim();
+      const mobile = document.getElementById('email-signup-mobile').value.trim();
+
+      if (!otp || otp.length !== 6) return alert('Please enter the 6-digit OTP code');
+      if (!pwd || pwd.length < 6) return alert('Password must be at least 6 characters');
+
+      const btn = document.getElementById('btn-email-verify-submit');
+      btn.disabled = true;
+      btn.innerText = 'VERIFYING...';
+
+      try {
+        const res = await fetch('/api/auth/verify-email-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, otp: otp, password: pwd, mobile: mobile })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('🎉 ' + data.message);
+          window.location.href = '/';
+        } else {
+          alert('❌ ' + (data.detail || 'Verification failed'));
+        }
+      } catch (err) {
+        alert('Network error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '✨ VERIFY OTP & CREATE ACCOUNT (₹500 BONUS)';
+      }
+    }
+
+    // 5. 1-Click Mobile Sign Up
     async function doInstantRegister(e) {
-      if (e) e.preventDefault();
+      e.preventDefault();
       const mobile = document.getElementById('reg-phone').value.trim();
       const pwd = document.getElementById('reg-pwd').value.trim();
       const pwdConfirm = document.getElementById('reg-pwd-confirm').value.trim();
 
-      if (!mobile || mobile.length !== 10 || !/^\d+$/.test(mobile)) {
-        alert('Please enter a valid 10-digit Indian mobile number');
-        return;
-      }
-      if (!pwd || pwd.length < 6) {
-        alert('Password must be at least 6 characters long');
-        return;
-      }
-      if (pwd !== pwdConfirm) {
-        alert('Passwords do not match! Please check again.');
-        return;
-      }
+      if (!mobile || mobile.length !== 10) return alert('Please enter a valid 10-digit mobile number');
+      if (!pwd || pwd.length < 6) return alert('Password must be at least 6 characters');
+      if (pwd !== pwdConfirm) return alert('Passwords do not match');
 
       const btn = document.getElementById('btn-reg-instant');
       btn.disabled = true;
@@ -550,17 +609,10 @@
         });
         const data = await res.json();
         if (res.ok) {
-          alert(`🎉 Welcome to CrickNova!\nYour account has been created successfully with ₹500 welcome bonus.`);
+          alert('🎉 Account created! ₹500 welcome bonus added.');
           window.location.href = '/';
         } else {
-          if (data.detail && data.detail.includes('already exists')) {
-            alert('ℹ️ ' + data.detail);
-            showLoginTab('login');
-            document.getElementById('login-phone').value = mobile;
-            document.getElementById('login-pwd').focus();
-          } else {
-            alert('❌ ' + (data.detail || 'Registration failed'));
-          }
+          alert('❌ ' + (data.detail || 'Registration failed'));
         }
       } catch (err) {
         alert('Network error: ' + err.message);
@@ -570,14 +622,84 @@
       }
     }
 
-    // Auto check if logout or registered param
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('registered') === '1') {
-      showLoginTab('register');
-    } else if (urlParams.get('logout') === '1') {
-      const topSub = document.querySelector('.login-subtitle');
-      if (topSub) {
-        topSub.innerHTML = '🔒 <strong style="color: var(--winbuzz-gold);">You have been signed out successfully.</strong> Please login to continue.';
+    // 6. Send Reset OTP
+    async function triggerSendResetOtp() {
+      const email = document.getElementById('forgot-email-inp').value.trim();
+      if (!email || !email.includes('@')) return alert('Please enter your registered email address');
+
+      const btn = document.getElementById('btn-send-reset-otp');
+      const status = document.getElementById('forgot-otp-status');
+      btn.disabled = true;
+      btn.innerText = 'SENDING...';
+
+      try {
+        const res = await fetch('/api/auth/send-email-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, purpose: 'RESET' })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          status.style.display = 'block';
+          status.style.color = '#00e701';
+          status.innerText = '✅ Reset code sent! Please check your Inbox / Spam.';
+          document.getElementById('forgot-step2').style.display = 'block';
+
+          let countdown = 60;
+          const timer = setInterval(() => {
+            countdown--;
+            if (countdown > 0) {
+              btn.innerText = `RESEND (${countdown}s)`;
+            } else {
+              clearInterval(timer);
+              btn.disabled = false;
+              btn.innerText = 'RESEND CODE 📩';
+            }
+          }, 1000);
+        } else {
+          alert('❌ ' + (data.detail || 'Failed to send reset code'));
+          btn.disabled = false;
+          btn.innerText = 'SEND CODE 📩';
+        }
+      } catch (err) {
+        alert('Network error: ' + err.message);
+        btn.disabled = false;
+        btn.innerText = 'SEND CODE 📩';
+      }
+    }
+
+    // 7. Verify Reset OTP & Update Password
+    async function doEmailPasswordReset(e) {
+      e.preventDefault();
+      const email = document.getElementById('forgot-email-inp').value.trim();
+      const otp = document.getElementById('forgot-otp-code').value.trim();
+      const newPwd = document.getElementById('forgot-new-pwd').value.trim();
+
+      if (!otp || otp.length !== 6) return alert('Please enter the 6-digit reset code');
+      if (!newPwd || newPwd.length < 6) return alert('New password must be at least 6 characters');
+
+      const btn = document.getElementById('btn-reset-submit');
+      btn.disabled = true;
+      btn.innerText = 'UPDATING...';
+
+      try {
+        const res = await fetch('/api/auth/reset-password-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, otp: otp, new_password: newPwd })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('🎉 Password updated successfully! Logging you in...');
+          window.location.href = '/';
+        } else {
+          alert('❌ ' + (data.detail || 'Reset failed'));
+        }
+      } catch (err) {
+        alert('Network error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '🔐 UPDATE PASSWORD & LOGIN';
       }
     }
   </script>
