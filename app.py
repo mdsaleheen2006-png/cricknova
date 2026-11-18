@@ -2441,6 +2441,13 @@ async def login_with_password(request: Request):
     elif clean_id.startswith('0') and len(clean_id) == 11 and clean_id.isdigit():
         clean_id = clean_id[1:]
 
+    blocked_mobiles = all_data.get("blocked_mobiles", [])
+    if clean_id in blocked_mobiles:
+        raise HTTPException(
+            status_code=403,
+            detail="Account Blocked! Security and anti-fraud verification failed. This ID has been permanently blocked by admin."
+        )
+
     target_user = None
     target_key = None
 
@@ -2545,6 +2552,11 @@ async def silent_restore_auth(request: Request):
                 target_user = u
                 target_key = k
                 break
+    if clean_phone in all_data.get("blocked_mobiles", []) or (target_user and target_user.get("is_blocked")):
+        resp = JSONResponse(status_code=403, content={"status": "error", "message": "Account is Blocked by Admin"})
+        resp.delete_cookie("cricknova_user")
+        return resp
+
     if target_user:
         resp = JSONResponse(content={"status": "success", "mobile": target_key, "balance": target_user.get("balance", 0.0)})
         resp.set_cookie("cricknova_user", target_key, max_age=86400 * 365, httponly=False, samesite="lax")
@@ -3686,10 +3698,19 @@ async def turbo_cash_out(request: Request):
 @app.get("/api/admin/users")
 async def admin_get_users():
     all_data = load_all_user_data()
+    users_dict = all_data.get("users", {})
+    blocked = set(all_data.get("blocked_mobiles", []))
+    users_list = []
+    for m, u in users_dict.items():
+        user_copy = dict(u)
+        user_copy["mobile"] = user_copy.get("mobile") or m
+        user_copy["is_blocked"] = (m in blocked) or bool(user_copy.get("is_blocked"))
+        users_list.append(user_copy)
     return JSONResponse(content={
         "status": "success",
-        "users": list(all_data.get("users", {}).values()),
-        "deposit_requests": all_data.get("deposit_requests", [])
+        "users": users_list,
+        "deposit_requests": all_data.get("deposit_requests", []),
+        "blocked_mobiles": list(blocked)
     })
 
 @app.post("/api/admin/reset-password")
@@ -3801,6 +3822,81 @@ async def admin_set_wagering(request: Request):
         "wagering_required": wagering_amount,
         "wagering_completed": 0.0
     })
+
+@app.post("/api/admin/user/block")
+async def admin_block_user(request: Request):
+    data = await request.json()
+    mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
+    is_blocked = bool(data.get("is_blocked", True))
+    reason = str(data.get("reason", "Suspicious / Fake ID detected by Admin")).strip()
+
+    if not mobile or len(mobile) != 10:
+        raise HTTPException(status_code=400, detail="Valid 10-digit mobile number required")
+
+    all_data = load_all_user_data()
+    users = all_data.setdefault("users", {})
+    blocked = all_data.setdefault("blocked_mobiles", [])
+
+    if mobile in users:
+        users[mobile]["is_blocked"] = is_blocked
+        users[mobile]["block_reason"] = reason
+
+    if is_blocked:
+        if mobile not in blocked:
+            blocked.append(mobile)
+        msg = f"User +91 {mobile} has been BLOCKED successfully! They cannot log in or play games."
+    else:
+        if mobile in blocked:
+            blocked.remove(mobile)
+        if mobile in users:
+            users[mobile]["is_blocked"] = False
+        msg = f"User +91 {mobile} has been UNBLOCKED successfully!"
+
+    save_all_user_data(all_data)
+    return JSONResponse(content={"status": "success", "message": msg, "mobile": mobile, "is_blocked": is_blocked})
+
+@app.post("/api/admin/user/delete")
+async def admin_delete_user(request: Request):
+    data = await request.json()
+    mobile = str(data.get("mobile", "")).strip().replace(" ", "").replace("+91", "")
+    if not mobile or len(mobile) != 10:
+        raise HTTPException(status_code=400, detail="Valid 10-digit mobile number required")
+
+    all_data = load_all_user_data()
+    users = all_data.setdefault("users", {})
+    blocked = all_data.setdefault("blocked_mobiles", [])
+
+    # 1. Permanently blacklist phone so they can never sign up or login again
+    if mobile not in blocked:
+        blocked.append(mobile)
+
+    # 2. Remove user profile
+    users.pop(mobile, None)
+
+    # 3. Purge all their deposit requests
+    all_data["deposit_requests"] = [
+        r for r in all_data.get("deposit_requests", [])
+        if str(r.get("user_mobile") or r.get("mobile", "")).strip().replace(" ", "").replace("+91", "") != mobile
+    ]
+
+    # 4. Purge all their withdrawal requests
+    all_data["withdrawal_requests"] = [
+        w for w in all_data.get("withdrawal_requests", [])
+        if str(w.get("user_mobile") or w.get("mobile", "")).strip().replace(" ", "").replace("+91", "") != mobile
+    ]
+
+    # 5. Purge all ledger transactions for this user
+    all_data["ledger"] = [
+        l for l in all_data.get("ledger", [])
+        if str(l.get("user_mobile", "")).strip().replace(" ", "").replace("+91", "") != mobile
+    ]
+
+    save_all_user_data(all_data)
+    return JSONResponse(content={
+        "status": "success",
+        "message": f"User +91 {mobile} and all their transaction history have been permanently deleted and wiped! Number is permanently blacklisted."
+    })
+
 
 @app.get("/api/admin/casino-config")
 async def admin_get_casino_config():

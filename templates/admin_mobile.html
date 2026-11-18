@@ -654,13 +654,18 @@
   <!-- MAIN SCROLLABLE CONTAINER -->
   <main class="app-container">
 
-    <!-- PWA INSTALL BANNER -->
-    <div id="pwa-install-banner" class="pwa-banner" style="display: none;">
-      <div>
-        <div style="font-size: 12px; font-weight: 800; color: #fff;">Install Admin PWA</div>
-        <div style="font-size: 10px; color: var(--text-muted);">Review deposits on your phone with instant push alerts</div>
+    <!-- CRICKNOVA ADMIN NATIVE ANDROID APK DOWNLOAD BANNER -->
+    <div class="pwa-banner" style="background: linear-gradient(135deg, rgba(0, 230, 118, 0.16), rgba(245, 166, 35, 0.16)); border: 1px solid rgba(0, 230, 118, 0.5); display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 12px 14px; border-radius: var(--radius-md);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 26px;">🤖</span>
+        <div>
+          <div style="font-size: 13px; font-weight: 900; color: #fff;">CrickNova Admin APK (Android)</div>
+          <div style="font-size: 10px; color: var(--text-muted);">Official Mobile Admin App • Approvals, Margin & User Security</div>
+        </div>
       </div>
-      <button id="btn-install-app" class="btn-install-pwa">📲 INSTALL APP</button>
+      <a href="/static/cricknova-admin.apk" download="cricknova-admin.apk" style="text-decoration: none; display: inline-flex; align-items: center; gap: 5px; background: var(--green-success); color: #000; font-weight: 900; font-size: 11px; padding: 8px 12px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,230,118,0.3);">
+        📥 DOWNLOAD APK
+      </a>
     </div>
 
     <!-- SUMMARY METRICS -->
@@ -1290,6 +1295,23 @@
                 <button class="btn-copy-sm" style="color: var(--red-alert); border-color: rgba(255,82,82,0.4);" onclick="quickAdjustBalance('${mob}', 100, 'DEBIT')">-₹100</button>
               </div>
             </div>
+
+            <!-- Anti-Fraud & Account Security Controls (Block & Delete) -->
+            <div style="border-top: 1px solid var(--border-subtle); margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+              <div>
+                ${u.is_blocked ? 
+                  `<span style="background: rgba(255,82,82,0.18); color: #ff5252; border: 1px solid rgba(255,82,82,0.4); font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 4px;">⛔ BLOCKED</span>` : 
+                  `<span style="background: rgba(0,230,118,0.12); color: var(--green-success); border: 1px solid rgba(0,230,118,0.3); font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 4px;">✓ ACTIVE</span>`}
+              </div>
+              <div style="display: flex; gap: 6px;">
+                <button class="btn-copy-sm" style="${u.is_blocked ? 'color: var(--green-success); border-color: rgba(0,230,118,0.4);' : 'color: #ff9800; border-color: rgba(255,152,0,0.5);'}" onclick="toggleBlockUser('${mob}', ${!u.is_blocked})">
+                  ${u.is_blocked ? '🔓 Unblock' : '⛔ Block User'}
+                </button>
+                <button class="btn-copy-sm" style="color: #ff5252; border-color: rgba(255,82,82,0.5); background: rgba(255,82,82,0.08);" onclick="deleteAndWipeUser('${mob}')">
+                  🗑️ Wipe & Delete
+                </button>
+              </div>
+            </div>
           </div>
         `;
       }).join('');
@@ -1339,6 +1361,56 @@
           loadUsers();
         } else {
           alert('❌ ' + (data.detail || 'Failed'));
+        }
+      } catch (e) {
+        alert('Network error: ' + e.message);
+      }
+    }
+
+    async function toggleBlockUser(mobile, willBlock) {
+      const actionName = willBlock ? 'BLOCK' : 'UNBLOCK';
+      if (!confirm(`Are you sure you want to ${actionName} user +91 ${mobile}?\n${willBlock ? 'They will be immediately blocked from logging in or betting.' : 'They will regain access.'}`)) return;
+
+      try {
+        const res = await fetch('/api/admin/user/block', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile: mobile, is_blocked: willBlock })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('✅ ' + data.message);
+          loadUsers();
+        } else {
+          alert('❌ ' + (data.detail || 'Failed to update user block status'));
+        }
+      } catch (e) {
+        alert('Network error: ' + e.message);
+      }
+    }
+
+    async function deleteAndWipeUser(mobile) {
+      const confirm1 = confirm(`🚨 PERMANENT ACTION 🚨\n\nAre you sure you want to PERMANENTLY DELETE user +91 ${mobile}?\n\n- User account will be wiped\n- Mobile number will be PERMANENTLY blacklisted\n- All deposit & withdrawal history will be deleted.`);
+      if (!confirm1) return;
+
+      const confirm2 = prompt(`To confirm permanent deletion, type 'DELETE' for +91 ${mobile}:`);
+      if (confirm2 !== 'DELETE') {
+        alert('Deletion cancelled.');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/admin/user/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mobile: mobile })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('✅ ' + data.message);
+          loadUsers();
+        } else {
+          alert('❌ ' + (data.detail || 'Failed to delete user'));
         }
       } catch (e) {
         alert('Network error: ' + e.message);
