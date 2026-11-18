@@ -1220,56 +1220,61 @@
           </div>
 
           <!-- Slice Dynamic / Static QR Code Fallback Container -->
-          <div style="text-align: center; margin: 10px 0;">
+          <div style="text-align: center; margin: 8px 0;">
             <div id="slice-dynamic-qr-container" style="display: inline-block;">
               <img id="slice-qr-img" src="/static/img/slice-qr.jpg"
-                   alt="Slice UPI QR Code" style="width: 175px; height: 215px; object-fit: contain; border-radius: 8px; border: 2px solid #a855f7; background: #fff; padding: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                   alt="Slice UPI QR Code" style="width: 140px; height: 170px; object-fit: contain; border-radius: 8px; border: 2px solid #a855f7; background: #fff; padding: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
             </div>
-            <div id="slice-amount-banner" style="font-size: 12px; color: #fff; font-weight: 800; margin-top: 6px;">
-              Pay exact amount: <span id="display-deposit-amount" style="color: #a855f7;">₹1,000</span>
+            <div id="slice-amount-banner" style="font-size: 13px; color: #fff; font-weight: 900; margin-top: 4px;">
+              Pay exact amount: <span id="display-deposit-amount" style="color: #a855f7; font-size: 15px;">₹100</span>
             </div>
-            <div style="font-size: 9.5px; color: var(--text-muted); margin-top: 3px;">
+            <div style="font-size: 9.5px; color: var(--text-muted); margin-top: 2px;">
               Scan with PhonePe / GPay / Paytm / Slice / BHIM UPI
             </div>
           </div>
 
           <!-- Direct App Intent / Hosted Checkout Link -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
-            <a id="btn-upi-app-intent" href="upi://pay?pa=9693554087@slc&pn=Tarana%20Nasreen&am=1000.00&cu=INR"
-               class="btn-header" style="text-decoration: none; justify-content: center; font-size: 11px; background: #7c3aed; color: #fff; border: none; padding: 7px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+            <a id="btn-upi-app-intent" href="upi://pay?pa=9693554087@slc&pn=Tarana%20Nasreen&am=100.00&cu=INR"
+               class="btn-header" style="text-decoration: none; justify-content: center; font-size: 11px; background: #7c3aed; color: #fff; border: none; padding: 8px; font-weight: 800; border-radius: 4px;">
               📱 PAY VIA UPI APP
             </a>
-            <a id="btn-hosted-checkout" href="https://youpi-slice-gateway.onrender.com" target="_blank"
-               class="btn-header" style="text-decoration: none; justify-content: center; font-size: 11px; background: #334155; color: #e2e8f0; border: 1px solid #475569; padding: 7px;">
-              🌐 HOSTED PORTAL
-            </a>
+            <button type="button" onclick="copyUpiId('9693554087@slc')"
+               class="btn-header" style="text-decoration: none; justify-content: center; font-size: 11px; background: #334155; color: #e2e8f0; border: 1px solid #475569; padding: 8px; font-weight: 800; border-radius: 4px;">
+              📋 COPY UPI ID
+            </button>
           </div>
         </div>
 
         <label style="font-size: 10px; font-weight: 800; color: var(--text-dim);">1. SELECT DEPOSIT AMOUNT (₹)</label>
         <div class="quick-deposit-grid" style="margin-bottom: 8px;">
-          <button class="quick-dep-btn" onclick="setQuickDeposit(500)">+₹500</button>
-          <button class="quick-dep-btn" onclick="setQuickDeposit(1000)">+₹1,000</button>
-          <button class="quick-dep-btn" onclick="setQuickDeposit(2500)">+₹2,500</button>
-          <button class="quick-dep-btn" onclick="setQuickDeposit(5000)">+₹5,000</button>
-          <button class="quick-dep-btn" onclick="setQuickDeposit(10000)">+₹10,000</button>
-          <button class="quick-dep-btn" onclick="setQuickDeposit(25000)">+₹25,000</button>
+          <button type="button" class="quick-dep-btn" onclick="setQuickDeposit(100)">+₹100</button>
+          <button type="button" class="quick-dep-btn" onclick="setQuickDeposit(200)">+₹200</button>
+          <button type="button" class="quick-dep-btn" onclick="setQuickDeposit(500)">+₹500</button>
+          <button type="button" class="quick-dep-btn" onclick="setQuickDeposit(1000)">+₹1,000</button>
+          <button type="button" class="quick-dep-btn" onclick="setQuickDeposit(2000)">+₹2,000</button>
+          <button type="button" class="quick-dep-btn" onclick="setQuickDeposit(5000)">+₹5,000</button>
         </div>
-        <input type="number" id="deposit-amount-input" value="1000" min="100" max="100000" step="50"
-               style="width: 100%; margin-bottom: 12px; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 14px; font-weight: 800; border-radius: var(--radius-xs);">
+        <input type="number" id="deposit-amount-input" value="100" min="100" max="100000" step="50"
+               oninput="onDepositAmountChange(this.value)" onchange="onDepositAmountChange(this.value)"
+               style="width: 100%; margin-bottom: 12px; padding: 10px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 15px; font-weight: 800; border-radius: var(--radius-xs);">
 
-        <label style="font-size: 10px; font-weight: 800; color: var(--text-dim);">2. UPLOAD PAYMENT SCREENSHOT (AUTO-EXTRACTS UTR)</label>
-        <div style="margin-bottom: 10px;">
+        <label style="font-size: 10px; font-weight: 800; color: var(--text-dim);">2. UPLOAD PAYMENT SCREENSHOT</label>
+        <div style="margin-bottom: 8px;">
           <input type="file" id="deposit-receipt-file" accept="image/*" onchange="autoExtractUtrFromReceipt(this)"
                  style="width: 100%; font-size: 11px; padding: 8px; background: var(--bg-darkest); border: 1px dashed var(--winbuzz-gold); color: #cbd5e1; border-radius: var(--radius-xs);">
         </div>
+        <div id="screenshot-preview-box" style="display: none; margin-bottom: 10px; text-align: center;">
+          <img id="screenshot-preview-img" style="max-height: 120px; border-radius: 4px; border: 1px solid #7c3aed; object-fit: contain;">
+          <div style="font-size: 10px; color: #00e676; margin-top: 3px;">✅ Screenshot selected successfully</div>
+        </div>
         <div id="ocr-status-box" style="display: none; font-size: 11px; margin-bottom: 10px; padding: 6px 10px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid #334155;"></div>
 
-        <label style="font-size: 10px; font-weight: 800; color: var(--text-dim);">3. 12-DIGIT UPI / UTR REFERENCE NUMBER</label>
-        <input type="text" id="deposit-utr-input" placeholder="e.g. 402918239012" maxlength="25"
-               style="width: 100%; margin-bottom: 14px; padding: 9px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: var(--winbuzz-gold); font-size: 13px; font-family: monospace; font-weight: 800; border-radius: var(--radius-xs);">
+        <label style="font-size: 10px; font-weight: 800; color: var(--text-dim);">3. 12-DIGIT UPI / UTR REFERENCE NUMBER (OPTIONAL IF SCREENSHOT ATTACHED)</label>
+        <input type="text" id="deposit-utr-input" placeholder="e.g. 402918239012 (या स्क्रीनशॉट अपलोड करें)" maxlength="25"
+               style="width: 100%; margin-bottom: 14px; padding: 10px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: var(--winbuzz-gold); font-size: 14px; font-family: monospace; font-weight: 800; border-radius: var(--radius-xs);">
 
-        <button id="btn-submit-deposit-claim" class="btn-deposit" style="width: 100%; padding: 11px; justify-content: center; font-size: 13px; font-weight: 900;" onclick="submitDepositRequestWithProof()">
+        <button id="btn-submit-deposit-claim" class="btn-deposit" style="width: 100%; padding: 13px; justify-content: center; font-size: 13.5px; font-weight: 900; background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: #fff; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 8px;" onclick="submitDepositRequestWithProof()">
           ⚡ SUBMIT DEPOSIT CLAIM
         </button>
 

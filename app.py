@@ -2896,7 +2896,10 @@ async def submit_deposit_request(request: Request):
 
     clean_utr = re.sub(r'[^0-9A-Za-z]', '', utr).upper()
     if len(clean_utr) < 6:
-        raise HTTPException(status_code=400, detail="Please enter a valid 12-digit UPI / UTR reference number from your receipt.")
+        if screenshot_url:
+            clean_utr = f"PROOF{int(time.time())}"
+        else:
+            raise HTTPException(status_code=400, detail="Please enter a valid 12-digit UPI / UTR reference number from your receipt.")
 
     all_data = load_all_user_data()
     existing_requests = all_data.get("deposit_requests", [])

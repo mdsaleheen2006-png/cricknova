@@ -543,11 +543,21 @@ function closeDepositModal() {
   if (modal) modal.classList.remove('active');
 }
 
+function onDepositAmountChange(val) {
+  const amt = parseFloat(val) || 100;
+  const displayAmt = document.getElementById('display-deposit-amount');
+  if (displayAmt) displayAmt.innerText = '₹' + amt.toLocaleString('en-IN');
+  const upiUri = `upi://pay?pa=9693554087@slc&pn=Tarana%20Nasreen&am=${amt.toFixed(2)}&cu=INR`;
+  const btnApp = document.getElementById('btn-upi-app-intent');
+  if (btnApp) btnApp.href = upiUri;
+  syncSliceDepositSession();
+}
+
 function setQuickDeposit(amount) {
   const input = document.getElementById('deposit-amount-input');
   if (input) {
     input.value = amount;
-    syncSliceDepositSession();
+    onDepositAmountChange(amount);
   }
 }
 
@@ -556,13 +566,25 @@ async function autoExtractUtrFromReceipt(fileInput) {
   const file = fileInput.files[0];
   const statusBox = document.getElementById('ocr-status-box');
   const utrInput = document.getElementById('deposit-utr-input');
+  const previewBox = document.getElementById('screenshot-preview-box');
+  const previewImg = document.getElementById('screenshot-preview-img');
+
+  // Immediately display thumbnail preview of the screenshot
+  if (previewBox && previewImg) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewImg.src = e.target.result;
+      previewBox.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
 
   if (statusBox) {
     statusBox.style.display = 'block';
     statusBox.style.background = 'rgba(245, 166, 35, 0.15)';
     statusBox.style.border = '1px solid var(--winbuzz-gold)';
     statusBox.style.color = '#fde68a';
-    statusBox.innerHTML = '⏳ <strong>Scanning receipt screenshot...</strong> Auto-extracting 12-digit UPI UTR...';
+    statusBox.innerHTML = '⏳ <strong>Screenshot attached!</strong> Checking for UTR reference...';
   }
 
   try {
@@ -570,7 +592,6 @@ async function autoExtractUtrFromReceipt(fileInput) {
     if (window.Tesseract) {
       const res = await Tesseract.recognize(file, 'eng');
       const text = res.data.text;
-      console.log('[Receipt OCR parsed text]:', text);
       const match = text.match(/(?:UTR|UPI Ref|Ref No|Txn ID|Transaction ID)[:\s]*([0-9]{12})/i) || text.match(/\b([0-9]{12})\b/);
       if (match && match[1]) {
         if (utrInput) utrInput.value = match[1];
@@ -578,40 +599,25 @@ async function autoExtractUtrFromReceipt(fileInput) {
           statusBox.style.background = 'rgba(0, 230, 118, 0.15)';
           statusBox.style.border = '1px solid #00e676';
           statusBox.style.color = '#00e676';
-          statusBox.innerHTML = `✅ <strong>UTR Auto-Detected:</strong> <code style="font-size: 13px; font-weight: 900; letter-spacing: 1px;">${match[1]}</code>. Verify and click Submit!`;
+          statusBox.innerHTML = `✅ <strong>UTR Auto-Detected:</strong> <code style="font-size: 13px; font-weight: 900; letter-spacing: 1px;">${match[1]}</code>. Ready to submit!`;
         }
         return;
       }
     }
 
-    // 2. Server-side pattern extraction
-    const formData = new FormData();
-    formData.append('receipt', file);
-    const sRes = await fetch('/api/ocr/extract-utr', { method: 'POST', body: formData });
-    const sData = await sRes.json();
-    if (sRes.ok && sData.extracted_utr) {
-      if (utrInput) utrInput.value = sData.extracted_utr;
-      if (statusBox) {
-        statusBox.style.background = 'rgba(0, 230, 118, 0.15)';
-        statusBox.style.border = '1px solid #00e676';
-        statusBox.style.color = '#00e676';
-        statusBox.innerHTML = `✅ <strong>UTR Auto-Detected:</strong> <code style="font-size: 13px; font-weight: 900;">${sData.extracted_utr}</code>. Verify and click Submit!`;
-      }
-    } else {
-      if (statusBox) {
-        statusBox.style.background = 'rgba(100, 116, 139, 0.15)';
-        statusBox.style.border = '1px solid #475569';
-        statusBox.style.color = '#cbd5e1';
-        statusBox.innerHTML = `📸 Receipt screenshot attached! Please verify or enter the 12-digit UTR below.`;
-      }
+    if (statusBox) {
+      statusBox.style.background = 'rgba(0, 230, 118, 0.15)';
+      statusBox.style.border = '1px solid #00e676';
+      statusBox.style.color = '#00e676';
+      statusBox.innerHTML = `📸 <strong>Screenshot Attached!</strong> Click "SUBMIT DEPOSIT CLAIM" below to proceed.`;
     }
   } catch (err) {
     if (statusBox) {
       statusBox.style.display = 'block';
-      statusBox.style.background = 'rgba(100, 116, 139, 0.15)';
-      statusBox.style.border = '1px solid #475569';
-      statusBox.style.color = '#cbd5e1';
-      statusBox.innerHTML = `📸 Screenshot attached. Please enter the 12-digit UTR from your payment receipt.`;
+      statusBox.style.background = 'rgba(0, 230, 118, 0.15)';
+      statusBox.style.border = '1px solid #00e676';
+      statusBox.style.color = '#00e676';
+      statusBox.innerHTML = `📸 <strong>Screenshot Attached!</strong> Click "SUBMIT DEPOSIT CLAIM" below to proceed.`;
     }
   }
 }
@@ -623,15 +629,16 @@ async function submitDepositRequestWithProof() {
   const btn = document.getElementById('btn-submit-deposit-claim') || document.querySelector('#deposit-modal .btn-deposit');
   const resultBox = document.getElementById('deposit-result-box');
 
-  const amount = parseFloat(amountInput ? amountInput.value : 1000);
+  const amount = parseFloat(amountInput ? amountInput.value : 100) || 100;
   const utr = utrInput ? utrInput.value.trim() : '';
+  const hasProofFile = Boolean(fileInput && fileInput.files && fileInput.files[0]);
 
   if (isNaN(amount) || amount < 100) {
     alert('Please enter a valid deposit amount of at least ₹100');
     return;
   }
-  if (!utr || utr.length < 6) {
-    alert('Please enter a valid 12-digit UPI / UTR reference number from your payment receipt.');
+  if (!utr && !hasProofFile) {
+    alert('Please enter the 12-digit UTR reference or upload your payment receipt screenshot.');
     if (utrInput) utrInput.focus();
     return;
   }
@@ -644,14 +651,14 @@ async function submitDepositRequestWithProof() {
   try {
     const formData = new FormData();
     formData.append('amount', amount);
-    formData.append('utr', utr);
+    formData.append('utr', utr || `SCREENSHOT-${Date.now()}`);
     formData.append('method', 'YouPI Slice UPI');
-    formData.append('notes', 'Customer claim via Slice UPI (Tarana Nasreen: 9693554087@slc)');
+    formData.append('notes', 'Customer deposit via Slice UPI (Tarana Nasreen: 9693554087@slc)');
     if (activeYouPiDepositSession && activeYouPiDepositSession.request_id) {
       formData.append('request_id', activeYouPiDepositSession.request_id);
     }
 
-    if (fileInput && fileInput.files && fileInput.files[0]) {
+    if (hasProofFile) {
       formData.append('proof_image', fileInput.files[0]);
     }
 
