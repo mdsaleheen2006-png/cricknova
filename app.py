@@ -953,93 +953,103 @@ async def match_detail(request: Request, match_id: str):
 # ============================================================================
 
 GAME_ALIASES = {
-    # Dragon Tiger
-    "dragontiger": "dragon-tiger",
-    "dragon-tiger-live": "dragon-tiger",
-    "macau-dragon-tiger": "dragon-tiger",
+    # 1. Spribe Aviator Flight Game (Official Room: flight)
+    "aviator": "flight",
+    "flight": "flight",
+    "spaceman": "flight",
+    "jetx": "flight",
+    "crash": "flight",
+    "spacexy": "flight",
+    "cashcrash": "flight",
     
-    # Lightning Roulette
-    "roulette": "lightning-roulette",
-    "lightningroulette": "lightning-roulette",
-    "lightning-roulette-3d": "lightning-roulette",
-    "european-roulette": "lightning-roulette",
-    "american-roulette": "lightning-roulette",
-    "speed-roulette": "lightning-roulette",
-    "car-roulette": "lightning-roulette",
-    "zoo-roulette": "dragon-tiger",
+    # 2. Temple of Gems / Fortune Gems (Official Room: gold)
+    "gold": "gold",
+    "temple-of-gems": "gold",
+    "fortune-gems": "gold",
+    "fortunegems": "gold",
+    "fortune-gems-2": "gold",
+    "fortunegems2": "gold",
+    "super-ace": "gold",
+    "superace": "gold",
+    "money-coming": "gold",
+    "moneycoming": "gold",
+    "golden-empire": "gold",
+    "goldenempire": "gold",
+    "boxing-king": "gold",
+    "boxingking": "gold",
+    "jili": "gold",
+    "jiligames": "gold",
+    "jili-games": "gold",
+    "slots": "gold",
     
-    # Aviator & Crash
-    "spaceman": "aviator",
-    "jetx": "aviator",
-    "crash": "aviator",
-    "spacexy": "aviator",
-    "cashcrash": "aviator",
+    # 3. Speed Andar Bahar Live Table (Official Room: andar)
+    "andar": "andar",
+    "andar-bahar": "andar",
+    "super-andar-bahar": "andar",
+    "speed-andar-bahar": "andar",
+    "andarbahar": "andar",
+    "dragon-tiger": "andar",
+    "dragontiger": "andar",
+    "dragon-tiger-live": "andar",
+    "macau-dragon-tiger": "andar",
+    "teen-patti": "andar",
+    "teen-patti-2020": "andar",
+    "one-day-teen-patti": "andar",
+    "teenpatti": "andar",
+    "baccarat": "andar",
+    "speed-baccarat": "andar",
+    "lightning-baccarat": "andar",
+    "speedbaccarat": "andar",
+    "baccarat-live": "andar",
     
-    # Slots & Jackpot
-    "slots": "mega-jackpot-slots",
-    "mega-jackpot": "mega-jackpot-slots",
-    "megajackpotslots": "mega-jackpot-slots",
-    "mega-jackpot-slot": "mega-jackpot-slots",
-    "mega-wheel-jackpot-slot": "mega-jackpot-slots",
-    "egyptian-slots": "mega-jackpot-slots",
-    "diamond-slots": "mega-jackpot-slots",
-    "dragon-slots": "mega-jackpot-slots",
-    "olympus": "mega-jackpot-slots",
-    "bonanza": "mega-jackpot-slots",
-    "royal777": "mega-jackpot-slots",
+    # 4. Lucky Roulette European 36x (Official Room: wheel)
+    "wheel": "wheel",
+    "lucky-roulette": "wheel",
+    "roulette": "wheel",
+    "lightning-roulette": "wheel",
+    "lightningroulette": "wheel",
+    "lightning-roulette-3d": "wheel",
+    "european-roulette": "wheel",
+    "american-roulette": "wheel",
+    "speed-roulette": "wheel",
+    "car-roulette": "wheel",
+    "zoo-roulette": "wheel",
+    "megawheel": "wheel",
+    "mega-wheel": "wheel",
+    "crazywheel": "wheel",
+    "crazy-time": "wheel",
     
-    # Andar Bahar
-    "super-andar-bahar": "andar-bahar",
-    "speed-andar-bahar": "andar-bahar",
-    "andarbahar": "andar-bahar",
+    # 5. Storm of the Nile 6-Reel Megaways (Official Room: storm)
+    "storm": "storm",
+    "storm-of-the-nile": "storm",
+    "mega-jackpot": "storm",
+    "megajackpotslots": "storm",
+    "mega-jackpot-slot": "storm",
+    "mega-jackpot-slots": "storm",
+    "mega-wheel-jackpot-slot": "storm",
+    "egyptian-slots": "storm",
+    "diamond-slots": "storm",
+    "dragon-slots": "storm",
+    "olympus": "storm",
+    "bonanza": "storm",
+    "royal777": "storm",
     
-    # Teen Patti
-    "teen-patti-2020": "teen-patti",
-    "one-day-teen-patti": "teen-patti",
-    "teenpatti": "teen-patti",
-    
-    # Baccarat
-    "baccarat": "speed-baccarat",
-    "lightning-baccarat": "speed-baccarat",
-    "speedbaccarat": "speed-baccarat",
-    "baccarat-live": "speed-baccarat",
-    
-    # Sic Bo
-    "super-sic-bo": "sic-bo",
-    "supersicbo": "sic-bo",
-    "sicbo": "sic-bo",
-    "sic-bo-live": "sic-bo",
-    
-    # Mega Wheel
-    "megawheel": "megawheel",
-    "mega-wheel": "megawheel",
-    "crazywheel": "megawheel",
-    "crazy-time": "megawheel",
-    
-    # Instant Games
-    "plinkospribe": "plinko",
-    "stakemines": "mines",
-    "spribedice": "dice",
-
-    # JILI Games Suite
-    "jili": "fortune-gems",
-    "jiligames": "fortune-gems",
-    "jili-games": "fortune-gems",
-    "fortune-gems": "fortune-gems",
-    "fortunegems": "fortune-gems",
-    "fortune-gems-2": "fortune-gems-2",
-    "fortunegems2": "fortune-gems-2",
-    "super-ace": "super-ace",
-    "superace": "super-ace",
-    "money-coming": "money-coming",
-    "moneycoming": "money-coming",
-    "golden-empire": "golden-empire",
-    "goldenempire": "golden-empire",
-    "boxing-king": "boxing-king",
-    "boxingking": "boxing-king"
+    # 6. Palace Bingo 4-Ticket 90-Ball (Official Room: bingo)
+    "bingo": "bingo",
+    "palace-bingo": "bingo",
+    "sic-bo": "bingo",
+    "super-sic-bo": "bingo",
+    "supersicbo": "bingo",
+    "sicbo": "bingo",
+    "sic-bo-live": "bingo",
+    "plinko": "bingo",
+    "plinkospribe": "bingo",
+    "mines": "bingo",
+    "stakemines": "bingo",
+    "dice": "bingo",
+    "spribedice": "bingo"
 }
 
-# Zoo Roulette: 28 sectors around the wheel (Priority #1)
 ZOO_SECTORS = [
     {"id": "lion", "name": "Lion", "mult": 12, "type": "beast", "icon": "🦁", "color": "#f59e0b"},
     {"id": "eagle", "name": "Eagle", "mult": 12, "type": "bird", "icon": "🦅", "color": "#3b82f6"},
@@ -1355,7 +1365,7 @@ def evaluate_bet_payout(game_id: str, outcome: Dict[str, Any], bet_type: str) ->
 
 @app.get("/casino", response_class=HTMLResponse)
 @app.get("/casino/{game_slug}", response_class=HTMLResponse)
-async def casino_arena(request: Request, game_slug: str = "dragon-tiger"):
+async def casino_arena(request: Request, game_slug: str = "flight"):
     if game_slug in GAME_ALIASES:
         game_slug = GAME_ALIASES[game_slug]
 
@@ -1368,7 +1378,7 @@ async def casino_arena(request: Request, game_slug: str = "dragon-tiger"):
 
     game = games_dict.get(game_slug)
     if not game:
-        game = games_dict.get("dragon-tiger", games_list[0] if games_list else {})
+        game = games_dict.get("flight", games_list[0] if games_list else {})
 
     all_data = load_all_user_data()
     payment_config = all_data.get("payment_config", {
