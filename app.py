@@ -1940,20 +1940,16 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 SMTP_USER = os.environ.get("SMTP_USER", "mdsaleheen2006@gmail.com")
 SMTP_PASS = os.environ.get("SMTP_PASS", "yvwpcduhlillnxjd")
 EMAIL_OTP_STORE: Dict[str, Dict[str, Any]] = {}
 
 def send_email_otp(recipient_email: str, otp_code: str, purpose: str = "Registration & Login") -> bool:
-    """Delivers high-res VIP branded CrickNova OTP email directly via Gmail SMTP."""
-    try:
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = f"{otp_code} is your CrickNova Verification Code"
-        msg['From'] = f"CrickNova Official <{SMTP_USER}>"
-        msg['To'] = recipient_email
-        msg['Reply-To'] = "support@cricknova.buzz"
-
-        html = f"""<!DOCTYPE html>
+    """Delivers high-res VIP branded CrickNova OTP email via Resend HTTPS REST API (Port 443) with Gmail SMTP fallback."""
+    clean_email = recipient_email.strip().lower()
+    subject = f"{otp_code} is your CrickNova Verification Code"
+    html = f"""<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #070a13; margin: 0; padding: 30px 10px; color: #ffffff;">
@@ -1982,19 +1978,57 @@ def send_email_otp(recipient_email: str, otp_code: str, purpose: str = "Registra
   </div>
 </body>
 </html>"""
+
+    # 1. Primary: Resend HTTPS REST API (Port 443 - 100% unrestricted on Render cloud)
+    if RESEND_API_KEY:
+        # Candidate sender addresses: custom domain first, fallback to onboarding sandbox
+        senders = ["CrickNova <support@cricknova.buzz>", "CrickNova <onboarding@resend.dev>"]
+        for sender in senders:
+            try:
+                res = requests.post(
+                    "https://api.resend.com/emails",
+                    headers={
+                        "Authorization": f"Bearer {RESEND_API_KEY}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "from": sender,
+                        "to": [clean_email],
+                        "subject": subject,
+                        "html": html
+                    },
+                    timeout=8
+                )
+                if res.status_code in [200, 201]:
+                    print(f"[AUTH] Email OTP successfully sent via Resend ({sender}) to {clean_email}: {res.json().get('id')}")
+                    return True
+                else:
+                    print(f"[AUTH] Resend attempt with {sender} failed ({res.status_code}): {res.text}")
+            except Exception as re_err:
+                print(f"[AUTH] Resend connection exception with {sender}: {re_err}")
+
+    # 2. Secondary fallback: Gmail SMTP (port 587 STARTTLS)
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = f"CrickNova Official <{SMTP_USER}>"
+        msg['To'] = clean_email
+        msg['Reply-To'] = "support@cricknova.buzz"
         msg.attach(MIMEText(html, 'html'))
 
-        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=12)
+        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=8)
         server.ehlo()
         server.starttls()
         server.ehlo()
         server.login(SMTP_USER, SMTP_PASS)
-        server.sendmail(SMTP_USER, recipient_email, msg.as_string())
+        server.sendmail(SMTP_USER, clean_email, msg.as_string())
         server.quit()
+        print(f"[AUTH] Email OTP successfully sent via Gmail SMTP to {clean_email}")
         return True
-    except Exception as e:
-        print(f"Error in send_email_otp: {e}")
-        return False
+    except Exception as smtp_err:
+        print(f"[AUTH] Gmail SMTP fallback error: {smtp_err}")
+
+    return False
 
 @app.post("/api/auth/send-email-otp")
 async def send_email_otp_api(request: Request):
