@@ -50,5 +50,18 @@
     "gradient": "linear-gradient(135deg, #0891b2, #164e63)",
     "description": "Six reels Egyptian Nile theme with wild scarabs, cascades, and free spins multiplier.",
     "play_url": "/casino/storm"
+  },
+  {
+    "id": "car-roulette",
+    "slug": "car-roulette",
+    "name": "Car Roulette • Royal 3D Stadium",
+    "category": "roulette",
+    "provider": "CrickNova Supercar Arena",
+    "badge": "SUPERCAR 20X",
+    "players": 2180,
+    "icon": "🏎️",
+    "gradient": "linear-gradient(135deg, #9333ea, #2e1065)",
+    "description": "High-octane luxury car roulette featuring 24-slot oval track, 8 supercar brands (Maserati, Ferrari, Lambo, Porsche X20; BMW, Mercedes, Jaguar, Land Rover X5) and continuous 15s auto-rounds.",
+    "play_url": "/casino/car-roulette"
   }
 ]
