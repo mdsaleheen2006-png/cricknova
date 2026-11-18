@@ -1222,11 +1222,11 @@
 
   <script>
     window.CURRENT_MATCH_ID = "{{ match.id }}";
-    var currentDesktopBet = window.currentDesktopBet || null;
-    var currentMobileBet = window.currentMobileBet || null;
-    var currentBetSlipMode = 'auto'; // 'auto' (streaming live odds) or 'manual' (locked quote)
-    var currentSlippageMode = 'better'; // 'better' (auto-accept improvements), 'any', 'exact'
-    var pendingOddsChange = null;
+    window.currentDesktopBet = window.currentDesktopBet || null;
+    window.currentMobileBet = window.currentMobileBet || null;
+    window.currentBetSlipMode = 'auto'; // 'auto' (streaming live odds) or 'manual' (locked quote)
+    window.currentSlippageMode = 'better'; // 'better' (auto-accept improvements), 'any', 'exact'
+    window.pendingOddsChange = null;
 
     function setBetSlipMode(mode) {
       currentBetSlipMode = mode;

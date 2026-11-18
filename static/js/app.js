@@ -3,8 +3,8 @@
 // Dual View (Android / Laptop), OTP Auth, Add Money, PWA & Modals
 // ========================================================
 
-let deferredInstallPrompt = null;
-let currentMobileBet = {
+var deferredInstallPrompt = null;
+var currentMobileBet = {
   matchId: null,
   matchName: null,
   runner: null,
