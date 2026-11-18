@@ -1937,6 +1937,7 @@ def send_sms_otp(mobile: str, otp: str) -> Dict[str, Any]:
 
 # ==================== AUTHENTICATION (PASSWORD, MOBILE & EMAIL OTP) ====================
 import smtplib
+import requests
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
