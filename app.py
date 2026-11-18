@@ -870,25 +870,73 @@ async def match_detail(request: Request, match_id: str):
 # ============================================================================
 
 GAME_ALIASES = {
-    "teen-patti-2020": "teen-patti",
-    "one-day-teen-patti": "teen-patti",
-    "super-andar-bahar": "andar-bahar",
-    "speed-andar-bahar": "andar-bahar",
+    # Dragon Tiger
+    "dragontiger": "dragon-tiger",
+    "dragon-tiger-live": "dragon-tiger",
+    "macau-dragon-tiger": "dragon-tiger",
+    
+    # Lightning Roulette
     "roulette": "lightning-roulette",
+    "lightningroulette": "lightning-roulette",
+    "lightning-roulette-3d": "lightning-roulette",
     "european-roulette": "lightning-roulette",
     "american-roulette": "lightning-roulette",
     "speed-roulette": "lightning-roulette",
-    "zoo-roulette": "dragon-tiger",
     "car-roulette": "lightning-roulette",
-    "baccarat": "speed-baccarat",
-    "lightning-baccarat": "speed-baccarat",
-    "super-sic-bo": "sic-bo",
+    "zoo-roulette": "dragon-tiger",
+    
+    # Aviator & Crash
+    "spaceman": "aviator",
+    "jetx": "aviator",
+    "crash": "aviator",
+    "spacexy": "aviator",
+    "cashcrash": "aviator",
+    
+    # Slots & Jackpot
     "slots": "mega-jackpot-slots",
+    "mega-jackpot": "mega-jackpot-slots",
+    "megajackpotslots": "mega-jackpot-slots",
+    "mega-jackpot-slot": "mega-jackpot-slots",
+    "mega-wheel-jackpot-slot": "mega-jackpot-slots",
     "egyptian-slots": "mega-jackpot-slots",
     "diamond-slots": "mega-jackpot-slots",
     "dragon-slots": "mega-jackpot-slots",
-    "spaceman": "aviator",
-    "jetx": "aviator"
+    "olympus": "mega-jackpot-slots",
+    "bonanza": "mega-jackpot-slots",
+    "royal777": "mega-jackpot-slots",
+    
+    # Andar Bahar
+    "super-andar-bahar": "andar-bahar",
+    "speed-andar-bahar": "andar-bahar",
+    "andarbahar": "andar-bahar",
+    
+    # Teen Patti
+    "teen-patti-2020": "teen-patti",
+    "one-day-teen-patti": "teen-patti",
+    "teenpatti": "teen-patti",
+    
+    # Baccarat
+    "baccarat": "speed-baccarat",
+    "lightning-baccarat": "speed-baccarat",
+    "speedbaccarat": "speed-baccarat",
+    "baccarat-live": "speed-baccarat",
+    
+    # Sic Bo
+    "super-sic-bo": "sic-bo",
+    "supersicbo": "sic-bo",
+    "sicbo": "sic-bo",
+    "sic-bo-live": "sic-bo",
+    
+    # Mega Wheel
+    "megawheel": "megawheel",
+    "mega-wheel": "megawheel",
+    "crazywheel": "megawheel",
+    "crazy-time": "megawheel",
+    
+    # Instant Games
+    "plinkospribe": "plinko",
+    "stakemines": "mines",
+    "spribedice": "dice"
 }
 
 # Zoo Roulette: 28 sectors around the wheel (Priority #1)
@@ -999,73 +1047,54 @@ def get_game_round_outcome(game_id: str, round_id: int) -> Dict[str, Any]:
     seed_str = f"cricknova-{game_id}-round-{round_id}"
     h = int(hashlib.sha256(seed_str.encode()).hexdigest()[:8], 16)
     
-    if game_id == "zoo-roulette":
-        sec_idx = h % len(ZOO_SECTORS)
-        sector = ZOO_SECTORS[sec_idx]
-        deg = sec_idx * (360.0 / len(ZOO_SECTORS)) + (180.0 / len(ZOO_SECTORS))
+    if game_id == "dragon-tiger":
+        ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+        suits = ['♠', '♥', '♦', '♣']
+        d_r = h % 13
+        d_s = (h >> 4) % 4
+        t_r = (h >> 8) % 13
+        t_s = (h >> 12) % 4
+        # Standard Macau: A=1, 2=2, ..., K=13
+        d_val = ((d_r + 1) % 13) + 1
+        t_val = ((t_r + 1) % 13) + 1
+        winner = "dragon" if d_val > t_val else ("tiger" if t_val > d_val else "tie")
+        is_suited_tie = (d_val == t_val and d_s == t_s)
         return {
             "round_id": round_id,
-            "sector_index": sec_idx,
-            "sector": sector,
-            "name": sector["name"],
-            "type": sector["type"],
-            "mult": sector["mult"],
-            "icon": sector["icon"],
-            "color": sector["color"],
-            "target_angle_deg": round(deg, 2)
+            "dragon_card": {"rank": ranks[d_r], "suit": suits[d_s], "val": d_val},
+            "tiger_card": {"rank": ranks[t_r], "suit": suits[t_s], "val": t_val},
+            "winner": winner,
+            "is_suited_tie": is_suited_tie,
+            "result_label": f"Dragon {ranks[d_r]} vs Tiger {ranks[t_r]} -> {winner.upper()}"
         }
-    elif game_id == "car-roulette":
-        sec_idx = h % len(CAR_SECTORS)
-        sector = CAR_SECTORS[sec_idx]
-        deg = sec_idx * (360.0 / len(CAR_SECTORS)) + (180.0 / len(CAR_SECTORS))
-        return {
-            "round_id": round_id,
-            "sector_index": sec_idx,
-            "sector": sector,
-            "name": sector["name"],
-            "type": sector["type"],
-            "mult": sector["mult"],
-            "icon": sector["icon"],
-            "color": sector["color"],
-            "target_angle_deg": round(deg, 2)
-        }
-    elif game_id == "european-roulette":
+    elif "roulette" in game_id:
         num_idx = h % len(EUROPEAN_ROULETTE_WHEEL)
         num = EUROPEAN_ROULETTE_WHEEL[num_idx]
         red_nums = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36}
         color = "green" if num == 0 else ("red" if num in red_nums else "black")
         deg = num_idx * (360.0 / len(EUROPEAN_ROULETTE_WHEEL))
+        
+        # 1 to 5 Lucky Numbers with multipliers (50x - 500x)
+        mult_pool = [50, 100, 150, 200, 250, 300, 400, 500]
+        num_lucky = 1 + (h % 5)
+        lucky_numbers = []
+        for i in range(num_lucky):
+            l_num = ((h >> (i * 3 + 2)) % 37)
+            l_mult = mult_pool[(h >> (i * 4 + 1)) % len(mult_pool)]
+            lucky_numbers.append({"number": l_num, "mult": l_mult})
+        
+        is_lightning_hit = any(l["number"] == num for l in lucky_numbers)
+        hit_mult = next((l["mult"] for l in lucky_numbers if l["number"] == num), 30)
+        
         return {
             "round_id": round_id,
             "sector_index": num_idx,
             "number": num,
             "color": color,
-            "target_angle_deg": round(deg, 2)
-        }
-    elif game_id == "american-roulette":
-        num_idx = h % len(AMERICAN_ROULETTE_WHEEL)
-        num = AMERICAN_ROULETTE_WHEEL[num_idx]
-        red_nums = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36}
-        color = "green" if num in [0, "00"] else ("red" if num in red_nums else "black")
-        deg = num_idx * (360.0 / len(AMERICAN_ROULETTE_WHEEL))
-        return {
-            "round_id": round_id,
-            "sector_index": num_idx,
-            "number": num,
-            "color": color,
-            "target_angle_deg": round(deg, 2)
-        }
-    elif game_id in ["wheel-of-fortune", "lucky-spin"]:
-        sectors = WHEEL_OF_FORTUNE_SECTORS if game_id == "wheel-of-fortune" else LUCKY_SPIN_SECTORS
-        sec_idx = h % len(sectors)
-        item = sectors[sec_idx]
-        deg = sec_idx * (360.0 / len(sectors))
-        return {
-            "round_id": round_id,
-            "sector_index": sec_idx,
-            "value": item.get("val") if isinstance(item, dict) else item,
-            "label": item.get("label") if isinstance(item, dict) else str(item),
-            "target_angle_deg": round(deg, 2)
+            "target_angle_deg": round(deg, 2),
+            "lucky_numbers": lucky_numbers,
+            "is_lightning_hit": is_lightning_hit,
+            "hit_mult": hit_mult
         }
     elif game_id == "sic-bo":
         d1 = 1 + (h % 6)
@@ -1073,16 +1102,79 @@ def get_game_round_outcome(game_id: str, round_id: int) -> Dict[str, Any]:
         d3 = 1 + ((h >> 6) % 6)
         total = d1 + d2 + d3
         is_triple = (d1 == d2 == d3)
+        lucky_mult = 888 if (is_triple and (h % 10 == 0)) else (total if total > 10 else 2)
         return {
             "round_id": round_id,
             "dice": [d1, d2, d3],
             "total": total,
             "is_triple": is_triple,
             "size": "Triple" if is_triple else ("Small" if total <= 10 else "Big"),
-            "odd_even": "Odd" if total % 2 == 1 else "Even"
+            "odd_even": "Odd" if total % 2 == 1 else "Even",
+            "lucky_mult": lucky_mult
+        }
+    elif game_id == "speed-baccarat":
+        p_c1 = 1 + (h % 13); b_c1 = 1 + ((h >> 4) % 13)
+        p_c2 = 1 + ((h >> 8) % 13); b_c2 = 1 + ((h >> 12) % 13)
+        def b_pts(v): return 0 if v >= 10 else v
+        p_score = (b_pts(p_c1) + b_pts(p_c2)) % 10
+        b_score = (b_pts(b_c1) + b_pts(b_c2)) % 10
+        winner = "player" if p_score > b_score else ("banker" if b_score > p_score else "tie")
+        return {
+            "round_id": round_id,
+            "player_cards": [p_c1, p_c2],
+            "banker_cards": [b_c1, b_c2],
+            "player_score": p_score,
+            "banker_score": b_score,
+            "winner": winner
+        }
+    elif game_id == "andar-bahar":
+        ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
+        suits = ['♠', '♥', '♦', '♣']
+        j_idx = h % 13
+        winner = "andar" if ((h >> 3) % 2 == 0) else "bahar"
+        deal_count = 3 + (h % 8)
+        return {
+            "round_id": round_id,
+            "joker": {"rank": ranks[j_idx], "suit": suits[h % 4]},
+            "winner": winner,
+            "deal_count": deal_count
+        }
+    elif game_id == "teen-patti":
+        winner = "player_a" if ((h % 2) == 0) else "player_b"
+        hand_types = ["High Card", "Pair", "Color", "Sequence", "Pure Sequence", "Trail"]
+        h_idx = (h >> 3) % len(hand_types)
+        return {
+            "round_id": round_id,
+            "winner": winner,
+            "winning_hand": hand_types[h_idx]
+        }
+    elif game_id == "mega-jackpot-slots":
+        syms = ['777', 'CROWN', 'GEM', 'BAR', 'BELL', 'STAR']
+        reels = []
+        for r in range(5):
+            reels.append([syms[((h >> (r * 3 + i)) % len(syms))] for i in range(3)])
+        center = [reels[r][1] for r in range(5)]
+        is_jackpot = center.count('777') >= 4 or center.count('CROWN') >= 4
+        is_win = (center[0] == center[1] == center[2]) or is_jackpot
+        return {
+            "round_id": round_id,
+            "reels": reels,
+            "center_line": center,
+            "is_win": is_win,
+            "is_jackpot": is_jackpot,
+            "mult": 50.0 if is_jackpot else (5.0 if is_win else 0.0)
+        }
+    elif game_id == "megawheel":
+        segs = [1, 2, 5, 10, 20, 40]
+        s_idx = h % len(segs)
+        num = segs[s_idx]
+        mult = 500 if (h % 25 == 0) else (100 if (h % 12 == 0) else num)
+        return {
+            "round_id": round_id,
+            "number": num,
+            "multiplier": mult
         }
     else:
-        # Generic outcome fallback
         return {
             "round_id": round_id,
             "result_code": h % 100
@@ -1092,40 +1184,24 @@ def evaluate_bet_payout(game_id: str, outcome: Dict[str, Any], bet_type: str) ->
     """Calculates the payout multiplier for a given bet type and round outcome."""
     bet_type = bet_type.strip().lower()
     
-    if game_id == "zoo-roulette":
-        sec = outcome.get("sector", {})
-        sec_id = sec.get("id", "").lower()
-        sec_type = sec.get("type", "").lower()
-        mult = float(sec.get("mult", 0.0))
-        
-        if bet_type == sec_id:
-            return mult
-        if bet_type in ["beasts", "mammals"] and sec_type == "beast":
-            return 2.0
-        if bet_type in ["birds", "avians"] and sec_type == "bird":
-            return 2.0
-        if bet_type in ["shark", "sharks"] and sec_type == "shark":
-            return mult
-        return 0.0
-
-    elif game_id == "car-roulette":
-        sec = outcome.get("sector", {})
-        sec_id = sec.get("id", "").lower()
-        sec_type = sec.get("type", "").lower()
-        mult = float(sec.get("mult", 0.0))
-        
-        if bet_type == sec_id:
-            return mult
-        if bet_type in ["supercars", "super"] and sec_type == "supercar":
-            return 2.5
-        if bet_type in ["luxury", "sedans"] and sec_type == "luxury":
-            return 2.0
+    if game_id == "dragon-tiger":
+        w = outcome.get("winner", "")
+        if bet_type == "dragon" and w == "dragon": return 1.95
+        if bet_type == "tiger" and w == "tiger": return 1.95
+        if bet_type == "tie" and w == "tie": return 11.0
+        if bet_type == "suited_tie" and outcome.get("is_suited_tie"): return 50.0
+        d_val = outcome.get("dragon_card", {}).get("val", 7)
+        t_val = outcome.get("tiger_card", {}).get("val", 7)
+        if bet_type == "dragon_big" and d_val >= 8: return 2.0
+        if bet_type == "dragon_small" and d_val <= 6: return 2.0
+        if bet_type == "tiger_big" and t_val >= 8: return 2.0
+        if bet_type == "tiger_small" and t_val <= 6: return 2.0
         return 0.0
 
     elif "roulette" in game_id:
         num = outcome.get("number")
         if bet_type == str(num):
-            return 36.0
+            return float(outcome.get("hit_mult", 30.0))
         red_nums = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36}
         if bet_type == "red" and num in red_nums: return 2.0
         if bet_type == "black" and num not in red_nums and num not in [0, "00"]: return 2.0
@@ -1138,12 +1214,6 @@ def evaluate_bet_payout(game_id: str, outcome: Dict[str, Any], bet_type: str) ->
         if bet_type in ["3rd12", "dozen3"] and isinstance(num, int) and 25 <= num <= 36: return 3.0
         return 0.0
 
-    elif game_id in ["wheel-of-fortune", "lucky-spin"]:
-        val = outcome.get("value")
-        if str(bet_type) == str(val):
-            return float(val) if isinstance(val, (int, float)) else 2.0
-        return 0.0
-
     elif game_id == "sic-bo":
         total = outcome.get("total", 0)
         is_triple = outcome.get("is_triple", False)
@@ -1151,7 +1221,34 @@ def evaluate_bet_payout(game_id: str, outcome: Dict[str, Any], bet_type: str) ->
         if bet_type == "big" and 11 <= total <= 17 and not is_triple: return 2.0
         if bet_type == "odd" and total % 2 == 1 and not is_triple: return 2.0
         if bet_type == "even" and total % 2 == 0 and not is_triple: return 2.0
-        if bet_type == "triple" and is_triple: return 31.0
+        if bet_type == "triple" and is_triple: return float(outcome.get("lucky_mult", 31.0))
+        return 0.0
+
+    elif game_id == "speed-baccarat":
+        w = outcome.get("winner", "")
+        if bet_type == "player" and w == "player": return 2.0
+        if bet_type == "banker" and w == "banker": return 1.95
+        if bet_type == "tie" and w == "tie": return 9.0
+        return 0.0
+
+    elif game_id == "andar-bahar":
+        w = outcome.get("winner", "")
+        if bet_type == "andar" and w == "andar": return 1.90
+        if bet_type == "bahar" and w == "bahar": return 2.00
+        return 0.0
+
+    elif game_id == "teen-patti":
+        w = outcome.get("winner", "")
+        if bet_type == "player_a" and w == "player_a": return 1.95
+        if bet_type == "player_b" and w == "player_b": return 1.95
+        return 0.0
+
+    elif game_id == "mega-jackpot-slots":
+        return float(outcome.get("mult", 0.0))
+
+    elif game_id == "megawheel":
+        if str(bet_type) == str(outcome.get("number")):
+            return float(outcome.get("multiplier", 1.0))
         return 0.0
 
     return 0.0

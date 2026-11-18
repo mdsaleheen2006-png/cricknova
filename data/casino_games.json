@@ -1,7 +1,7 @@
 [
   {
     "id": "dragon-tiger",
-    "name": "Live Dragon Tiger \u2022 Macau Studio",
+    "name": "Live Dragon Tiger • Macau Studio",
     "category": "cards",
     "category_name": "Live Studio",
     "provider": "Evolution Macau",
@@ -10,13 +10,13 @@
     "min_bet": 50,
     "max_bet": 200000,
     "badge": "TOP PICK #1",
-    "icon": "\ud83d\udc09",
+    "icon": "🐉",
     "gradient": "linear-gradient(135deg, #dc2626, #450a0a)",
     "description": "Macau Live Studio 15s card duel: Dragon (1.95x) vs Tiger (1.95x), 9x Tie, 50x Suited Tie & Big Road Bead Plate streaks."
   },
   {
     "id": "lightning-roulette",
-    "name": "Lightning Roulette 3D \u2022 500x",
+    "name": "Lightning Roulette 3D • 500x",
     "category": "roulette",
     "category_name": "Roulette 3D",
     "provider": "Evolution Live",
@@ -25,13 +25,13 @@
     "min_bet": 50,
     "max_bet": 150000,
     "badge": "500x MULTIPLIER",
-    "icon": "\u26a1",
+    "icon": "⚡",
     "gradient": "linear-gradient(135deg, #ffd700, #b45309)",
     "description": "3D mahogany wheel with physics ball and random lightning strikes boosting numbers from 50x up to 500x!"
   },
   {
     "id": "aviator",
-    "name": "Spribe Aviator \u2022 Crash Cockpit",
+    "name": "Spribe Aviator • Crash Cockpit",
     "category": "crash",
     "category_name": "Crash & Instant",
     "provider": "Spribe Official",
@@ -40,7 +40,7 @@
     "min_bet": 50,
     "max_bet": 100000,
     "badge": "TRENDING #1",
-    "icon": "\ud83d\ude80",
+    "icon": "🚀",
     "gradient": "linear-gradient(135deg, #e11d48, #4c0519)",
     "description": "Multiplayer Spribe Aviator: Red plane climbs with exponential multiplier ticking up to 100x+ before flying away."
   },
@@ -54,8 +54,8 @@
     "players_online": "18,740",
     "min_bet": 50,
     "max_bet": 100000,
-    "badge": "JACKPOT \u20b92.4CR",
-    "icon": "\ud83c\udfb0",
+    "badge": "JACKPOT ₹2.4CR",
+    "icon": "🎰",
     "gradient": "linear-gradient(135deg, #ec4899, #831843)",
     "description": "5-Reel 25-line authentic Vegas slot machine cabinet with reel blur, scatter free spins & progressive mega jackpot."
   },
@@ -70,7 +70,7 @@
     "min_bet": 50,
     "max_bet": 150000,
     "badge": "INDIAN FAVORITE",
-    "icon": "\ud83c\udccf",
+    "icon": "🃏",
     "gradient": "linear-gradient(135deg, #0ea5e9, #0369a1)",
     "description": "Live Indian dealer table: Opening cut Joker card with Andar (1.90x) vs Bahar (2.00x) dealing loop and side bets."
   },
@@ -85,7 +85,7 @@
     "min_bet": 100,
     "max_bet": 200000,
     "badge": "20-20 LIVE",
-    "icon": "\ud83c\udfb4",
+    "icon": "🎴",
     "gradient": "linear-gradient(135deg, #8b5cf6, #4c1d95)",
     "description": "Fast 20-second 3-card Indian poker: Player A (1.95x) vs Player B (1.95x) with Pair Plus bonus up to 35x."
   },
@@ -100,7 +100,7 @@
     "min_bet": 100,
     "max_bet": 200000,
     "badge": "VIP SPEED",
-    "icon": "\ud83d\udc51",
+    "icon": "👑",
     "gradient": "linear-gradient(135deg, #6366f1, #312e81)",
     "description": "Player, Banker (1:0.95), Tie (8:1) and Player/Banker Pair side bets with card squeeze."
   },
@@ -115,8 +115,23 @@
     "min_bet": 50,
     "max_bet": 100000,
     "badge": "1000x DICE",
-    "icon": "\ud83c\udfb2",
+    "icon": "🎲",
     "gradient": "linear-gradient(135deg, #10b981, #064e3b)",
     "description": "3-Dice shaker under glass dome with random multipliers up to 1000x on Big, Small, and Triples."
+  },
+  {
+    "id": "megawheel",
+    "name": "Mega Wheel 54 • 500x Live",
+    "category": "wheel",
+    "category_name": "Game Shows",
+    "provider": "Pragmatic Live",
+    "rtp": "96.51%",
+    "players_online": "16,890",
+    "min_bet": 50,
+    "max_bet": 150000,
+    "badge": "500x SHOW",
+    "icon": "🎡",
+    "gradient": "linear-gradient(135deg, #f59e0b, #78350f)",
+    "description": "Giant 54-segment vertical money wheel with live host flapper and random Mega Multipliers up to 500x."
   }
 ]
