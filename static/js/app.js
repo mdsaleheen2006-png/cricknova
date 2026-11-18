@@ -71,8 +71,8 @@ function switchAndroidTab(tabName) {
 
   // If opening Account tab, refresh user profile and transaction feed
   if (tabName === 'account') {
-    checkAuthStatus();
-    loadAccountScreenHistory();
+    if (typeof checkAuthStatus === 'function') checkAuthStatus();
+    if (typeof loadAccountScreenHistory === 'function') loadAccountScreenHistory();
   }
 
   // Scroll to top of Android view
@@ -1113,10 +1113,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+});
 
 // ==================== 7. TRANSACTION HISTORY (DEPOSIT & WITHDRAWAL) ====================
 let historyPollingTimer = null;
-let currentHistoryTab = 'deposit';
+let currentHistoryTab = 'all';
 
 function openHistoryModal(tab = 'all') {
   closeDepositModal();
@@ -1525,4 +1526,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   loadAccountScreenHistory();
 });
-});
+
+// Explicit Global Window Exports for Inline HTML Onclick Handlers
+window.openHistoryModal = openHistoryModal;
+window.closeHistoryModal = closeHistoryModal;
+window.switchHistoryTab = switchHistoryTab;
+window.loadAccountScreenHistory = loadAccountScreenHistory;
+window.doQuickAccountLogin = doQuickAccountLogin;
+window.lookupClaimsByPhone = lookupClaimsByPhone;
