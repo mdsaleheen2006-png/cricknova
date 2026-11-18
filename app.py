@@ -56,6 +56,13 @@ if os.path.exists(casino_games_dir):
 roulette_3d_dir = os.path.join(BASE_DIR, "static", "roulette_3d")
 if os.path.exists(roulette_3d_dir):
     app.mount("/roulette-3d", StaticFiles(directory=roulette_3d_dir, html=True), name="roulette_3d")
+
+@app.get("/plinko-outcomes.json")
+async def get_plinko_outcomes():
+    fpath = os.path.join(casino_games_dir, "plinko-outcomes.json")
+    if os.path.exists(fpath):
+        return FileResponse(fpath, media_type="application/json")
+    raise HTTPException(status_code=404, detail="File not found")
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 # ==================== DATA HELPERS ====================

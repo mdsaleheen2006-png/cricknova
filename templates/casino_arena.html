@@ -310,8 +310,8 @@ button[data-wager]:after {
   </div>
   <div style="display:flex;align-items:center;gap:12px;">
     <div style="display:flex;flex-direction:column;align-items:flex-end;">
-      <span style="font-size:9.5px;text-transform:uppercase;color:#94a3b8;font-weight:800;letter-spacing:0.8px;">{{ 'LIVE WALLET' if user and not user.is_guest else 'DEMO WALLET' }}</span>
-      <span class="wallet" id="balance" style="font-size:16px;font-weight:900;color:#facc15;">₹ 0.00</span>
+      <span style="font-size:9.5px;text-transform:uppercase;color:#94a3b8;font-weight:800;letter-spacing:0.8px;">{{ 'LIVE WALLET' if user and not user.is_guest else 'WALLET BALANCE' }}</span>
+      <span class="wallet" id="balance" style="font-size:16px;font-weight:900;color:#facc15;">₹ {{ "{:,.2f}".format(user.balance if user and user.balance is defined else 50000.0) }}</span>
     </div>
     <a href="/?deposit=1" class="deposit-btn">+ DEPOSIT</a>
     <button data-act="sound" style="padding:6px 10px;font-size:12px;background:#1e293b;border-color:#475569;">Sound</button>
@@ -348,7 +348,7 @@ function balance(delta=0){
   wallet = Math.round((wallet + delta) * 100) / 100;
   if (wallet < 0) wallet = 0;
   set('vip_casino_wallet', wallet);
-  bal.textContent = (userLoggedIn ? '' : 'Demo ') + money(wallet);
+  bal.textContent = money(wallet);
   if (userLoggedIn && delta !== 0) {
     if (delta < 0) {
       fetch('/api/casino/bet', {
@@ -389,6 +389,19 @@ function balance(delta=0){
 window.syncAviatorBalance = function(delta) {
   balance(delta);
 };
+balance(0);
+try {
+  fetch('/api/auth/me', { credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(d => {
+      if (d && d.user && typeof d.user.balance === 'number' && d.user.balance >= 0) {
+        wallet = d.user.balance;
+        set('vip_casino_wallet', wallet);
+        balance(0);
+      }
+    })
+    .catch(() => {});
+} catch(e) {}
 function tone(freq,dur=.08,type='sine',delay=0){if(!sound||document.hidden||!audio||audio.state!=='running')return;const t=audio.currentTime+delay,o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);o.frequency.exponentialRampToValueAtTime(Math.max(40,freq*.75),t+dur);g.gain.setValueAtTime(.055,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g).connect(audio.destination);o.start(t);o.stop(t+dur)}
 const shapes=[
  '<path d="M12 37 31 15 68 15 88 37 51 89Z"/><path d="m12 37 25 6 14 46 14-46 23-6-20-22-3 28H37l-6-28Z" fill="#fff" opacity=".36"/>',
@@ -421,7 +434,7 @@ function openRoom(k){
  if(k==='plinko'){window.location.href='/casino-games/#/plinko';return}
  if(k==='mines'){window.location.href='/casino-games/#/mines';return}
  if(k==='roulette-3d'){window.location.href='/roulette-3d/';return}
- if(!games.some(g=>g[0]===k))return;room=k;roundToken++;bets=[];auto=false;free=0;chip=10;locked=false;try{history.replaceState(null,'','/casino/'+k)}catch(e){}
+ if(!games.some(g=>g[0]===k))return;room=k;roundToken++;bets=[];auto=false;free=0;chip=10;locked=false;balance(0);try{history.replaceState(null,'','/casino/'+k)}catch(e){}
  if(k==='flight'){balance(0);app.innerHTML='<div style="padding:8px 12px;background:#0d1117;display:flex;align-items:center;justify-content:space-between;">'+btn('‹ Casino Lobby','back')+'<span style="font-size:13px;font-weight:700;color:#94a3b8;">🚀 Aviator Cockpit</span></div><iframe title="Aviator" style="height:calc(100dvh - 110px);"></iframe>';app.querySelector('iframe').srcdoc=aviator;return}
  const timed=k==='wheel'||k==='andar';app.innerHTML='<section class="stage '+k+'"><div class="roomtitle">'+btn('‹ Lobby','back')+'<h1>'+games.find(g=>g[0]===k)[1]+'</h1><div>'+btn(sound?'Sound on':'Muted','sound')+' '+btn('⛶','full')+'</div></div><div class="gamearea" id="play"></div><div class="status" role="status" id="status"></div><div class="bar"><div class="stake-group"><label>Stake <select id="stake">'+[10,20,50,100,200,500,1000].map(a=>'<option value="'+a+'" '+(a===chip?'selected':'')+'>₹'+a+'</option>').join('')+'</select></label><div class="quick-chip-bar">'+[10,50,100,500,1000].map(c=>'<button type="button" class="chip-pill '+(chip===c?'active':'')+'" data-setchip="'+c+'">₹'+c+'</button>').join('')+'</div></div>'+(timed?'<div class="timed-actions"><b id="staked"></b>'+btn('2× Double','double')+btn('↶ Undo','undo')+btn('✕ Clear','clear')+'</div>':btn(k==='bingo'?'🎱 DRAW BALLS':'🎰 SPIN','go','primary')+(k==='bingo'?'':btn('⚡ Auto ×5','auto')))+'</div><details class="rules"><summary>Table rules & payouts</summary>'+rules[k]+'</details><div class="log">Round history · <span id="hist"></span></div></section>';d('hist').textContent=(history[k]||[]).join(' · ');if(timed)openBetting();else if(k==='bingo'){newTickets();paintBingo([]);notify('Tickets ready')}else{grid=slotGrid(k);paintSlot();notify('Ready to spin')}}
 function later(fn,ms){const token=roundToken;job=setTimeout(()=>{if(token===roundToken)fn()},ms)}
