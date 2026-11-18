@@ -25,6 +25,250 @@
     })();
   </script>
   <style>
+    @keyframes pulseLive {
+      0% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.7); }
+      70% { box-shadow: 0 0 0 7px rgba(0, 230, 118, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0); }
+    }
+    .live-pulse-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00e676;
+      animation: pulseLive 1.8s infinite;
+    }
+    .flash-up {
+      animation: flashGreen 0.6s cubic-bezier(0.1, 0.9, 0.2, 1);
+    }
+    .flash-down {
+      animation: flashRed 0.6s cubic-bezier(0.1, 0.9, 0.2, 1);
+    }
+    @keyframes flashGreen {
+      0% { background: #00e676 !important; color: #000 !important; transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    @keyframes flashRed {
+      0% { background: #ff1744 !important; color: #fff !important; transform: scale(0.95); }
+      100% { transform: scale(1); }
+    }
+
+    /* Mode Toggle */
+    .mode-toggle-group {
+      display: flex;
+      background: #0b1329;
+      border-radius: 8px;
+      padding: 3px;
+      gap: 4px;
+      margin-bottom: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .mode-pill {
+      flex: 1;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+    .mode-pill.active {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #000;
+      box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
+    }
+
+    /* Slippage Radio Group */
+    .slippage-box {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+    }
+    .slippage-box-title {
+      font-size: 10px;
+      color: #94a3b8;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .slippage-radios {
+      display: flex;
+      gap: 8px;
+    }
+    .slip-radio-item {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #cbd5e1;
+      cursor: pointer;
+    }
+    .slip-radio-item input {
+      accent-color: #00e676;
+      cursor: pointer;
+    }
+
+    /* Odds Changed Prompt Modal/Banner inside betslip */
+    .odds-changed-banner {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid #ef4444;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+      animation: fadeIn 0.3s ease;
+    }
+    .odds-changed-banner .ocb-title {
+      font-size: 11.5px;
+      font-weight: 900;
+      color: #ef4444;
+      margin-bottom: 4px;
+    }
+    .odds-changed-banner .ocb-text {
+      font-size: 11px;
+      color: #f1f5f9;
+      margin-bottom: 8px;
+    }
+    .ocb-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-ocb-accept {
+      flex: 2;
+      background: #00e676;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 11.5px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .btn-ocb-cancel {
+      flex: 1;
+      background: #334155;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Match Dashboard & Placed Bets */
+    .match-bets-dashboard {
+      background: #0d1527;
+      border: 1px solid rgba(255, 215, 0, 0.25);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+    .dash-tab-btn {
+      padding: 6px 12px;
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .dash-tab-btn.active {
+      background: linear-gradient(135deg, #f59e0b, #b45309);
+      color: #000;
+      border-color: #ffd700;
+    }
+    .match-bets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 8px;
+    }
+    .match-bet-card {
+      background: #111a2e;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .match-bet-card.settled {
+      opacity: 0.75;
+      background: #0f172a;
+    }
+    .mbc-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .mbc-runner {
+      color: #fff;
+      font-weight: 800;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mbc-market {
+      font-size: 9.5px;
+      color: var(--winbuzz-gold);
+      font-weight: 700;
+    }
+    .mbc-mid {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #94a3b8;
+      background: rgba(0,0,0,0.25);
+      padding: 6px 8px;
+      border-radius: 6px;
+    }
+    .mbc-bot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2px;
+    }
+    .cashout-btn {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #fff;
+      border: 1px solid #38bdf8;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+    .cashout-btn:hover {
+      background: #0284c7;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+    }
+    .status-tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 800;
+    }
+    .status-tag.won { background: rgba(0,230,118,0.2); color: #00e676; border: 1px solid #00e676; }
+    .status-tag.lost { background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid #ef4444; }
+    .status-tag.cashed_out { background: rgba(250,204,21,0.2); color: #facc15; border: 1px solid #facc15; }
+
     .market-tabs-bar {
       display: flex;
       gap: 6px;
@@ -239,6 +483,130 @@
           </table>
         </div>
         {% endif %}
+      </div>
+
+      <!-- MATCH BETS & LIVE ACTIVITY DASHBOARD -->
+      <div class="match-bets-dashboard" id="match-bets-dashboard">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px; margin-bottom: 8px;">
+          <div>
+            <span style="font-size: 13px; font-weight: 900; color: #ffd700; display: flex; align-items: center; gap: 6px;">
+              <span>⚡ MATCH WAGERING & ACTIVITY</span>
+              <span class="live-pulse-dot"></span>
+            </span>
+            <div style="font-size: 10px; color: #94a3b8;">Real-time match orders & live execution flow</div>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <div class="stat-pill" style="background: rgba(0,230,118,0.1); border: 1px solid rgba(0,230,118,0.3); padding: 4px 10px; border-radius: 6px; font-size: 11px;">
+              <span style="color: #94a3b8;">Total Staked:</span>
+              <strong id="match-total-staked-text" style="color: #00e676; margin-left: 4px;">₹{{ "{:,.2f}".format(total_staked) }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-Tabs -->
+        <div class="dash-tabs" style="display: flex; gap: 6px; margin-bottom: 10px;">
+          <button type="button" class="dash-tab-btn active" id="btn-tab-active-bets" onclick="switchMatchDashTab('active')">
+            ⚡ My Active Bets (<span id="count-match-active-bets">{{ open_bets|length }}</span>)
+          </button>
+          <button type="button" class="dash-tab-btn" id="btn-tab-settled-bets" onclick="switchMatchDashTab('settled')">
+            📜 Settled (<span id="count-match-settled-bets">{{ (match_bets|length) - (open_bets|length) }}</span>)
+          </button>
+          <button type="button" class="dash-tab-btn" id="btn-tab-activity-feed" onclick="switchMatchDashTab('activity')">
+            🌐 Live Bet Stream
+          </button>
+        </div>
+
+        <!-- Tab 1: Active Bets -->
+        <div id="pane-active-bets">
+          <div id="match-active-bets-list" class="match-bets-grid">
+            {% if open_bets %}
+              {% for b in open_bets %}
+              <div class="match-bet-card" id="bet-card-{{ b.id }}">
+                <div class="mbc-top">
+                  <span class="bet-badge {{ b.type }}">{{ b.type|upper }}</span>
+                  <span class="mbc-runner">{{ b.runner }}</span>
+                  <span class="mbc-market">{{ (b.market_type or 'MATCH ODDS')|upper }}</span>
+                </div>
+                <div class="mbc-mid">
+                  <div>Odds: <strong style="color: #fff;">{{ b.odds }}</strong> {% if b.odds_improved %}<span style="font-size: 9px; background:#00e676; color:#000; padding:1px 4px; border-radius:3px; font-weight:800;">IMPROVED</span>{% endif %}</div>
+                  <div>Stake: <strong style="color: #fff;">₹{{ b.stake }}</strong></div>
+                  <div style="color: #00e676;">Return: <strong>₹{{ "{:,.2f}".format(b.potential_profit + b.stake if b.type == 'back' else b.potential_profit) }}</strong></div>
+                </div>
+                <div class="mbc-bot">
+                  <span style="font-size: 9.5px; color: #64748b;">{{ b.placed_at }}</span>
+                  <button class="cashout-btn" data-bet-id="{{ b.id }}" data-match-id="{{ b.match_id }}" data-runner="{{ b.runner }}" data-orig-odds="{{ b.odds }}" data-stake="{{ b.stake }}" onclick="executeTurboCashout('{{ b.id }}', this)">
+                    <span>⚡ CASHOUT</span>
+                    <span class="cashout-payout" style="font-weight:900; margin-left:4px;">₹{{ b.stake }}</span>
+                  </button>
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="dash-empty-msg" id="empty-active-bets" style="color: #64748b; font-size: 11.5px; padding: 12px; text-align: center;">No active bets on this match. Click any Back or Lay box to place a live exchange bet!</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Tab 2: Settled Bets -->
+        <div id="pane-settled-bets" style="display: none;">
+          <div id="match-settled-bets-list" class="match-bets-grid">
+            {% set has_settled = false %}
+            {% for b in match_bets %}
+              {% if b.status != 'OPEN' %}
+                {% set has_settled = true %}
+                <div class="match-bet-card settled">
+                  <div class="mbc-top">
+                    <span class="bet-badge {{ b.type }}">{{ b.type|upper }}</span>
+                    <span class="mbc-runner">{{ b.runner }}</span>
+                    <span class="status-tag {{ b.status|lower }}">{{ b.status }}</span>
+                  </div>
+                  <div class="mbc-mid">
+                    <div>Odds: <strong>{{ b.odds }}</strong></div>
+                    <div>Stake: <strong>₹{{ b.stake }}</strong></div>
+                    <div>Result: <strong style="color: {% if b.status == 'WON' %}#00e676{% elif b.status == 'LOST' %}#ff5252{% else %}#facc15{% endif %};">{{ b.status }}</strong></div>
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+            {% if not has_settled %}
+              <div class="dash-empty-msg" style="color: #64748b; font-size: 11.5px; padding: 12px; text-align: center;">No settled bets for this match yet.</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Tab 3: Live Bet Feed -->
+        <div id="pane-activity-feed" style="display: none;">
+          <div style="max-height: 220px; overflow-y: auto;">
+            <table class="activity-feed-table" style="width: 100%; font-size: 11px;">
+              <thead>
+                <tr style="color: #94a3b8; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: left;">
+                  <th style="padding: 4px;">TIME</th>
+                  <th style="padding: 4px;">USER</th>
+                  <th style="padding: 4px;">SELECTION</th>
+                  <th style="padding: 4px;">TYPE</th>
+                  <th style="padding: 4px;">ODDS</th>
+                  <th style="padding: 4px;">STAKE</th>
+                </tr>
+              </thead>
+              <tbody id="match-activity-feed-body">
+                {% if recent_activity %}
+                  {% for act in recent_activity %}
+                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                    <td style="color: #64748b; padding: 4px;">{{ act.time }}</td>
+                    <td style="color: #94a3b8; padding: 4px;">{{ act.user_masked }}</td>
+                    <td style="font-weight: 700; color: #fff; padding: 4px;">{{ act.runner }}</td>
+                    <td style="padding: 4px;"><span class="bet-badge {{ act.type|lower }}">{{ act.type }}</span></td>
+                    <td style="font-weight: 800; color: #facc15; padding: 4px;">{{ act.odds }}</td>
+                    <td style="font-weight: 800; color: #00e676; padding: 4px;">₹{{ act.stake }}</td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr><td colspan="6" style="text-align: center; color: #64748b; padding: 12px;">Waiting for live match orders...</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <!-- MARKET CATEGORY FILTER TABS -->
@@ -624,15 +992,25 @@
             Click any <strong>Back (Blue)</strong> or <strong>Lay (Pink)</strong> box on any player or market to place an exchange bet.
           </div>
           <div id="desktop-betslip-form" style="display: none; padding: 12px;">
+            <!-- AUTO / MANUAL MODE TOGGLE -->
+            <div class="mode-toggle-group">
+              <button type="button" class="mode-pill active" id="dt-mode-auto" onclick="setBetSlipMode('auto')">⚡ AUTO (Live Market)</button>
+              <button type="button" class="mode-pill" id="dt-mode-manual" onclick="setBetSlipMode('manual')">⏱️ MANUAL (Lock Quote)</button>
+            </div>
+
             <div style="font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 4px;" id="dt-runner-name">Runner Name</div>
             <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 10px;">
               <span id="dt-bet-badge" class="bet-badge back">BACK</span>
               <span id="dt-market-name" style="font-size: 11px; color: var(--winbuzz-gold); font-weight: 700;">MATCH ODDS</span>
+              <span id="dt-live-quote-badge" style="font-size: 10px; color: #00e676; margin-left: auto;">⚡ Live Syncing</span>
             </div>
             
             <div style="margin-bottom: 8px;">
-              <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">ODDS / RATE</label>
-              <input type="number" id="dt-odds-input" step="0.01" style="width: 100%; background: #1e293b; border: 1px solid #475569; color: #fff; padding: 8px; border-radius: 6px; font-weight: 800; font-size: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label style="font-size: 11px; color: #94a3b8; font-weight: 700;">ODDS / RATE</label>
+                <span id="dt-quote-status" style="font-size: 10px; color: #94a3b8;">Streaming Market</span>
+              </div>
+              <input type="number" id="dt-odds-input" step="0.01" oninput="onManualOddsChange()" style="width: 100%; background: #1e293b; border: 1px solid #475569; color: #fff; padding: 8px; border-radius: 6px; font-weight: 800; font-size: 14px;">
             </div>
 
             <div style="margin-bottom: 10px;">
@@ -641,11 +1019,43 @@
             </div>
 
             <!-- Quick Stake Chips -->
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 12px;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 10px;">
               <button type="button" class="chip-btn" onclick="setDesktopStake(100)" style="padding: 4px; background: #0f172a; border: 1px solid #334155; color: #cbd5e1; border-radius: 4px; font-size: 10.5px; font-weight: 700;">+100</button>
               <button type="button" class="chip-btn" onclick="setDesktopStake(500)" style="padding: 4px; background: #0f172a; border: 1px solid #334155; color: #cbd5e1; border-radius: 4px; font-size: 10.5px; font-weight: 700;">+500</button>
               <button type="button" class="chip-btn" onclick="setDesktopStake(1000)" style="padding: 4px; background: #0f172a; border: 1px solid #334155; color: #cbd5e1; border-radius: 4px; font-size: 10.5px; font-weight: 700;">+1k</button>
               <button type="button" class="chip-btn" onclick="setDesktopStake(5000)" style="padding: 4px; background: #0f172a; border: 1px solid #334155; color: #cbd5e1; border-radius: 4px; font-size: 10.5px; font-weight: 700;">+5k</button>
+            </div>
+
+            <!-- Slippage Acceptance Option -->
+            <div class="slippage-box">
+              <div class="slippage-box-title">
+                <span>ODDS CHANGE POLICY</span>
+                <span style="color:#ffd700;" title="How odds shifts before bet placement are handled">ℹ️</span>
+              </div>
+              <div class="slippage-radios">
+                <label class="slip-radio-item" title="Auto-accepts if odds improve (e.g. 4.70 -> 4.80); requires confirmation if odds drop">
+                  <input type="radio" name="slippage_mode" value="better" checked onchange="setSlippageMode('better')">
+                  <span style="color: #00e676;">Better</span>
+                </label>
+                <label class="slip-radio-item" title="Accepts latest available odds unconditionally">
+                  <input type="radio" name="slippage_mode" value="any" onchange="setSlippageMode('any')">
+                  <span style="color: #facc15;">Any</span>
+                </label>
+                <label class="slip-radio-item" title="Requires exact odds; asks confirmation on any movement">
+                  <input type="radio" name="slippage_mode" value="exact" onchange="setSlippageMode('exact')">
+                  <span style="color: #94a3b8;">Exact</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Odds Changed Confirmation Prompt inside Bet Slip -->
+            <div id="dt-odds-changed-banner" class="odds-changed-banner" style="display: none;">
+              <div class="ocb-title">⚠️ Market Odds Changed</div>
+              <div class="ocb-text">Quoted: <span id="dt-ocb-old-odds">4.70</span> ➔ Live: <strong id="dt-ocb-new-odds" style="color: #ffd700;">4.50</strong></div>
+              <div class="ocb-actions">
+                <button type="button" class="btn-ocb-accept" onclick="acceptChangedOddsAndSubmit('desktop')">Accept <span id="dt-ocb-btn-val">4.50</span> & Place</button>
+                <button type="button" class="btn-ocb-cancel" onclick="cancelChangedOdds('desktop')">Cancel</button>
+              </div>
             </div>
 
             <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 12px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px;">
@@ -696,13 +1106,22 @@
       <button class="sheet-close" onclick="closeMobileBetSlip()">✕</button>
     </div>
     <div class="sheet-body">
+      <!-- AUTO / MANUAL MODE TOGGLE -->
+      <div class="mode-toggle-group">
+        <button type="button" class="mode-pill active" id="sheet-mode-auto" onclick="setBetSlipMode('auto')">⚡ AUTO (Live Market)</button>
+        <button type="button" class="mode-pill" id="sheet-mode-manual" onclick="setBetSlipMode('manual')">⏱️ MANUAL (Lock Quote)</button>
+      </div>
+
       <div class="sheet-match-info">
         <span id="sheet-match-name" class="sheet-match-name">{{ match.name }}</span>
         <div class="sheet-runner-row">
           <span id="sheet-runner-name" class="sheet-runner-name">Runner Name</span>
           <span id="sheet-bet-badge" class="bet-badge back">BACK</span>
         </div>
-        <div id="sheet-market-tag" style="font-size: 10.5px; color: var(--winbuzz-gold); font-weight: 700; margin-top: 2px;">MATCH ODDS</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+          <div id="sheet-market-tag" style="font-size: 10.5px; color: var(--winbuzz-gold); font-weight: 700;">MATCH ODDS</div>
+          <span id="sheet-live-quote-badge" style="font-size: 10px; color: #00e676;">⚡ Live Syncing</span>
+        </div>
       </div>
 
       <!-- Odds Controls -->
@@ -710,7 +1129,7 @@
         <label>ODDS / RATE</label>
         <div class="sheet-stepper">
           <button onclick="adjustSheetOdds(-0.01)">-</button>
-          <input type="number" id="sheet-odds-input" step="0.01" min="1.01">
+          <input type="number" id="sheet-odds-input" step="0.01" min="1.01" oninput="onManualOddsChange()">
           <button onclick="adjustSheetOdds(0.01)">+</button>
         </div>
       </div>
@@ -732,6 +1151,38 @@
         <button type="button" onclick="setSheetStake(1000)">+1k</button>
         <button type="button" onclick="setSheetStake(5000)">+5k</button>
         <button type="button" onclick="setSheetStake(10000)">+10k</button>
+      </div>
+
+      <!-- Slippage Acceptance Option -->
+      <div class="slippage-box" style="margin-top: 8px; margin-bottom: 8px;">
+        <div class="slippage-box-title">
+          <span>ODDS CHANGE POLICY</span>
+          <span style="color:#ffd700;">ℹ️</span>
+        </div>
+        <div class="slippage-radios">
+          <label class="slip-radio-item">
+            <input type="radio" name="mobile_slippage_mode" value="better" checked onchange="setSlippageMode('better')">
+            <span style="color: #00e676;">Better</span>
+          </label>
+          <label class="slip-radio-item">
+            <input type="radio" name="mobile_slippage_mode" value="any" onchange="setSlippageMode('any')">
+            <span style="color: #facc15;">Any</span>
+          </label>
+          <label class="slip-radio-item">
+            <input type="radio" name="mobile_slippage_mode" value="exact" onchange="setSlippageMode('exact')">
+            <span style="color: #94a3b8;">Exact</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Odds Changed Confirmation Prompt inside Mobile Sheet -->
+      <div id="sheet-odds-changed-banner" class="odds-changed-banner" style="display: none;">
+        <div class="ocb-title">⚠️ Market Odds Changed</div>
+        <div class="ocb-text">Quoted: <span id="sheet-ocb-old-odds">4.70</span> ➔ Live: <strong id="sheet-ocb-new-odds" style="color: #ffd700;">4.50</strong></div>
+        <div class="ocb-actions">
+          <button type="button" class="btn-ocb-accept" onclick="acceptChangedOddsAndSubmit('mobile')">Accept <span id="sheet-ocb-btn-val">4.50</span> & Place</button>
+          <button type="button" class="btn-ocb-cancel" onclick="cancelChangedOdds('mobile')">Cancel</button>
+        </div>
       </div>
 
       <div class="sheet-calc-row">
@@ -770,18 +1221,90 @@
   <script src="/static/js/betting.js"></script>
 
   <script>
-    // Universal Bet Trigger for Mobile & Desktop
+    window.CURRENT_MATCH_ID = "{{ match.id }}";
     let currentDesktopBet = null;
+    let currentMobileBet = null;
+    let currentBetSlipMode = 'auto'; // 'auto' (streaming live odds) or 'manual' (locked quote)
+    let currentSlippageMode = 'better'; // 'better' (auto-accept improvements), 'any', 'exact'
+    let pendingOddsChange = null;
+
+    function setBetSlipMode(mode) {
+      currentBetSlipMode = mode;
+      document.querySelectorAll('#dt-mode-auto, #sheet-mode-auto').forEach(b => {
+        b.classList.toggle('active', mode === 'auto');
+      });
+      document.querySelectorAll('#dt-mode-manual, #sheet-mode-manual').forEach(b => {
+        b.classList.toggle('active', mode === 'manual');
+      });
+      const quoteBadge = document.querySelectorAll('#dt-live-quote-badge, #sheet-live-quote-badge');
+      quoteBadge.forEach(b => {
+        b.innerText = mode === 'auto' ? '⚡ Live Syncing' : '⏱️ Quote Locked';
+        b.style.color = mode === 'auto' ? '#00e676' : '#facc15';
+      });
+    }
+
+    function setSlippageMode(mode) {
+      currentSlippageMode = mode;
+      document.querySelectorAll('input[name="slippage_mode"], input[name="mobile_slippage_mode"]').forEach(radio => {
+        if (radio.value === mode) radio.checked = true;
+      });
+    }
+
+    function onManualOddsChange() {
+      setBetSlipMode('manual');
+      calculateDesktopProfit();
+      calculateSheetProfit();
+    }
+
+    // Live Odds Engine calls this whenever an odds box ticks
+    window.handleLiveOddsSlipUpdate = function(runner, type, newPrice, direction) {
+      const isDtMatch = currentDesktopBet && currentDesktopBet.runner === runner && currentDesktopBet.type.toLowerCase() === type.toLowerCase();
+      const isMobileMatch = currentMobileBet && currentMobileBet.runner === runner && currentMobileBet.type.toLowerCase() === type.toLowerCase();
+
+      if (!isDtMatch && !isMobileMatch) return;
+
+      if (currentBetSlipMode === 'auto') {
+        if (isDtMatch) {
+          currentDesktopBet.odds = newPrice;
+          const input = document.getElementById('dt-odds-input');
+          if (input) {
+            input.value = newPrice.toFixed(2);
+            input.classList.remove('flash-up', 'flash-down');
+            void input.offsetWidth;
+            input.classList.add(direction === 'up' ? 'flash-up' : 'flash-down');
+            setTimeout(() => input.classList.remove('flash-up', 'flash-down'), 500);
+          }
+          calculateDesktopProfit();
+        }
+        if (isMobileMatch) {
+          currentMobileBet.odds = newPrice;
+          const input = document.getElementById('sheet-odds-input');
+          if (input) {
+            input.value = newPrice.toFixed(2);
+            input.classList.remove('flash-up', 'flash-down');
+            void input.offsetWidth;
+            input.classList.add(direction === 'up' ? 'flash-up' : 'flash-down');
+            setTimeout(() => input.classList.remove('flash-up', 'flash-down'), 500);
+          }
+          calculateSheetProfit();
+        }
+      } else {
+        const badges = document.querySelectorAll('#dt-live-quote-badge, #sheet-live-quote-badge');
+        badges.forEach(b => {
+          b.innerText = `Market: ${newPrice.toFixed(2)}`;
+          b.style.color = direction === 'up' ? '#00e676' : '#ff5252';
+        });
+      }
+    };
 
     function triggerBetSelection(matchId, matchName, runner, type, odds, marketType) {
       const isMobile = window.innerWidth <= 768 || document.documentElement.classList.contains('is-mobile-device');
       
+      hideOddsChangedBanners();
+      setBetSlipMode('auto');
+
       if (isMobile) {
-        if (typeof openMobileBetSlip === 'function') {
-          openMobileBetSlip(matchId, matchName, runner, type, odds, marketType);
-          const tag = document.getElementById('sheet-market-tag');
-          if (tag) tag.innerText = (marketType || 'MATCH ODDS').toUpperCase().replace('_', ' ');
-        }
+        openMobileBetSlip(matchId, matchName, runner, type, odds, marketType);
       } else {
         openDesktopBetSlip(matchId, matchName, runner, type, odds, marketType);
       }
@@ -801,10 +1324,48 @@
       badge.innerText = type.toUpperCase();
 
       document.getElementById('dt-market-name').innerText = (marketType || 'MATCH ODDS').toUpperCase().replace('_', ' ');
-      document.getElementById('dt-odds-input').value = odds;
+      document.getElementById('dt-odds-input').value = parseFloat(odds).toFixed(2);
       document.getElementById('dt-stake-input').value = 500;
       calculateDesktopProfit();
       switchDeskTab('betslip');
+    }
+
+    function openMobileBetSlip(matchId, matchName, runner, type, price, marketType = 'match_odds') {
+      currentMobileBet = {
+        matchId: matchId,
+        matchName: matchName,
+        runner: runner,
+        type: type,
+        odds: parseFloat(price) || 1.95,
+        stake: 500,
+        marketType: marketType || 'match_odds'
+      };
+
+      const sheet = document.getElementById('mobile-betslip-sheet');
+      const matchEl = document.getElementById('sheet-match-name');
+      const runnerEl = document.getElementById('sheet-runner-name');
+      const badgeEl = document.getElementById('sheet-bet-badge');
+      const oddsInput = document.getElementById('sheet-odds-input');
+      const stakeInput = document.getElementById('sheet-stake-input');
+      const marketTag = document.getElementById('sheet-market-tag');
+
+      if (matchEl) matchEl.innerText = matchName;
+      if (runnerEl) runnerEl.innerText = runner;
+      if (badgeEl) {
+        badgeEl.innerText = type.toUpperCase();
+        badgeEl.className = `bet-badge ${type}`;
+      }
+      if (marketTag) marketTag.innerText = (marketType || 'MATCH ODDS').toUpperCase().replace('_', ' ');
+      if (oddsInput) oddsInput.value = currentMobileBet.odds.toFixed(2);
+      if (stakeInput) stakeInput.value = currentMobileBet.stake;
+
+      calculateSheetProfit();
+      if (sheet) sheet.classList.add('sheet-open');
+    }
+
+    function closeMobileBetSlip() {
+      const sheet = document.getElementById('mobile-betslip-sheet');
+      if (sheet) sheet.classList.remove('sheet-open');
     }
 
     function setDesktopStake(amount) {
@@ -814,6 +1375,32 @@
         input.value = cur + amount;
         calculateDesktopProfit();
       }
+    }
+
+    function adjustSheetOdds(delta) {
+      const oddsInput = document.getElementById('sheet-odds-input');
+      let val = (parseFloat(oddsInput.value) || 1.01) + delta;
+      if (val < 1.01) val = 1.01;
+      oddsInput.value = val.toFixed(2);
+      if (currentMobileBet) currentMobileBet.odds = val;
+      setBetSlipMode('manual');
+      calculateSheetProfit();
+    }
+
+    function adjustSheetStake(delta) {
+      const stakeInput = document.getElementById('sheet-stake-input');
+      let val = (parseFloat(stakeInput.value) || 500) + delta;
+      if (val < 50) val = 50;
+      stakeInput.value = Math.round(val);
+      if (currentMobileBet) currentMobileBet.stake = val;
+      calculateSheetProfit();
+    }
+
+    function setSheetStake(amt) {
+      const stakeInput = document.getElementById('sheet-stake-input');
+      stakeInput.value = amt;
+      if (currentMobileBet) currentMobileBet.stake = amt;
+      calculateSheetProfit();
     }
 
     function calculateDesktopProfit() {
@@ -838,6 +1425,82 @@
       }
     }
 
+    function calculateSheetProfit() {
+      if (!currentMobileBet) return;
+      const odds = parseFloat(document.getElementById('sheet-odds-input').value) || 1.0;
+      const stake = parseFloat(document.getElementById('sheet-stake-input').value) || 0;
+      const isBack = currentMobileBet.type.toLowerCase() === 'back';
+
+      const label = document.getElementById('sheet-calc-label');
+      const val = document.getElementById('sheet-calc-val');
+
+      if (isBack) {
+        const profit = stake * (odds - 1.0);
+        if (label) label.innerText = 'Potential Profit:';
+        if (val) {
+          val.style.color = '#00e676';
+          val.innerText = '₹' + profit.toFixed(2);
+        }
+      } else {
+        const liability = stake * (odds - 1.0);
+        if (label) label.innerText = 'Liability (Risk):';
+        if (val) {
+          val.style.color = '#ff5252';
+          val.innerText = '₹' + liability.toFixed(2);
+        }
+      }
+    }
+
+    function hideOddsChangedBanners() {
+      const dtB = document.getElementById('dt-odds-changed-banner');
+      const shB = document.getElementById('sheet-odds-changed-banner');
+      if (dtB) dtB.style.display = 'none';
+      if (shB) shB.style.display = 'none';
+      pendingOddsChange = null;
+    }
+
+    function showOddsChangedBanner(view, oldOdds, newOdds) {
+      pendingOddsChange = { view, newOdds };
+      if (view === 'desktop') {
+        const b = document.getElementById('dt-odds-changed-banner');
+        if (b) {
+          b.style.display = 'block';
+          document.getElementById('dt-ocb-old-odds').innerText = Number(oldOdds).toFixed(2);
+          document.getElementById('dt-ocb-new-odds').innerText = Number(newOdds).toFixed(2);
+          document.getElementById('dt-ocb-btn-val').innerText = Number(newOdds).toFixed(2);
+        }
+      } else {
+        const b = document.getElementById('sheet-odds-changed-banner');
+        if (b) {
+          b.style.display = 'block';
+          document.getElementById('sheet-ocb-old-odds').innerText = Number(oldOdds).toFixed(2);
+          document.getElementById('sheet-ocb-new-odds').innerText = Number(newOdds).toFixed(2);
+          document.getElementById('sheet-ocb-btn-val').innerText = Number(newOdds).toFixed(2);
+        }
+      }
+    }
+
+    function acceptChangedOddsAndSubmit(view) {
+      if (!pendingOddsChange) return;
+      const newPrice = pendingOddsChange.newOdds;
+      hideOddsChangedBanners();
+      if (view === 'desktop') {
+        document.getElementById('dt-odds-input').value = newPrice.toFixed(2);
+        if (currentDesktopBet) currentDesktopBet.odds = newPrice;
+        calculateDesktopProfit();
+        submitDesktopBet();
+      } else {
+        document.getElementById('sheet-odds-input').value = newPrice.toFixed(2);
+        if (currentMobileBet) currentMobileBet.odds = newPrice;
+        calculateSheetProfit();
+        submitMobileBet();
+      }
+    }
+
+    function cancelChangedOdds(view) {
+      hideOddsChangedBanners();
+    }
+
     async function submitDesktopBet() {
       if (!currentDesktopBet) return;
       const odds = parseFloat(document.getElementById('dt-odds-input').value);
@@ -852,6 +1515,8 @@
       btn.disabled = true;
       btn.innerText = 'PLACING BET...';
 
+      const clientBetId = 'CB-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+
       try {
         const res = await fetch('/api/bet/place', {
           method: 'POST',
@@ -862,18 +1527,28 @@
             type: currentDesktopBet.type,
             odds: odds,
             stake: stake,
-            market_type: currentDesktopBet.marketType || 'match_odds'
+            market_type: currentDesktopBet.marketType || 'match_odds',
+            accept_odds_mode: currentSlippageMode,
+            client_bet_id: clientBetId
           })
         });
+
         const data = await res.json();
+
         if (res.status === 401) {
           alert('⚠️ Please login first to place bets.');
           window.location.href = '/login';
           return;
         }
+
+        if (res.status === 409 && data.status === 'odds_changed') {
+          showOddsChangedBanner('desktop', data.old_odds, data.new_odds);
+          return;
+        }
+
         if (res.ok && data.status === 'success') {
-          alert('✅ ' + data.message);
-          window.location.reload();
+          hideOddsChangedBanners();
+          handleSuccessfulBet(data);
         } else {
           alert('❌ ' + (data.detail || data.message || 'Failed to place bet'));
         }
@@ -884,6 +1559,344 @@
         btn.innerText = 'PLACE BET NOW';
       }
     }
+
+    async function submitMobileBet() {
+      if (!currentMobileBet) return;
+      const odds = parseFloat(document.getElementById('sheet-odds-input').value);
+      const stake = parseFloat(document.getElementById('sheet-stake-input').value);
+      const btn = document.getElementById('sheet-submit-btn');
+
+      if (isNaN(stake) || stake < 50) {
+        alert('Minimum bet stake is ₹50');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = 'PLACING BET...';
+
+      const clientBetId = 'CB-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+
+      try {
+        const res = await fetch('/api/bet/place', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            match_id: currentMobileBet.matchId,
+            runner: currentMobileBet.runner,
+            type: currentMobileBet.type,
+            odds: odds,
+            stake: stake,
+            market_type: currentMobileBet.marketType || 'match_odds',
+            accept_odds_mode: currentSlippageMode,
+            client_bet_id: clientBetId
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.status === 401) {
+          alert('⚠️ Please login first to place bets on CrickNova!');
+          window.location.href = '/login';
+          return;
+        }
+
+        if (res.status === 409 && data.status === 'odds_changed') {
+          showOddsChangedBanner('mobile', data.old_odds, data.new_odds);
+          return;
+        }
+
+        if (res.ok && data.status === 'success') {
+          hideOddsChangedBanners();
+          handleSuccessfulBet(data);
+          closeMobileBetSlip();
+        } else {
+          alert('❌ ' + (data.detail || data.message || 'Failed to place bet'));
+        }
+      } catch (err) {
+        alert('Network error while placing bet: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'PLACE BET NOW';
+      }
+    }
+
+    function handleSuccessfulBet(data) {
+      if (window.bettingEngine && typeof window.bettingEngine.playBeep === 'function') {
+        window.bettingEngine.playBeep('place');
+      }
+
+      if (data.balance !== undefined) {
+        document.querySelectorAll('.android-wallet-val').forEach(el => el.innerText = Math.round(data.balance).toLocaleString('en-IN'));
+        const wb = document.getElementById('wallet-balance');
+        if (wb) wb.innerText = '₹' + Number(data.balance).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+      }
+      if (data.exposure !== undefined) {
+        const we = document.getElementById('wallet-exposure');
+        if (we) we.innerText = '₹' + Number(data.exposure).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+      }
+
+      if (data.book && window.bettingEngine && typeof window.bettingEngine.updateRunnerBookUI === 'function') {
+        window.bettingEngine.updateRunnerBookUI(data.bet.match_id, data.book);
+      }
+
+      window.syncMatchBetsUI(data);
+
+      const msg = data.odds_improved 
+        ? `⚡ Bet Placed at IMPROVED odds ${data.accepted_odds.toFixed(2)}!`
+        : `✅ Bet Placed: ${data.bet.type.toUpperCase()} on ${data.bet.runner} @ ${data.accepted_odds.toFixed(2)}`;
+      showToast(msg);
+    }
+
+    function showToast(text) {
+      let toast = document.getElementById('cn-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'cn-toast';
+        toast.style.cssText = 'position:fixed; bottom:70px; left:50%; transform:translateX(-50%); background:#0f172a; border:1px solid #ffd700; color:#fff; padding:10px 18px; border-radius:8px; font-weight:800; font-size:12.5px; z-index:99999; box-shadow:0 8px 24px rgba(0,0,0,0.6); display:none; text-align:center;';
+        document.body.appendChild(toast);
+      }
+      toast.innerText = text;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3500);
+    }
+
+    window.syncMatchBetsUI = function(data) {
+      if (!data) return;
+      if (data.total_staked !== undefined) {
+        const el = document.getElementById('match-total-staked-text');
+        if (el) el.innerText = '₹' + Number(data.total_staked).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+      }
+      if (data.open_bets) {
+        renderActiveBetsList(data.open_bets);
+        const b1 = document.getElementById('count-match-active-bets');
+        if (b1) b1.innerText = data.open_bets.length;
+        const b2 = document.getElementById('open-bets-count');
+        if (b2) b2.innerText = data.open_bets.length;
+      }
+      if (data.settled_bets) {
+        renderSettledBetsList(data.settled_bets);
+        const b3 = document.getElementById('count-match-settled-bets');
+        if (b3) b3.innerText = data.settled_bets.length;
+      }
+      if (data.recent_activity || data.activity) {
+        renderActivityFeed(data.recent_activity || data.activity);
+      }
+    };
+
+    function renderActiveBetsList(openBets) {
+      const list = document.getElementById('match-active-bets-list');
+      const dtOpenList = document.getElementById('open-bets-list');
+
+      if (!list) return;
+
+      if (!openBets || openBets.length === 0) {
+        list.innerHTML = '<div class="dash-empty-msg" id="empty-active-bets" style="color: #64748b; font-size: 11.5px; padding: 12px; text-align: center;">No active bets on this match. Click any Back or Lay box to place a live exchange bet!</div>';
+        if (dtOpenList) dtOpenList.innerHTML = '<div class="betslip-empty">No active bets on this match yet.</div>';
+        return;
+      }
+
+      let html = '';
+      let dtHtml = '';
+      openBets.forEach(b => {
+        const ret = b.type.toLowerCase() === 'back' ? (b.potential_profit + b.stake) : b.potential_profit;
+        const improvedBadge = b.odds_improved ? '<span style="font-size: 9px; background:#00e676; color:#000; padding:1px 4px; border-radius:3px; font-weight:800; margin-left:4px;">IMPROVED</span>' : '';
+
+        html += `
+          <div class="match-bet-card" id="bet-card-${b.id}">
+            <div class="mbc-top">
+              <span class="bet-badge ${b.type.toLowerCase()}">${b.type.toUpperCase()}</span>
+              <span class="mbc-runner">${b.runner}</span>
+              <span class="mbc-market">${(b.market_type || 'MATCH ODDS').toUpperCase().replace('_', ' ')}</span>
+            </div>
+            <div class="mbc-mid">
+              <div>Odds: <strong style="color: #fff;">${b.odds}</strong> ${improvedBadge}</div>
+              <div>Stake: <strong style="color: #fff;">₹${b.stake}</strong></div>
+              <div style="color: #00e676;">Return: <strong>₹${ret.toLocaleString('en-IN', {minimumFractionDigits: 2})}</strong></div>
+            </div>
+            <div class="mbc-bot">
+              <span style="font-size: 9.5px; color: #64748b;">${b.placed_at || 'Just now'}</span>
+              <button class="cashout-btn" data-bet-id="${b.id}" data-match-id="${b.match_id}" data-runner="${b.runner}" data-orig-odds="${b.odds}" data-stake="${b.stake}" onclick="executeTurboCashout('${b.id}', this)">
+                <span>⚡ CASHOUT</span>
+                <span class="cashout-payout" style="font-weight:900; margin-left:4px;">₹${b.stake}</span>
+              </button>
+            </div>
+          </div>
+        `;
+
+        dtHtml += `
+          <div class="open-bet-item">
+            <div class="open-bet-top">
+              <span class="bet-badge ${b.type.toLowerCase()}">${b.type.toUpperCase()}</span>
+              <span style="font-size: 11px; font-weight: 800; color: #fff;">${b.runner}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text-muted); margin-top: 4px;">
+              <span>Odds: <strong style="color: #fff;">${b.odds}</strong></span>
+              <span>Stake: <strong style="color: #fff;">₹${b.stake}</strong></span>
+            </div>
+            <div style="margin-top: 6px; text-align: right;">
+              <button class="cashout-btn" style="padding: 2px 6px; font-size: 10px;" onclick="executeTurboCashout('${b.id}', this)">⚡ CASHOUT ₹${b.stake}</button>
+            </div>
+          </div>
+        `;
+      });
+
+      list.innerHTML = html;
+      if (dtOpenList) dtOpenList.innerHTML = dtHtml;
+    }
+
+    function renderSettledBetsList(settledBets) {
+      const list = document.getElementById('match-settled-bets-list');
+      if (!list) return;
+
+      if (!settledBets || settledBets.length === 0) {
+        list.innerHTML = '<div class="dash-empty-msg" style="color: #64748b; font-size: 11.5px; padding: 12px; text-align: center;">No settled bets for this match yet.</div>';
+        return;
+      }
+
+      let html = '';
+      settledBets.forEach(b => {
+        let stColor = '#facc15';
+        if (b.status === 'WON') stColor = '#00e676';
+        else if (b.status === 'LOST') stColor = '#ff5252';
+
+        html += `
+          <div class="match-bet-card settled">
+            <div class="mbc-top">
+              <span class="bet-badge ${b.type.toLowerCase()}">${b.type.toUpperCase()}</span>
+              <span class="mbc-runner">${b.runner}</span>
+              <span class="status-tag ${b.status.toLowerCase()}">${b.status}</span>
+            </div>
+            <div class="mbc-mid">
+              <div>Odds: <strong>${b.odds}</strong></div>
+              <div>Stake: <strong>₹${b.stake}</strong></div>
+              <div>Result: <strong style="color: ${stColor};">${b.status}</strong></div>
+            </div>
+          </div>
+        `;
+      });
+      list.innerHTML = html;
+    }
+
+    function renderActivityFeed(activityList) {
+      const tbody = document.getElementById('match-activity-feed-body');
+      if (!tbody || !activityList) return;
+
+      if (activityList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 12px;">Waiting for live match orders...</td></tr>';
+        return;
+      }
+
+      let html = '';
+      activityList.forEach(act => {
+        html += `
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+            <td style="color: #64748b; padding: 4px;">${act.time}</td>
+            <td style="color: #94a3b8; padding: 4px;">${act.user_masked}</td>
+            <td style="font-weight: 700; color: #fff; padding: 4px;">${act.runner}</td>
+            <td style="padding: 4px;"><span class="bet-badge ${act.type.toLowerCase()}">${act.type}</span></td>
+            <td style="font-weight: 800; color: #facc15; padding: 4px;">${act.odds}</td>
+            <td style="font-weight: 800; color: #00e676; padding: 4px;">₹${act.stake}</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    async function executeTurboCashout(betId, btnElement) {
+      if (!confirm('Execute instant Turbo Cash-Out for this bet?')) return;
+
+      if (btnElement) {
+        btnElement.disabled = true;
+        btnElement.innerHTML = '<span>⚡ CASHING OUT...</span>';
+      }
+
+      try {
+        const res = await fetch('/api/bet/cashout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bet_id: betId })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.detail || 'Cashout failed');
+          if (btnElement) {
+            btnElement.disabled = false;
+            btnElement.innerHTML = '<span>⚡ CASHOUT</span>';
+          }
+          return;
+        }
+
+        if (window.bettingEngine && typeof window.bettingEngine.playBeep === 'function') {
+          window.bettingEngine.playBeep('win');
+        }
+
+        showToast(`⚡ Turbo Cash-Out Executed! Credited ₹${data.cashout_payout.toLocaleString('en-IN')}`);
+        window.syncMatchBetsUI(data);
+
+      } catch (err) {
+        alert('Error during cashout: ' + err.message);
+        if (btnElement) {
+          btnElement.disabled = false;
+          btnElement.innerHTML = '<span>⚡ CASHOUT</span>';
+        }
+      }
+    }
+
+    function switchMatchDashTab(tab) {
+      const paneAct = document.getElementById('pane-active-bets');
+      const paneSet = document.getElementById('pane-settled-bets');
+      const paneFeed = document.getElementById('pane-activity-feed');
+
+      const btnAct = document.getElementById('btn-tab-active-bets');
+      const btnSet = document.getElementById('btn-tab-settled-bets');
+      const btnFeed = document.getElementById('btn-tab-activity-feed');
+
+      if (tab === 'active') {
+        if (paneAct) paneAct.style.display = 'block';
+        if (paneSet) paneSet.style.display = 'none';
+        if (paneFeed) paneFeed.style.display = 'none';
+        if (btnAct) btnAct.classList.add('active');
+        if (btnSet) btnSet.classList.remove('active');
+        if (btnFeed) btnFeed.classList.remove('active');
+      } else if (tab === 'settled') {
+        if (paneAct) paneAct.style.display = 'none';
+        if (paneSet) paneSet.style.display = 'block';
+        if (paneFeed) paneFeed.style.display = 'none';
+        if (btnAct) btnAct.classList.remove('active');
+        if (btnSet) btnSet.classList.add('active');
+        if (btnFeed) btnFeed.classList.remove('active');
+      } else {
+        if (paneAct) paneAct.style.display = 'none';
+        if (paneSet) paneSet.style.display = 'none';
+        if (paneFeed) paneFeed.style.display = 'block';
+        if (btnAct) btnAct.classList.remove('active');
+        if (btnSet) btnSet.classList.remove('active');
+        if (btnFeed) btnFeed.classList.add('active');
+      }
+    }
+
+    // Listen to WebSocket Live Bet Activity Stream
+    window.addEventListener('cricknova:new_bet_activity', (e) => {
+      const item = e.detail && e.detail.activity_item;
+      if (item && String(item.match_id) === String(window.CURRENT_MATCH_ID)) {
+        const tbody = document.getElementById('match-activity-feed-body');
+        if (tbody) {
+          const row = document.createElement('tr');
+          row.style.cssText = 'border-bottom: 1px solid rgba(255,255,255,0.03); background: rgba(0,230,118,0.1); transition: background 1s ease;';
+          row.innerHTML = `
+            <td style="color: #64748b; padding: 4px;">${item.time}</td>
+            <td style="color: #94a3b8; padding: 4px;">${item.user_masked}</td>
+            <td style="font-weight: 700; color: #fff; padding: 4px;">${item.runner}</td>
+            <td style="padding: 4px;"><span class="bet-badge ${item.type.toLowerCase()}">${item.type}</span></td>
+            <td style="font-weight: 800; color: #facc15; padding: 4px;">${item.odds}</td>
+            <td style="font-weight: 800; color: #00e676; padding: 4px;">₹${item.stake}</td>
+          `;
+          tbody.prepend(row);
+          setTimeout(() => { row.style.background = 'transparent'; }, 2000);
+        }
+      }
+    });
 
     function filterMarketCategory(cat, btn) {
       if (btn && btn.parentElement) {

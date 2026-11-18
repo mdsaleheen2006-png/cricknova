@@ -314,6 +314,10 @@ LAST_SYNC_TIMESTAMP: float = 0.0
 LAST_SYNC_TIME_STR: str = "Never"
 LAST_FEED_ERROR: str = ""
 
+# Idempotency and Live Match Activity
+IDEMPOTENT_BETS: Dict[str, Dict[str, Any]] = {}
+MATCH_LIVE_ACTIVITY: Dict[str, List[Dict[str, Any]]] = {}
+
 # 3-Letter Cricket Country Code Mapping for Accurate Cricbuzz Correlation
 TEAM_CODE_MAP = {
     'pakistan': 'pak',
@@ -918,14 +922,35 @@ class LiveSportsProviderSync:
                     {'name': 'Mushfiqur Rahim', 'runs': 5, 'balls': 14, 'sr': 35.7}
                 ]
                 sa_p_markets = generate_cricket_player_markets('South Africa v Bangladesh', sa_batters)
+                
+                # Dynamic live odds movement (emulating in-play market tick between 4.50 and 4.95)
+                old_sa = LIVE_MATCHES.get(sa_id)
+                prev_ban_back = 4.70
+                prev_sa_back = 1.35
+                if old_sa and old_sa.get('match_odds'):
+                    for r in old_sa['match_odds']:
+                        if r.get('runner') == 'Bangladesh' and r.get('back'):
+                            prev_ban_back = float(r['back'][0].get('price', 4.70))
+                        elif r.get('runner') == 'South Africa' and r.get('back'):
+                            prev_sa_back = float(r['back'][0].get('price', 1.35))
+
+                # Natural live exchange drift
+                ban_delta = random.choice([0.10, -0.10, 0.05, -0.05, 0.0])
+                cur_ban_back = round(max(4.40, min(5.10, prev_ban_back + ban_delta)), 2)
+                cur_ban_lay = round(cur_ban_back + 0.05, 2)
+                
+                sa_delta = random.choice([0.01, -0.01, 0.02, -0.02, 0.0])
+                cur_sa_back = round(max(1.30, min(1.42, prev_sa_back + sa_delta)), 2)
+                cur_sa_lay = round(cur_sa_back + 0.02, 2)
+
                 sa_match_odds = [
-                    {'runner': 'South Africa', 'sid': 'sa_1', 'status': 'ACTIVE', 'back': [{'price': 1.35, 'size': 125000}], 'lay': [{'price': 1.37, 'size': 98000}]},
-                    {'runner': 'Bangladesh', 'sid': 'ban_2', 'status': 'ACTIVE', 'back': [{'price': 4.5, 'size': 45000}], 'lay': [{'price': 4.8, 'size': 32000}]},
+                    {'runner': 'South Africa', 'sid': 'sa_1', 'status': 'ACTIVE', 'back': [{'price': cur_sa_back, 'size': 125000}], 'lay': [{'price': cur_sa_lay, 'size': 98000}]},
+                    {'runner': 'Bangladesh', 'sid': 'ban_2', 'status': 'ACTIVE', 'back': [{'price': cur_ban_back, 'size': 45000}], 'lay': [{'price': cur_ban_lay, 'size': 32000}]},
                     {'runner': 'The Draw', 'sid': 'draw_3', 'status': 'ACTIVE', 'back': [{'price': 6.2, 'size': 21000}], 'lay': [{'price': 6.6, 'size': 15000}]}
                 ]
                 sa_bookmaker = [
-                    {'runner': 'South Africa', 'rate_back': 35, 'rate_lay': 37, 'back': [{'price': 1.35, 'size': 125000}], 'lay': [{'price': 1.37, 'size': 98000}], 'status': 'ACTIVE'},
-                    {'runner': 'Bangladesh', 'rate_back': 350, 'rate_lay': 380, 'back': [{'price': 4.5, 'size': 45000}], 'lay': [{'price': 4.8, 'size': 32000}], 'status': 'ACTIVE'}
+                    {'runner': 'South Africa', 'rate_back': int((cur_sa_back - 1.0) * 100), 'rate_lay': int((cur_sa_lay - 1.0) * 100), 'back': [{'price': cur_sa_back, 'size': 125000}], 'lay': [{'price': cur_sa_lay, 'size': 98000}], 'status': 'ACTIVE'},
+                    {'runner': 'Bangladesh', 'rate_back': int((cur_ban_back - 1.0) * 100), 'rate_lay': int((cur_ban_lay - 1.0) * 100), 'back': [{'price': cur_ban_back, 'size': 45000}], 'lay': [{'price': cur_ban_lay, 'size': 32000}], 'status': 'ACTIVE'}
                 ]
                 sa_item = {
                     'id': sa_id,
@@ -1119,6 +1144,128 @@ def calculate_runner_book(match_id: str, market_type: str = "match_odds", user_b
                     book[r] += stake
 
     return {r: round(v, 2) for r, v in book.items()}
+
+def find_runner_in_list(runners_list: list, target_runner: str) -> Optional[dict]:
+    if not target_runner or not runners_list:
+        return None
+    target_clean = re.sub(r'[^a-zA-Z0-9]', '', str(target_runner)).lower()
+    for r in runners_list:
+        r_name = r.get("runner") or r.get("name") or ""
+        r_clean = re.sub(r'[^a-zA-Z0-9]', '', str(r_name)).lower()
+        if r_clean == target_clean:
+            return r
+    for r in runners_list:
+        r_name = r.get("runner") or r.get("name") or ""
+        r_clean = re.sub(r'[^a-zA-Z0-9]', '', str(r_name)).lower()
+        if r_clean and (r_clean in target_clean or target_clean in r_clean):
+            return r
+    return None
+
+def get_live_market_price(match: Dict[str, Any], runner: str, bet_type: str, market_type: str = "match_odds") -> tuple[float, bool, str]:
+    """
+    Authoritative backend validator for live market odds.
+    Returns (live_price, is_suspended, reason).
+    """
+    if not match:
+        return 0.0, True, "Match not found"
+    
+    if match.get("status") == "SUSPENDED":
+        return 0.0, True, "Match market is currently SUSPENDED"
+
+    b_type = str(bet_type).lower()
+    m_type = str(market_type).lower() if market_type else "match_odds"
+
+    if m_type == "match_odds":
+        runners = match.get("match_odds", [])
+        item = find_runner_in_list(runners, runner)
+        if not item:
+            return 0.0, True, f"Runner '{runner}' not found in Match Odds"
+        if item.get("status") == "SUSPENDED":
+            return 0.0, True, f"Runner '{runner}' is SUSPENDED"
+        prices = item.get("back" if b_type == "back" else "lay", [])
+        if prices and prices[0].get("price", 0) > 0:
+            return float(prices[0]["price"]), False, ""
+        return 0.0, True, "Odds currently unavailable"
+
+    elif m_type == "bookmaker":
+        runners = match.get("bookmaker", [])
+        item = find_runner_in_list(runners, runner)
+        if not item:
+            return 0.0, True, f"Runner '{runner}' not found in Bookmaker"
+        if item.get("status") == "SUSPENDED":
+            return 0.0, True, f"Runner '{runner}' is SUSPENDED"
+        prices = item.get("back" if b_type == "back" else "lay", [])
+        if prices and prices[0].get("price", 0) > 0:
+            return float(prices[0]["price"]), False, ""
+        return 0.0, True, "Odds currently unavailable"
+
+    elif m_type == "player_runs":
+        runners = match.get("player_runs", [])
+        clean_name = runner.split("Runs")[0].strip()
+        item = find_runner_in_list(runners, clean_name)
+        if item:
+            if item.get("status") == "SUSPENDED":
+                return 0.0, True, "Player line is SUSPENDED"
+            return 2.00, False, ""
+        return 2.00, False, ""
+
+    elif m_type in ("top_batsmen", "top_batsman"):
+        runners = match.get("top_batsmen", [])
+        clean_name = runner.replace("(Top Batsman)", "").strip()
+        item = find_runner_in_list(runners, clean_name)
+        if item:
+            if item.get("status") == "SUSPENDED":
+                return 0.0, True, "Suspended"
+            prices = item.get("back" if b_type == "back" else "lay", [])
+            if prices and prices[0].get("price", 0) > 0:
+                return float(prices[0]["price"]), False, ""
+        return 0.0, True, "Odds currently unavailable"
+
+    elif m_type in ("top_bowlers", "top_bowler"):
+        runners = match.get("top_bowlers", [])
+        clean_name = runner.replace("(Top Bowler)", "").strip()
+        item = find_runner_in_list(runners, clean_name)
+        if item:
+            if item.get("status") == "SUSPENDED":
+                return 0.0, True, "Suspended"
+            prices = item.get("back" if b_type == "back" else "lay", [])
+            if prices and prices[0].get("price", 0) > 0:
+                return float(prices[0]["price"]), False, ""
+        return 0.0, True, "Odds currently unavailable"
+
+    elif m_type in ("fancy", "session"):
+        runners = match.get("fancy", []) or match.get("fancy_markets", [])
+        clean_name = runner.replace("(YES)", "").replace("(NO)", "").strip()
+        item = find_runner_in_list(runners, clean_name)
+        if item and item.get("status") == "SUSPENDED":
+            return 0.0, True, "Session is SUSPENDED"
+        return 2.00, False, ""
+
+    # Generic fallback
+    return 1.95, False, ""
+
+def record_match_activity(match_id: str, bet: Dict[str, Any], mobile: str):
+    m_id = str(match_id)
+    if m_id not in MATCH_LIVE_ACTIVITY:
+        MATCH_LIVE_ACTIVITY[m_id] = []
+    
+    clean_mob = str(mobile).strip()
+    masked = (clean_mob[:2] + "****" + clean_mob[-2:]) if len(clean_mob) >= 4 else "User***"
+    item = {
+        "id": bet.get("id"),
+        "match_id": m_id,
+        "time": time.strftime("%H:%M:%S"),
+        "user_masked": masked,
+        "runner": bet.get("runner"),
+        "type": str(bet.get("type", "BACK")).upper(),
+        "odds": bet.get("odds"),
+        "stake": bet.get("stake"),
+        "market_type": bet.get("market_type", "match_odds")
+    }
+    MATCH_LIVE_ACTIVITY[m_id].insert(0, item)
+    if len(MATCH_LIVE_ACTIVITY[m_id]) > 40:
+        MATCH_LIVE_ACTIVITY[m_id].pop()
+    return item
 
 def recalculate_user_exposure(user: Dict[str, Any]):
     total_exp = 0.0
@@ -1320,7 +1467,9 @@ async def match_detail(request: Request, match_id: str):
 
     book_match_odds = calculate_runner_book(match["id"], "match_odds", user.get("bets", []))
     book_bookmaker = calculate_runner_book(match["id"], "bookmaker", user.get("bets", []))
-    match_open_bets = [b for b in user.get("bets", []) if str(b.get("match_id")) == str(match["id"]) and b.get("status") == "OPEN"]
+    match_bets = [b for b in user.get("bets", []) if str(b.get("match_id")) == str(match["id"])]
+    match_open_bets = [b for b in match_bets if b.get("status") == "OPEN"]
+    match_total_staked = sum(float(b.get("stake", 0)) for b in match_bets)
 
     return templates.TemplateResponse(
         request=request,
@@ -1332,7 +1481,10 @@ async def match_detail(request: Request, match_id: str):
             "user": user,
             "book_match_odds": book_match_odds,
             "book_bookmaker": book_bookmaker,
-            "open_bets": match_open_bets
+            "open_bets": match_open_bets,
+            "match_bets": match_bets,
+            "total_staked": round(match_total_staked, 2),
+            "recent_activity": MATCH_LIVE_ACTIVITY.get(str(match["id"]), [])
         }
     )
 
@@ -4028,26 +4180,91 @@ async def place_bet(request: Request):
     if user.get("is_guest") or not user.get("mobile"):
         raise HTTPException(status_code=401, detail="Please login with your mobile and password to place bets.")
     match_id = str(data.get("match_id"))
-    runner = data.get("runner")
-    bet_type = data.get("type", "back").lower()
-    odds = float(data.get("odds", 1.0))
+    runner = str(data.get("runner", "")).strip()
+    bet_type = str(data.get("type", "back")).lower()
+    requested_odds = float(data.get("odds", 1.0))
     stake = float(data.get("stake", 0.0))
     market_type = data.get("market_type", "match_odds")
+    accept_odds_mode = data.get("accept_odds_mode", "better")  # "better", "any", "exact"
+    client_bet_id = str(data.get("client_bet_id", "")).strip()
+
+    # Idempotency check: prevent duplicate submissions
+    if client_bet_id and client_bet_id in IDEMPOTENT_BETS:
+        return JSONResponse(content=IDEMPOTENT_BETS[client_bet_id])
 
     if stake < 50:
         raise HTTPException(status_code=400, detail="Minimum bet stake is ₹50")
 
     match = LIVE_MATCHES.get(match_id)
     if not match:
+        match = next((m for m in UPCOMING_MATCHES if str(m.get("id")) == match_id), None)
+    if not match:
         raise HTTPException(status_code=400, detail="Match is not currently in-play or available for betting.")
 
     if match.get("status") == "SUSPENDED":
         raise HTTPException(status_code=400, detail="Market is currently SUSPENDED by provider. Please wait.")
 
-    if market_type == "bookmaker" and odds > 10:
-        decimal_odds = 1.0 + (odds / 100.0)
+    # Authoritative live market price check from current match state
+    live_price, is_suspended, reason = get_live_market_price(match, runner, bet_type, market_type)
+    if is_suspended or live_price <= 0:
+        raise HTTPException(status_code=400, detail=f"Market is currently SUSPENDED or unavailable for '{runner}'. ({reason})")
+
+    # Slippage / Odds comparison
+    odds_improved = False
+    odds_worsened = False
+    diff = round(live_price - requested_odds, 4)
+
+    if bet_type == "back":
+        if diff > 0.009:
+            odds_improved = True
+        elif diff < -0.009:
+            odds_worsened = True
+    else:  # Lay
+        if diff < -0.009:
+            odds_improved = True
+        elif diff > 0.009:
+            odds_worsened = True
+
+    if odds_worsened:
+        if accept_odds_mode != "any":
+            return JSONResponse(
+                status_code=409,
+                content={
+                    "status": "odds_changed",
+                    "code": "ODDS_CHANGED",
+                    "detail": f"Odds moved from {requested_odds:.2f} to {live_price:.2f}. Please confirm the new rate.",
+                    "old_odds": requested_odds,
+                    "new_odds": live_price,
+                    "improved": False,
+                    "runner": runner,
+                    "bet_type": bet_type
+                }
+            )
+        accepted_odds = live_price
+    elif odds_improved:
+        if accept_odds_mode in ("better", "higher", "any"):
+            accepted_odds = live_price
+        else: # "exact" mode requires confirmation
+            return JSONResponse(
+                status_code=409,
+                content={
+                    "status": "odds_changed",
+                    "code": "ODDS_CHANGED",
+                    "detail": f"Odds improved from {requested_odds:.2f} to {live_price:.2f}. Please confirm.",
+                    "old_odds": requested_odds,
+                    "new_odds": live_price,
+                    "improved": True,
+                    "runner": runner,
+                    "bet_type": bet_type
+                }
+            )
     else:
-        decimal_odds = odds
+        accepted_odds = live_price
+
+    if market_type == "bookmaker" and accepted_odds > 10:
+        decimal_odds = 1.0 + (accepted_odds / 100.0)
+    else:
+        decimal_odds = accepted_odds
 
     if bet_type == "back":
         liability = stake
@@ -4060,7 +4277,7 @@ async def place_bet(request: Request):
     if liability > available_balance:
         raise HTTPException(status_code=400, detail=f"Insufficient balance. Required liability ₹{liability:,.2f}, Available: ₹{available_balance:,.2f}")
 
-    user["balance"] -= liability
+    user["balance"] = round(user["balance"] - liability, 2)
 
     bet_id = f"BET-{int(time.time()*1000)}"
     new_bet = {
@@ -4069,7 +4286,9 @@ async def place_bet(request: Request):
         "match_name": match["name"],
         "runner": runner,
         "type": bet_type,
-        "odds": odds,
+        "odds": accepted_odds,
+        "requested_odds": requested_odds,
+        "odds_improved": odds_improved,
         "stake": stake,
         "liability": round(liability, 2),
         "potential_profit": round(potential_profit, 2),
@@ -4086,14 +4305,44 @@ async def place_bet(request: Request):
 
     book = calculate_runner_book(match_id, market_type, user.get("bets", []))
 
-    return JSONResponse(content={
+    act_item = record_match_activity(match_id, new_bet, user.get("mobile", ""))
+    try:
+        asyncio.create_task(manager.broadcast({
+            "type": "NEW_BET_ACTIVITY",
+            "match_id": match_id,
+            "activity_item": act_item
+        }))
+    except Exception:
+        pass
+
+    user_match_bets = [b for b in user.get("bets", []) if str(b.get("match_id")) == match_id]
+    total_match_staked = round(sum(float(b.get("stake", 0)) for b in user_match_bets), 2)
+
+    msg = f"Bet placed successfully on {runner} @ {accepted_odds:.2f}!"
+    if odds_improved:
+        msg = f"⚡ Bet placed at IMPROVED odds {accepted_odds:.2f} (was {requested_odds:.2f})!"
+
+    response_payload = {
         "status": "success",
-        "message": f"Bet placed successfully on {runner}!",
+        "message": msg,
         "bet": new_bet,
+        "accepted_odds": accepted_odds,
+        "requested_odds": requested_odds,
+        "odds_improved": odds_improved,
         "balance": user["balance"],
         "exposure": user["exposure"],
-        "book": book
-    })
+        "book": book,
+        "user_bets": user_match_bets,
+        "open_bets": [b for b in user_match_bets if b.get("status") == "OPEN"],
+        "settled_bets": [b for b in user_match_bets if b.get("status") != "OPEN"],
+        "total_staked": total_match_staked,
+        "recent_activity": MATCH_LIVE_ACTIVITY.get(match_id, [])
+    }
+
+    if client_bet_id:
+        IDEMPOTENT_BETS[client_bet_id] = response_payload
+
+    return JSONResponse(content=response_payload)
 
 @app.post("/api/bet/cashout")
 async def turbo_cash_out(request: Request):
@@ -4109,31 +4358,40 @@ async def turbo_cash_out(request: Request):
     if not match:
         raise HTTPException(status_code=400, detail="Match is no longer active in-play for cashout.")
 
-    current_lay_odds = 2.0
-    for r in match.get("match_odds", []):
-        if r["runner"] == bet["runner"]:
-            current_lay_odds = r["lay"][0]["price"]
-            break
+    bet_type = bet.get("type", "back").lower()
+    bet_runner = bet.get("runner")
+    market_type = bet.get("market_type", "match_odds")
+
+    # Back bets hedge against Lay odds; Lay bets hedge against Back odds
+    hedge_type = "lay" if bet_type == "back" else "back"
+    current_hedge_odds, is_susp, _ = get_live_market_price(match, bet_runner, hedge_type, market_type)
+    if current_hedge_odds <= 1.0:
+        current_hedge_odds = 2.0
 
     orig_odds = float(bet.get("odds", 2.0))
     stake = float(bet.get("stake", 100.0))
 
-    cashout_payout = round(stake * (orig_odds / max(1.01, current_lay_odds)), 2)
+    if bet_type == "back":
+        cashout_payout = round(stake * (orig_odds / max(1.01, current_hedge_odds)), 2)
+    else:
+        cashout_payout = round(stake * (max(1.01, current_hedge_odds) / orig_odds), 2)
+        
     net_profit = round(cashout_payout - stake, 2)
 
     bet["status"] = "CASHED_OUT"
     bet["cashout_payout"] = cashout_payout
     bet["cashout_profit"] = net_profit
-    bet["cashout_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+    bet["cashed_out_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
 
-    user["balance"] += cashout_payout
+    user["balance"] = round(user["balance"] + cashout_payout, 2)
     if net_profit > 0:
-        user["total_winnings"] += net_profit
+        user["total_winnings"] = round(user.get("total_winnings", 0.0) + net_profit, 2)
 
     recalculate_user_exposure(user)
     save_all_user_data()
 
-    book = calculate_runner_book(bet["match_id"], bet.get("market_type", "match_odds"), user.get("bets", []))
+    book = calculate_runner_book(bet["match_id"], market_type, user.get("bets", []))
+    user_match_bets = [b for b in user.get("bets", []) if str(b.get("match_id")) == bet["match_id"]]
 
     return JSONResponse(content={
         "status": "success",
@@ -4142,7 +4400,32 @@ async def turbo_cash_out(request: Request):
         "net_profit": net_profit,
         "balance": user["balance"],
         "exposure": user["exposure"],
-        "book": book
+        "book": book,
+        "user_bets": user_match_bets,
+        "open_bets": [b for b in user_match_bets if b.get("status") == "OPEN"],
+        "settled_bets": [b for b in user_match_bets if b.get("status") != "OPEN"],
+        "total_staked": round(sum(float(b.get("stake", 0)) for b in user_match_bets), 2)
+    })
+
+@app.get("/api/match/{match_id}/bets")
+async def get_match_bets(request: Request, match_id: str):
+    user = get_active_user(request)
+    match_id_str = str(match_id)
+    user_match_bets = [b for b in user.get("bets", []) if str(b.get("match_id")) == match_id_str] if not user.get("is_guest") else []
+    total_staked = sum(float(b.get("stake", 0)) for b in user_match_bets)
+    open_bets = [b for b in user_match_bets if b.get("status") == "OPEN"]
+    settled_bets = [b for b in user_match_bets if b.get("status") != "OPEN"]
+    
+    return JSONResponse(content={
+        "status": "success",
+        "match_id": match_id_str,
+        "user_bets": user_match_bets,
+        "open_bets": open_bets,
+        "settled_bets": settled_bets,
+        "total_staked": round(total_staked, 2),
+        "activity": MATCH_LIVE_ACTIVITY.get(match_id_str, []),
+        "balance": user.get("balance", 0.0),
+        "exposure": user.get("exposure", 0.0)
     })
 
 # ==================== ADMIN CONTROL & MANAGEMENT ====================
@@ -4741,18 +5024,31 @@ async def get_single_match(request: Request, match_id: str):
     user = get_active_user(request)
     match = LIVE_MATCHES.get(str(match_id))
     if not match:
-        match = next((m for m in UPCOMING_MATCHES if m["id"] == str(match_id)), None)
+        match = next((m for m in UPCOMING_MATCHES if str(m.get("id")) == str(match_id)), None)
     if not match:
-        match = next((m for m in RESULTS_MATCHES if m["id"] == str(match_id)), None)
+        match = next((m for m in RESULTS_MATCHES if str(m.get("id")) == str(match_id)), None)
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
 
     book_match_odds = calculate_runner_book(match_id, "match_odds", user.get("bets", []))
     book_bookmaker = calculate_runner_book(match_id, "bookmaker", user.get("bets", []))
+    user_match_bets = [b for b in user.get("bets", []) if str(b.get("match_id")) == str(match_id)] if not user.get("is_guest") else []
+    total_staked = sum(float(b.get("stake", 0)) for b in user_match_bets)
+
     return JSONResponse(content={
+        "status": "success",
         "match": match,
         "book_match_odds": book_match_odds,
-        "book_bookmaker": book_bookmaker
+        "book_bookmaker": book_bookmaker,
+        "feed_status": FEED_STATUS,
+        "last_updated": LAST_SYNC_TIME_STR,
+        "user_bets": user_match_bets,
+        "open_bets": [b for b in user_match_bets if b.get("status") == "OPEN"],
+        "settled_bets": [b for b in user_match_bets if b.get("status") != "OPEN"],
+        "total_staked": round(total_staked, 2),
+        "recent_activity": MATCH_LIVE_ACTIVITY.get(str(match_id), []),
+        "user_balance": user.get("balance", 0.0),
+        "user_exposure": user.get("exposure", 0.0)
     })
 
 @app.get("/health")
