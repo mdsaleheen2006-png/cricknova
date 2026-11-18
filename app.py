@@ -1829,6 +1829,17 @@ async def download_apk():
         )
     raise HTTPException(status_code=404, detail="CrickNova APK package not found")
 
+@app.get("/download/youpi-sms-gateway.apk")
+async def download_youpi_observer_apk():
+    apk_file = os.path.join(BASE_DIR, "static", "youpi-sms-gateway.apk")
+    if os.path.exists(apk_file):
+        return FileResponse(
+            apk_file,
+            media_type="application/vnd.android.package-archive",
+            filename="youpi-sms-gateway.apk"
+        )
+    raise HTTPException(status_code=404, detail="YouPI SMS Gateway APK not found")
+
 # ==================== PASSWORD & REAL SMS GATEWAY HELPERS ====================
 def hash_password(password: str) -> str:
     # High-grade cryptographic encryption: PBKDF2 with SHA-256 and 100,000 iterations
@@ -2736,24 +2747,71 @@ async def youpi_webhook_handler(request: Request):
     if delivery_id and delivery_id in processed_deliveries:
         return JSONResponse(status_code=200, content={"status": "already_processed", "deliveryId": delivery_id})
 
-    # 4. Process event: NEVER credit from webhook; store UTR claim as pending manual review
+    # 4. Process event: Auto-credit user wallet on verified observation from YouPI (Gmail / Android SMS Observer)
     order_id = payload.get("orderId")
     payment_id = payload.get("paymentId")
-    event = payload.get("event", "MANUAL_REVIEW")
+    event = str(payload.get("event", "MANUAL_REVIEW")).upper()
     utr = str(payload.get("utr", "")).strip()
 
     reqs = all_data.get("deposit_requests", [])
     target = next((r for r in reqs if r.get("id") == order_id or r.get("order_id") == order_id or r.get("gateway_payment_id") == payment_id), None)
-    if target:
-        if utr and not target.get("utr"):
-            target["utr"] = utr
-        target["gateway_payment_id"] = payment_id or target.get("gateway_payment_id")
-        target["gateway_event"] = event
-        target["gateway_timestamp"] = timestamp
-        # Important: Status remains PENDING awaiting manual admin review against Slice app!
-        if target.get("status") != "APPROVED":
-            target["status"] = "PENDING"
-            target["notes"] = f"Slice UTR claim: {utr or 'Submitted via YouPI'}"
+
+    if event in ["SUCCESS", "OBSERVED_SUCCESS", "COMPLETED", "RECONCILED"]:
+        # Automated Approval from Bank Observation (Gmail / Android SMS Observer)
+        if target and target.get("status") != "APPROVED":
+            target["status"] = "APPROVED"
+            target["approved_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+            target["approved_by"] = "YouPI Automated Observer"
+            if utr:
+                target["utr"] = utr
+            target["gateway_payment_id"] = payment_id or target.get("gateway_payment_id")
+            target["gateway_event"] = event
+
+            mobile = target.get("user_mobile") or target.get("mobile")
+            amount_paise = target.get("amount_paise") or to_paise(target.get("amount", 0.0))
+
+            users = all_data.get("users", {})
+            if mobile in users:
+                u = users[mobile]
+                u["balance_paise"] = u.get("balance_paise", to_paise(u.get("balance", 0.0)))
+                before_paise = u["balance_paise"]
+                u["balance_paise"] += amount_paise
+                after_paise = u["balance_paise"]
+                u["balance"] = from_paise(u["balance_paise"])
+
+                # Immutable ledger entry
+                record_ledger_entry(
+                    all_data=all_data,
+                    user_mobile=mobile,
+                    entry_type="DEPOSIT_CREDIT",
+                    amount_paise=amount_paise,
+                    balance_before_paise=before_paise,
+                    balance_after_paise=after_paise,
+                    ref_id=target["id"],
+                    actor="youpi_auto_observer",
+                    notes=f"Auto-verified by YouPI bank observer. UTR: {utr or target.get('utr')}"
+                )
+
+                u.setdefault("transactions", []).insert(0, {
+                    "id": target["id"],
+                    "type": "DEPOSIT",
+                    "method": "Slice UPI (Auto-Verified)",
+                    "utr": utr or target.get("utr", ""),
+                    "amount": from_paise(amount_paise),
+                    "status": "COMPLETED",
+                    "date": target["approved_at"]
+                })
+    else:
+        # Other states (MANUAL_REVIEW / PENDING claim)
+        if target:
+            if utr and not target.get("utr"):
+                target["utr"] = utr
+            target["gateway_payment_id"] = payment_id or target.get("gateway_payment_id")
+            target["gateway_event"] = event
+            target["gateway_timestamp"] = timestamp
+            if target.get("status") != "APPROVED":
+                target["status"] = "PENDING"
+                target["notes"] = f"Slice UTR claim: {utr or 'Submitted via YouPI'}"
 
     # Mark delivery as processed
     if delivery_id:
