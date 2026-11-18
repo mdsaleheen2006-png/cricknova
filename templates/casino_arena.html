@@ -311,7 +311,7 @@ button[data-wager]:after {
   <div style="display:flex;align-items:center;gap:12px;">
     <div style="display:flex;flex-direction:column;align-items:flex-end;">
       <span style="font-size:9.5px;text-transform:uppercase;color:#94a3b8;font-weight:800;letter-spacing:0.8px;">{{ 'LIVE WALLET' if user and not user.is_guest else 'DEMO WALLET' }}</span>
-      <span class="wallet" id="balance" style="font-size:16px;font-weight:900;color:#facc15;">₹ 50,000</span>
+      <span class="wallet" id="balance" style="font-size:16px;font-weight:900;color:#facc15;">₹ 0.00</span>
     </div>
     <a href="/?deposit=1" class="deposit-btn">+ DEPOSIT</a>
     <button data-act="sound" style="padding:6px 10px;font-size:12px;background:#1e293b;border-color:#475569;">Sound</button>
@@ -344,7 +344,7 @@ function balance(delta=0){
   wallet = Math.round((wallet + delta) * 100) / 100;
   if (wallet < 0) wallet = 0;
   set('vip_casino_wallet', wallet);
-  bal.textContent = (userLoggedIn ? '₹ ' : 'Demo balance  ₹ ') + money(wallet);
+  bal.textContent = (userLoggedIn ? '' : 'Demo ') + money(wallet);
   if (userLoggedIn && delta !== 0) {
     if (delta < 0) {
       fetch('/api/casino/bet', {
@@ -359,7 +359,7 @@ function balance(delta=0){
         if (data && typeof data.new_balance === 'number') {
           wallet = data.new_balance;
           set('vip_casino_wallet', wallet);
-          bal.textContent = '₹ ' + money(wallet);
+          bal.textContent = money(wallet);
         }
       }).catch(err => console.warn('bet sync error:', err));
     } else {
@@ -376,7 +376,7 @@ function balance(delta=0){
         if (data && typeof data.new_balance === 'number') {
           wallet = data.new_balance;
           set('vip_casino_wallet', wallet);
-          bal.textContent = '₹ ' + money(wallet);
+          bal.textContent = money(wallet);
         }
       }).catch(err => console.warn('settle sync error:', err));
     }
