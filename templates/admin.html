@@ -385,8 +385,21 @@
                 📲 Download Observer APK (288 KB)
               </a>
               <a href="https://youpi-slice-gateway.onrender.com/admin" target="_blank" class="btn-reject" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; padding: 8px 12px; font-size: 11px; background: #334155; color: #cbd5e1; border: 1px solid #475569;">
-                🔗 Open Pairing QR
+                🔗 Open Gateway Admin
               </a>
+            </div>
+
+            <div id="youpi-pairing-box" style="margin-top: 12px; background: rgba(0,0,0,0.4); border: 1px dashed #7c3aed; border-radius: 6px; padding: 10px; text-align: center;">
+              <div style="font-size: 11px; font-weight: 700; color: #c084fc; margin-bottom: 6px;">
+                📷 Scan with YOUPI Observer App:
+              </div>
+              <div id="youpi-qr-wrapper" style="min-height: 180px; display: flex; align-items: center; justify-content: center;">
+                <div id="youpi-qr-spinner" style="font-size: 11px; color: var(--text-dim);">
+                  ⏳ Loading live pairing QR code...
+                </div>
+                <div id="youpi-qr-render" style="display: none; max-width: 180px; width: 100%; margin: 0 auto; background: #fff; padding: 6px; border-radius: 4px;"></div>
+              </div>
+              <div id="youpi-pair-creds" style="font-size: 10px; color: #94a3b8; margin-top: 6px; word-break: break-all;"></div>
             </div>
           </div>
 
@@ -500,8 +513,21 @@
                 📲 Download Observer APK (288 KB)
               </a>
               <a href="https://youpi-slice-gateway.onrender.com/admin" target="_blank" class="btn-reject" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; padding: 8px 12px; font-size: 11px; background: #334155; color: #cbd5e1; border: 1px solid #475569;">
-                🔗 Open Pairing QR
+                🔗 Open Gateway Admin
               </a>
+            </div>
+
+            <div id="youpi-pairing-box" style="margin-top: 12px; background: rgba(0,0,0,0.4); border: 1px dashed #7c3aed; border-radius: 6px; padding: 10px; text-align: center;">
+              <div style="font-size: 11px; font-weight: 700; color: #c084fc; margin-bottom: 6px;">
+                📷 Scan with YOUPI Observer App:
+              </div>
+              <div id="youpi-qr-wrapper" style="min-height: 180px; display: flex; align-items: center; justify-content: center;">
+                <div id="youpi-qr-spinner" style="font-size: 11px; color: var(--text-dim);">
+                  ⏳ Loading live pairing QR code...
+                </div>
+                <div id="youpi-qr-render" style="display: none; max-width: 180px; width: 100%; margin: 0 auto; background: #fff; padding: 6px; border-radius: 4px;"></div>
+              </div>
+              <div id="youpi-pair-creds" style="font-size: 10px; color: #94a3b8; margin-top: 6px; word-break: break-all;"></div>
             </div>
           </div>
 
@@ -678,8 +704,21 @@
                 📲 Download Observer APK (288 KB)
               </a>
               <a href="https://youpi-slice-gateway.onrender.com/admin" target="_blank" class="btn-reject" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; padding: 8px 12px; font-size: 11px; background: #334155; color: #cbd5e1; border: 1px solid #475569;">
-                🔗 Open Pairing QR
+                🔗 Open Gateway Admin
               </a>
+            </div>
+
+            <div id="youpi-pairing-box" style="margin-top: 12px; background: rgba(0,0,0,0.4); border: 1px dashed #7c3aed; border-radius: 6px; padding: 10px; text-align: center;">
+              <div style="font-size: 11px; font-weight: 700; color: #c084fc; margin-bottom: 6px;">
+                📷 Scan with YOUPI Observer App:
+              </div>
+              <div id="youpi-qr-wrapper" style="min-height: 180px; display: flex; align-items: center; justify-content: center;">
+                <div id="youpi-qr-spinner" style="font-size: 11px; color: var(--text-dim);">
+                  ⏳ Loading live pairing QR code...
+                </div>
+                <div id="youpi-qr-render" style="display: none; max-width: 180px; width: 100%; margin: 0 auto; background: #fff; padding: 6px; border-radius: 4px;"></div>
+              </div>
+              <div id="youpi-pair-creds" style="font-size: 10px; color: #94a3b8; margin-top: 6px; word-break: break-all;"></div>
             </div>
           </div>
 
@@ -964,6 +1003,31 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       updateSettlementRunners();
+      
+      // Auto-load YouPI SMS Gateway pairing QR
+      fetch('/api/admin/youpi/pair-qr')
+        .then(r => r.json())
+        .then(d => {
+          const spinners = document.querySelectorAll('#youpi-qr-spinner');
+          const qrBoxes = document.querySelectorAll('#youpi-qr-render');
+          const credsBoxes = document.querySelectorAll('#youpi-pair-creds');
+          if (d && d.pairingQrSvg) {
+            spinners.forEach(s => s.style.display = 'none');
+            qrBoxes.forEach(b => {
+              b.innerHTML = d.pairingQrSvg;
+              b.style.display = 'block';
+            });
+            credsBoxes.forEach(c => {
+              c.innerHTML = `<strong>Server:</strong> ${d.gatewayUrl || 'https://youpi-slice-gateway.onrender.com'}<br><strong>Token:</strong> <code style="color:#38bdf8; font-weight:800;">${(d.payload && d.payload.enrollmentToken) || d.enrollmentToken || ''}</code>`;
+            });
+          } else {
+            spinners.forEach(s => s.innerText = 'Pairing QR available in Gateway Admin');
+          }
+        })
+        .catch(() => {
+          const spinners = document.querySelectorAll('#youpi-qr-spinner');
+          spinners.forEach(s => s.innerText = 'Pairing QR available in Gateway Admin');
+        });
     });
   </script>
 </body>

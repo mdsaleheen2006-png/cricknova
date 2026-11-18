@@ -2579,6 +2579,7 @@ YOUPI_WEBHOOK_SECRET = os.environ.get("YOUPI_WEBHOOK_SECRET", "") or os.environ.
 YOUPI_RECEIVING_VPA = os.environ.get("YOUPI_RECEIVING_VPA", "9693554087@slc")
 YOUPI_RECEIVING_PAYEE = os.environ.get("YOUPI_RECEIVING_PAYEE", "Tarana Nasreen")
 YOUPI_RECEIVING_ACCOUNT_ID = os.environ.get("YOUPI_RECEIVING_ACCOUNT_ID", "da864feb-15d4-47cd-8afa-e64d05ad8e91")
+YOUPI_ADMIN_API_TOKEN = os.environ.get("YOUPI_ADMIN_API_TOKEN", "") or os.environ.get("ADMIN_API_TOKEN", "")
 
 def verify_youpi_signature(payload_bytes: bytes, signature_header: str, secret: str) -> bool:
     if not signature_header or not secret:
@@ -2823,6 +2824,23 @@ async def youpi_webhook_handler(request: Request):
 
     save_all_user_data(all_data)
     return JSONResponse(status_code=200, content={"received": True, "deliveryId": delivery_id})
+
+@app.get("/api/admin/youpi/pair-qr")
+async def get_youpi_pairing_qr_endpoint(request: Request):
+    token = YOUPI_ADMIN_API_TOKEN
+    if not token:
+        return JSONResponse(status_code=400, content={"error": "YOUPI_ADMIN_API_TOKEN not set on server"})
+    try:
+        url = f"{YOUPI_GATEWAY_URL}/api/v1/admin/sms-gateway/pair-qr"
+        req = urllib.request.Request(url, headers={
+            "Authorization": f"Bearer {token}",
+            "User-Agent": "CrickNova/1.0"
+        })
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode())
+            return JSONResponse(content=data)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.post("/api/user/deposit-request")
 async def submit_deposit_request(request: Request):
