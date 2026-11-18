@@ -351,7 +351,8 @@
 
         <!-- Category Scroll Bar -->
         <div class="android-cat-bar" style="margin-bottom: 10px;">
-          <button class="android-cat-btn active" onclick="filterMobileCasino('all', this)">⚡ All (24)</button>
+          <button class="android-cat-btn active" onclick="filterMobileCasino('all', this)">⚡ All ({{ casino_games|length }})</button>
+          <button class="android-cat-btn" onclick="filterMobileCasino('jili', this)" style="border: 1px solid #ffd700; color: #ffd700; background: rgba(255,215,0,0.15); font-weight: 800;">⭐ JILI Games</button>
           <button class="android-cat-btn" onclick="filterMobileCasino('cards', this)">🎴 Indian Cards</button>
           <button class="android-cat-btn" onclick="filterMobileCasino('crash', this)">✈️ Aviator & Crash</button>
           <button class="android-cat-btn" onclick="filterMobileCasino('roulette', this)">🎡 Roulette</button>
@@ -864,15 +865,15 @@
         <div class="exchange-card" style="margin-top: 14px;">
           <div class="exchange-header" style="background: #080f1e; padding: 10px 14px; border-bottom: 1px solid var(--border-dark); display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 13px; font-weight: 900; color: #fff;">🎰 WINBUZZ LIVE CASINO & AVIATOR CRASH</span>
-              <span style="background: #dc2626; color: #fff; font-size: 8.5px; font-weight: 900; padding: 2px 6px; border-radius: 3px;">24+ TABLES LIVE</span>
+              <span style="font-size: 13px; font-weight: 900; color: #fff;">🎰 WINBUZZ LIVE CASINO, JILI SUITE & AVIATOR</span>
+              <span style="background: #ffd700; color: #000; font-size: 8.5px; font-weight: 900; padding: 2px 6px; border-radius: 3px;">⭐ JILI OFFICIAL</span>
             </div>
-            <a href="/casino" style="color: var(--winbuzz-gold); font-size: 11px; font-weight: 800; text-decoration: none;">
-              Open Full Casino Lobby (24+ Games) →
+            <a href="/casino/fortune-gems" style="color: var(--winbuzz-gold); font-size: 11px; font-weight: 800; text-decoration: none;">
+              Play JILI Fortune Gems Demo & Real →
             </a>
           </div>
           <div style="padding: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;">
-            {% for g in casino_games[:8] %}
+            {% for g in casino_games %}
             <a href="/casino/{{ g.id }}" class="android-casino-card" style="background: {{ g.gradient|default('var(--bg-card)') }}; text-decoration: none; padding: 12px 10px;">
               <div class="casino-card-badge">{{ g.badge }}</div>
               <div class="casino-icon" style="font-size: 36px;">{{ g.icon }}</div>

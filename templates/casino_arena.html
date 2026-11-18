@@ -258,10 +258,19 @@
   </div>
 
   <div class="header-right">
+    <button class="icon-tool-btn" id="demoToggleBtn" onclick="toggleDemoMode()" style="background: rgba(0,231,1,0.15); border: 1px solid #00e701; color: #00e701; font-weight: 800; font-size: 11px;">
+      🎮 FREE DEMO
+    </button>
+    <button class="icon-tool-btn" id="refillDemoBtn" onclick="refillDemoCoins()" style="display:none; background: rgba(245,185,66,0.2); border: 1px solid var(--gold); color: var(--gold); font-weight: 800; font-size: 10px;">
+      + REFILL 10K
+    </button>
+    <button class="icon-tool-btn" id="paytableBtn" onclick="openPaytableModal()" style="font-size: 11px; font-weight: 800;">
+      📜 PAYTABLE
+    </button>
     <button class="icon-tool-btn" id="soundBtn" onclick="toggleAudio()">🔊</button>
     <a href="/?deposit=1" class="btn-deposit">+ DEPOSIT</a>
     <div class="wallet-card">
-      <span class="wallet-lbl">INR BALANCE</span>
+      <span class="wallet-lbl" id="walletLabel">INR BALANCE</span>
       <span class="wallet-val" id="walletDisplay">₹{{ "%.2f"|format(user.balance if user and user.balance is defined else 50000.0) }}</span>
     </div>
     <a href="/" class="btn-exchange">🏏 <span>CRICKET</span></a>
@@ -279,7 +288,8 @@
       <input type="text" class="drawer-search" id="drawerSearchInp" placeholder="🔍 Search 30+ VIP games..." oninput="filterGames()">
     </div>
     <div class="drawer-cats">
-      <div class="d-cat-pill active" onclick="filterCategory('all', this)">⚡ ALL (30)</div>
+      <div class="d-cat-pill active" onclick="filterCategory('all', this)">⚡ ALL</div>
+      <div class="d-cat-pill" onclick="filterCategory('jili', this)" style="border: 1px solid #ffd700; color: #ffd700; background: rgba(255,215,0,0.14); font-weight: 800;">⭐ JILI (6)</div>
       <div class="d-cat-pill" onclick="filterCategory('cards', this)">🎴 LIVE CARDS</div>
       <div class="d-cat-pill" onclick="filterCategory('roulette', this)">⚡ ROULETTE</div>
       <div class="d-cat-pill" onclick="filterCategory('crash', this)">🚀 AVIATOR</div>
@@ -371,6 +381,35 @@
         </label>
       </div>
 
+      <!-- JILI Games Specific Bar -->
+      <div class="slots-bar" id="jiliConsoleBar" style="display:none; width: 100%; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="font-size:11px; color:#ffd700; font-weight:800;">BET:</span>
+          <div class="av-wager-box">
+            <button class="av-step-btn" onclick="adjJiliStake(-10)">-</button>
+            <input type="text" class="av-input" id="jiliStakeInput" value="50" style="width:55px;">
+            <button class="av-step-btn" onclick="adjJiliStake(10)">+</button>
+          </div>
+          <div style="display:flex; gap:3px;">
+            <button onclick="setJiliStake(10)" class="av-step-btn" style="width:34px; font-size:10px;">10</button>
+            <button onclick="setJiliStake(50)" class="av-step-btn" style="width:34px; font-size:10px;">50</button>
+            <button onclick="setJiliStake(100)" class="av-step-btn" style="width:34px; font-size:10px;">100</button>
+            <button onclick="setJiliStake(500)" class="av-step-btn" style="width:34px; font-size:10px;">500</button>
+          </div>
+        </div>
+        <div id="jiliLinesInfo" style="font-size:11px; color:#ffd700; font-weight:800; background:rgba(255,215,0,0.12); padding:3px 8px; border-radius:6px; border:1px solid rgba(255,215,0,0.3);">
+          ⚡ 5 LINES + 4TH MULTIPLIER REEL
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <label style="display:flex; align-items:center; gap:4px; font-size:11px; font-weight:800; color:#00e701; cursor:pointer;">
+            <input type="checkbox" id="chkJiliTurbo"> 🚀 TURBO
+          </label>
+          <label style="display:flex; align-items:center; gap:4px; font-size:11px; font-weight:800; color:var(--gold); cursor:pointer;">
+            <input type="checkbox" id="chkJiliAuto"> ⚡ AUTO
+          </label>
+        </div>
+      </div>
+
       <!-- Bet Total Indicator -->
       <div class="bet-summary" id="betSummaryWrap">
         <div class="b-sum-lbl">TOTAL BET</div>
@@ -391,6 +430,14 @@
    1. MASTER CATALOG OF 30 VIP CASINO GAMES & RESOLUTION ENGINE
    ============================================================================ */
 const GAMES_30 = [
+  // 0. JILI OFFICIAL GAMES SUITE (DEMO & REAL PLAY)
+  { id: 'fortune-gems', name: 'JILI Fortune Gems • 3x3 + 4th Reel', provider: 'JILI', engine: 'jilifortunegems', category: 'jili', theme: '#f59e0b', rtp: '97.0%', dealer: 'Garuda Gold • 4th Multiplier Reel', cycle: 0 },
+  { id: 'super-ace', name: 'JILI Super Ace • Cascading 1024 Ways', provider: 'JILI', engine: 'jilisuperace', category: 'jili', theme: '#6366f1', rtp: '97.0%', dealer: 'Golden Card Elimination • 1024 Ways', cycle: 0 },
+  { id: 'money-coming', name: 'JILI Money Coming • Instant Jackpot', provider: 'JILI', engine: 'jilimoneycoming', category: 'jili', theme: '#10b981', rtp: '97.0%', dealer: '3-Digit Cash + Wheel Reel', cycle: 0 },
+  { id: 'fortune-gems-2', name: 'JILI Fortune Gems 2 • Lucky Wheel', provider: 'JILI', engine: 'jilifortunegems2', category: 'jili', theme: '#ea580c', rtp: '97.1%', dealer: 'Lucky Wheel 1000x Bonus', cycle: 0 },
+  { id: 'golden-empire', name: 'JILI Golden Empire • Aztec Megaways', provider: 'JILI', engine: 'jilifortunegems', category: 'jili', theme: '#eab308', rtp: '96.8%', dealer: 'Aztec Megaways & Gold Frames', cycle: 0 },
+  { id: 'boxing-king', name: 'JILI Boxing King • Knockout Combo', provider: 'JILI', engine: 'jilisuperace', category: 'jili', theme: '#ef4444', rtp: '97.0%', dealer: 'Combo Bell Free Spins', cycle: 0 },
+
   // 1. LIVE FLAGSHIP TABLES
   { id: 'dragon-tiger', name: 'Live Dragon Tiger', provider: 'EVOLUTION', engine: 'dragontiger', category: 'cards', theme: '#f59e0b', rtp: '96.3%', dealer: 'Mei Ling • Macau Table 1', cycle: 25.0 },
   { id: 'lightning-roulette', name: 'Lightning Roulette 3D 500x', provider: 'EVOLUTION', engine: 'lightningroulette', category: 'roulette', theme: '#ffd700', rtp: '97.3%', dealer: 'Alexander • Studio Riga', cycle: 30.0 },
@@ -426,6 +473,24 @@ function findGameBySlug(slug) {
   let g = GAMES_30.find(x => x.id === s || x.id.replace(/[^a-z0-9]/g, '') === clean);
   if (g) return g;
 
+  // 2. JILI Specific intent
+  if (clean.includes('fortunegem') || clean.includes('fortune') || clean.includes('gems')) {
+    if (clean.includes('2')) return GAMES_30.find(x => x.id === 'fortune-gems-2') || GAMES_30[0];
+    return GAMES_30.find(x => x.id === 'fortune-gems') || GAMES_30[0];
+  }
+  if (clean.includes('superace') || clean.includes('super') || clean.includes('ace')) return GAMES_30.find(x => x.id === 'super-ace') || GAMES_30[1];
+  if (clean.includes('moneycoming') || clean.includes('money')) return GAMES_30.find(x => x.id === 'money-coming') || GAMES_30[2];
+  if (clean.includes('goldenempire') || clean.includes('empire')) return GAMES_30.find(x => x.id === 'golden-empire') || GAMES_30[4];
+  if (clean.includes('boxingking') || clean.includes('boxing')) return GAMES_30.find(x => x.id === 'boxing-king') || GAMES_30[5];
+  if (clean.includes('jili')) return GAMES_30.find(x => x.category === 'jili') || GAMES_30[0];
+  if (!slug) return GAMES_30[0];
+  const s = slug.toLowerCase();
+  const clean = s.replace(/[^a-z0-9]/g, '');
+
+  // 1. Direct match by id
+  let g = GAMES_30.find(x => x.id === s || x.id.replace(/[^a-z0-9]/g, '') === clean);
+  if (g) return g;
+
   // 2. Specific intent / keyword match
   if (clean.includes('dragontiger') || clean.includes('dragon')) return GAMES_30.find(x => x.id === 'dragon-tiger') || GAMES_30[0];
   if (clean.includes('roulette')) return GAMES_30.find(x => x.id === 'lightning-roulette') || GAMES_30[1];
@@ -446,6 +511,8 @@ function findGameBySlug(slug) {
 let wallet = {{ user.balance if user and user.balance is defined else 50000.0 }};
 const isGuestUser = {{ 'true' if not user or user.is_guest else 'false' }};
 let isAudioEnabled = true;
+let isDemoMode = false;
+let demoBalance = 10000.0;
 let activeGame = GAMES_30[0];
 let selectedChipVal = 50;
 let tableBets = {}; // { spot_id: amount }
@@ -455,13 +522,66 @@ const canvas = document.getElementById('mainCanvas');
 const ctx = canvas.getContext('2d');
 
 function updateWalletDisplay(amt) {
+  if (isDemoMode) {
+    demoBalance += amt;
+    if (demoBalance < 0) demoBalance = 0;
+    const disp = document.getElementById('walletDisplay');
+    if (disp) disp.innerText = '🪙 ' + demoBalance.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    const refillBtn = document.getElementById('refillDemoBtn');
+    if (refillBtn) refillBtn.style.display = (demoBalance < 50) ? 'inline-block' : 'none';
+    return;
+  }
   wallet += amt;
   if (wallet < 0) wallet = 0;
-  document.getElementById('walletDisplay').innerText = '₹' + wallet.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const disp = document.getElementById('walletDisplay');
+  if (disp) disp.innerText = '₹' + wallet.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function toggleDemoMode() {
+  isDemoMode = !isDemoMode;
+  const btn = document.getElementById('demoToggleBtn');
+  const lbl = document.getElementById('walletLabel');
+  const refillBtn = document.getElementById('refillDemoBtn');
+  if (isDemoMode) {
+    if (btn) {
+      btn.innerHTML = '🎮 DEMO (FREE)';
+      btn.style.background = 'rgba(0, 231, 1, 0.2)';
+      btn.style.borderColor = '#00e701';
+      btn.style.color = '#00e701';
+    }
+    if (lbl) lbl.innerText = 'VIRTUAL COINS (DEMO)';
+    updateWalletDisplay(0);
+    if (refillBtn) refillBtn.style.display = (demoBalance < 50) ? 'inline-block' : 'none';
+    playTone(500, 800, 0.15);
+  } else {
+    if (btn) {
+      btn.innerHTML = '💰 REAL CASH';
+      btn.style.background = 'rgba(255, 215, 0, 0.2)';
+      btn.style.borderColor = '#ffd700';
+      btn.style.color = '#ffd700';
+    }
+    if (lbl) lbl.innerText = 'INR BALANCE';
+    updateWalletDisplay(0);
+    if (refillBtn) refillBtn.style.display = 'none';
+    playTone(700, 500, 0.15);
+  }
+  if (activeGame && activeGame.engine && activeGame.engine.startsWith('jili')) {
+    const sub = document.getElementById('mainActionSub');
+    if (sub) sub.innerText = (isDemoMode ? '🪙 ' : '₹') + jiliStake;
+  }
+}
+
+function refillDemoCoins() {
+  demoBalance = 10000.0;
+  updateWalletDisplay(0);
+  const refillBtn = document.getElementById('refillDemoBtn');
+  if (refillBtn) refillBtn.style.display = 'none';
+  playTone(400, 900, 0.25, 'triangle');
+  alert('🎉 Refilled 10,000 Virtual Coins for Free Demo Play!');
 }
 
 async function syncBetToBackend(gameId, stake, betType = 'bet') {
-  if (isGuestUser) return;
+  if (isDemoMode || isGuestUser) return;
   try {
     await fetch('/api/casino/bet', {
       method: 'POST',
@@ -472,7 +592,7 @@ async function syncBetToBackend(gameId, stake, betType = 'bet') {
 }
 
 async function syncWinToBackend(gameId, stake, payout) {
-  if (isGuestUser) return;
+  if (isDemoMode || isGuestUser) return;
   try {
     await fetch('/api/casino/settle', {
       method: 'POST',
@@ -590,6 +710,9 @@ function configureConsole(g) {
   const betSum = document.getElementById('betSummaryWrap');
   const mainBtn = document.getElementById('mainActionButton');
 
+  const jiliBar = document.getElementById('jiliConsoleBar');
+  if (jiliBar) jiliBar.style.display = 'none';
+
   if (g.engine === 'aviator') {
     tableChips.style.display = 'none';
     tableActs.style.display = 'none';
@@ -598,6 +721,24 @@ function configureConsole(g) {
     betSum.style.display = 'none';
     mainBtn.style.display = 'flex';
     syncAviatorBtn();
+  } else if (g.engine.startsWith('jili')) {
+    tableChips.style.display = 'none';
+    tableActs.style.display = 'none';
+    aviatorBar.style.display = 'none';
+    slotsBar.style.display = 'none';
+    if (jiliBar) jiliBar.style.display = 'flex';
+    betSum.style.display = 'none';
+    mainBtn.style.display = 'flex';
+    mainBtn.className = 'btn-main-play bet-open';
+    document.getElementById('mainActionText').innerText = '⚡ SPIN';
+    document.getElementById('mainActionSub').innerText = (isDemoMode ? '🪙 ' : '₹') + jiliStake;
+    const lInfo = document.getElementById('jiliLinesInfo');
+    if (lInfo) {
+      if (g.engine === 'jilisuperace') lInfo.innerText = '♠️ 1024 WAYS • CASCADE MULTIPLIER (1X-5X)';
+      else if (g.engine === 'jilimoneycoming') lInfo.innerText = '💰 3 NUMBER REELS + WHEEL REEL';
+      else if (g.engine === 'jilifortunegems2') lInfo.innerText = '🎡 5 LINES + LUCKY WHEEL 1000X';
+      else lInfo.innerText = '💎 5 LINES + 4TH MULTIPLIER REEL';
+    }
   } else if (g.engine === 'slots') {
     tableChips.style.display = 'none';
     tableActs.style.display = 'none';
@@ -967,6 +1108,10 @@ function spinSlots() {
    8. MAIN ACTION BUTTON HANDLER
    ============================================================================ */
 function onMainActionClick() {
+  if (activeGame.engine && activeGame.engine.startsWith('jili')) {
+    spinJiliGame();
+    return;
+  }
   if (activeGame.engine === 'aviator') {
     if (avCrashState.phase === 'FLYING' && avCrashState.betActive) {
       avCrashState.betActive = false;
@@ -1018,7 +1163,9 @@ function masterRenderLoop(now) {
   const round = getLiveRoundState(activeGame.cycle);
 
   const clockEl = document.getElementById('hudClockBadge');
-  if (round.phase === 'BETTING') {
+  if (eng.startsWith('jili')) {
+    clockEl.innerHTML = isDemoMode ? `🎮 <span style="color:#00e701; font-weight:800;">FREE DEMO PLAY</span>` : `💰 <span style="color:var(--gold); font-weight:800;">REAL MONEY</span>`;
+  } else if (round.phase === 'BETTING') {
     clockEl.innerHTML = `⏱ ${round.timeLeft.toFixed(1)}s <span style="color:var(--green-live); font-size:10px;">BETS OPEN</span>`;
     document.getElementById('mainActionText').innerText = 'BETS OPEN';
     document.getElementById('mainActionSub').innerText = `⏱ ${round.timeLeft.toFixed(1)}s`;
@@ -1032,7 +1179,10 @@ function masterRenderLoop(now) {
     clockEl.innerHTML = `⚡ IN PROGRESS`;
   }
 
-  if (eng === 'dragontiger') drawDragonTigerStudio(W, H, round, now);
+  if (eng === 'jilifortunegems' || eng === 'jilifortunegems2') drawJiliFortuneGems(W, H, now);
+  else if (eng === 'jilisuperace') drawJiliSuperAce(W, H, now);
+  else if (eng === 'jilimoneycoming') drawJiliMoneyComing(W, H, now);
+  else if (eng === 'dragontiger') drawDragonTigerStudio(W, H, round, now);
   else if (eng === 'lightningroulette') drawLightningRouletteStudio(W, H, round, now);
   else if (eng === 'aviator') drawAviatorCockpit(W, H, now);
   else if (eng === 'slots') drawVegasSlotsCabinet(W, H, now);
@@ -1579,6 +1729,767 @@ const matchedGame = findGameBySlug(initialSlug);
 selectGame(matchedGame.id);
 
 requestAnimationFrame(masterRenderLoop);
+
+/* ============================================================================
+   JILI GAMES SUITE: FULL PLAYABLE ENGINES (FORTUNE GEMS, SUPER ACE, MONEY COMING)
+   ============================================================================ */
+let jiliStake = 50;
+let jiliSpinning = false;
+
+// 1. FORTUNE GEMS (3x3 + 4TH MULTIPLIER REEL)
+const JILI_FG_SYMBOLS = {
+  'GARUDA': { name: 'Garuda Wild', mult: 25, color: '#ffd700', icon: '🦅', isWild: true, bg: '#78350f' },
+  'PHOENIX': { name: 'Red Phoenix', mult: 20, color: '#ef4444', icon: '🔴', bg: '#450a0a' },
+  'PEACOCK': { name: 'Blue Peacock', mult: 15, color: '#0ea5e9', icon: '🔵', bg: '#082f49' },
+  'NAGA': { name: 'Green Naga', mult: 10, color: '#10b981', icon: '🟢', bg: '#022c22' },
+  'A': { name: 'Ace', mult: 5, color: '#f59e0b', icon: '🅰️', bg: '#291b00' },
+  'K': { name: 'King', mult: 4, color: '#eab308', icon: '👑', bg: '#231b00' },
+  'Q': { name: 'Queen', mult: 3, color: '#ec4899', icon: '👸', bg: '#29001b' },
+  'J': { name: 'Jack', mult: 2, color: '#a855f7', icon: '🃏', bg: '#1c0029' }
+};
+const JILI_FG_KEYS = ['GARUDA', 'PHOENIX', 'PEACOCK', 'NAGA', 'A', 'K', 'Q', 'J'];
+const JILI_FG_MULTS = ['1X', '2X', '3X', '5X', '10X', '15X'];
+
+let jiliFgReels = [
+  ['GARUDA', 'PHOENIX', 'A'],
+  ['A', 'GARUDA', 'K'],
+  ['Q', 'NAGA', 'GARUDA']
+];
+let jiliFgMult = '5X';
+let jiliFgWinningLines = [];
+let jiliFgWheelActive = false;
+let jiliFgWheelAngle = 0;
+let jiliFgWheelTarget = 50;
+let jiliFgBigWinBanner = null;
+
+// 2. SUPER ACE (5x4 1024 WAYS)
+const JILI_SA_SYMBOLS = ['♠️ A', '♥️ K', '♦️ Q', '♣️ J', '10', '9', '🃏 WILD', '🪙 SCATTER'];
+let jiliSaGrid = [
+  ['♠️ A', '♥️ K', '♦️ Q', '10'],
+  ['10', '♠️ A', '🃏 WILD', '9'],
+  ['♦️ Q', '♣️ J', '♠️ A', '♥️ K'],
+  ['♥️ K', '10', '♦️ Q', '♣️ J'],
+  ['♣️ J', '♠️ A', '10', '♠️ A']
+];
+let jiliSaMultiplierStep = 1; // 1, 2, 3, 5
+
+// 3. MONEY COMING (3 NUMBERS + 1 FEATURE REEL)
+let jiliMcReels = ['10', '00', '0'];
+let jiliMcFeature = '5X';
+
+function adjJiliStake(delta) {
+  jiliStake = Math.max(10, Math.min(100000, jiliStake + delta));
+  const inp = document.getElementById('jiliStakeInput');
+  if (inp) inp.value = jiliStake;
+  const sub = document.getElementById('mainActionSub');
+  if (sub) sub.innerText = (isDemoMode ? '🪙 ' : '₹') + jiliStake;
+}
+
+function setJiliStake(amt) {
+  jiliStake = amt;
+  const inp = document.getElementById('jiliStakeInput');
+  if (inp) inp.value = jiliStake;
+  const sub = document.getElementById('mainActionSub');
+  if (sub) sub.innerText = (isDemoMode ? '🪙 ' : '₹') + jiliStake;
+  playTone(500, 700, 0.08);
+}
+
+function spinJiliGame() {
+  if (jiliSpinning) return;
+
+  const currentBal = isDemoMode ? demoBalance : wallet;
+  if (jiliStake > currentBal) {
+    if (isDemoMode) {
+      const rBtn = document.getElementById('refillDemoBtn');
+      if (rBtn) rBtn.style.display = 'inline-block';
+      return alert('Demo coins low! Click [+ REFILL 10K] to get more free coins.');
+    } else {
+      return alert('Insufficient balance in wallet for ₹' + jiliStake + ' bet. Please deposit or switch to Free Demo!');
+    }
+  }
+
+  updateWalletDisplay(-jiliStake);
+  syncBetToBackend(activeGame.id, jiliStake, 'jili_spin');
+  jiliSpinning = true;
+  jiliFgWinningLines = [];
+  jiliFgBigWinBanner = null;
+
+  if (activeGame.engine === 'jilisuperace') {
+    spinSuperAce();
+  } else if (activeGame.engine === 'jilimoneycoming') {
+    spinMoneyComing();
+  } else {
+    spinFortuneGems();
+  }
+}
+
+/* ==================== FORTUNE GEMS & FORTUNE GEMS 2 ==================== */
+function spinFortuneGems() {
+  const isTurbo = document.getElementById('chkJiliTurbo')?.checked;
+  const spinDuration = isTurbo ? 1000 : 2000;
+  const t0 = performance.now();
+  playTone(240, 520, 0.35, 'sawtooth');
+
+  function stepFg(now) {
+    const elapsed = now - t0;
+    const p = elapsed / spinDuration;
+
+    // Fast reel shuffle during spin
+    if (p < 0.5) {
+      for (let r = 0; r < 3; r++) {
+        jiliFgReels[r] = [
+          JILI_FG_KEYS[Math.floor(Math.random() * JILI_FG_KEYS.length)],
+          JILI_FG_KEYS[Math.floor(Math.random() * JILI_FG_KEYS.length)],
+          JILI_FG_KEYS[Math.floor(Math.random() * JILI_FG_KEYS.length)]
+        ];
+      }
+      jiliFgMult = JILI_FG_MULTS[Math.floor(Math.random() * JILI_FG_MULTS.length)];
+    } else if (p < 0.7) {
+      // Reel 0 stops
+      for (let r = 1; r < 3; r++) {
+        jiliFgReels[r] = [
+          JILI_FG_KEYS[Math.floor(Math.random() * JILI_FG_KEYS.length)],
+          JILI_FG_KEYS[Math.floor(Math.random() * JILI_FG_KEYS.length)],
+          JILI_FG_KEYS[Math.floor(Math.random() * JILI_FG_KEYS.length)]
+        ];
+      }
+      jiliFgMult = JILI_FG_MULTS[Math.floor(Math.random() * JILI_FG_MULTS.length)];
+    } else if (p < 0.85) {
+      // Reel 1 stops
+      jiliFgReels[2] = [
+        JILI_FG_KEYS[Math.floor(Math.random() * JILI_FG_KEYS.length)],
+        JILI_FG_KEYS[Math.floor(Math.random() * JILI_FG_KEYS.length)],
+        JILI_FG_KEYS[Math.floor(Math.random() * JILI_FG_KEYS.length)]
+      ];
+      jiliFgMult = JILI_FG_MULTS[Math.floor(Math.random() * JILI_FG_MULTS.length)];
+    } else if (p < 1.0) {
+      // 4th Multiplier reel tension spin
+      jiliFgMult = JILI_FG_MULTS[Math.floor(Math.random() * JILI_FG_MULTS.length)];
+    }
+
+    if (p < 1.0) {
+      requestAnimationFrame(stepFg);
+    } else {
+      resolveFortuneGems();
+    }
+  }
+  requestAnimationFrame(stepFg);
+}
+
+function resolveFortuneGems() {
+  jiliSpinning = false;
+  playTone(550, 880, 0.25, 'triangle');
+
+  // Final stop symbols (simulated balanced distribution)
+  const isLuckyWheel = (activeGame.engine === 'jilifortunegems2' && Math.random() < 0.08);
+  if (isLuckyWheel) {
+    jiliFgMult = '🎡 WHEEL';
+  } else {
+    const multWeights = [
+      { m: '1X', w: 40 }, { m: '2X', w: 25 }, { m: '3X', w: 15 },
+      { m: '5X', w: 10 }, { m: '10X', w: 7 }, { m: '15X', w: 3 }
+    ];
+    let rnd = Math.random() * 100;
+    let chosenMult = '1X';
+    for (let mw of multWeights) {
+      if (rnd <= mw.w) { chosenMult = mw.m; break; }
+      rnd -= mw.w;
+    }
+    jiliFgMult = chosenMult;
+  }
+
+  // 5 Standard Paylines
+  const LINES = [
+    { id: 1, name: 'Top Horizontal', coords: [[0,0], [1,0], [2,0]], yP: 0.22 },
+    { id: 2, name: 'Middle Center', coords: [[0,1], [1,1], [2,1]], yP: 0.50 },
+    { id: 3, name: 'Bottom Horizontal', coords: [[0,2], [1,2], [2,2]], yP: 0.78 },
+    { id: 4, name: 'Diagonal Left-to-Right', coords: [[0,0], [1,1], [2,2]], isDiag: true, dir: 1 },
+    { id: 5, name: 'Diagonal Right-to-Left', coords: [[0,2], [1,1], [2,0]], isDiag: true, dir: -1 }
+  ];
+
+  let winningLines = [];
+  let baseLineMultSum = 0;
+
+  for (let line of LINES) {
+    const sym0 = jiliFgReels[line.coords[0][0]][line.coords[0][1]];
+    const sym1 = jiliFgReels[line.coords[1][0]][line.coords[1][1]];
+    const sym2 = jiliFgReels[line.coords[2][0]][line.coords[2][1]];
+
+    // Determine target symbol accounting for Garuda Wild
+    let target = null;
+    for (let s of [sym0, sym1, sym2]) {
+      if (s !== 'GARUDA') { target = s; break; }
+    }
+    if (!target) target = 'GARUDA'; // 3 Garuda Wilds!
+
+    const match0 = (sym0 === target || sym0 === 'GARUDA');
+    const match1 = (sym1 === target || sym1 === 'GARUDA');
+    const match2 = (sym2 === target || sym2 === 'GARUDA');
+
+    if (match0 && match1 && match2) {
+      const symInfo = JILI_FG_SYMBOLS[target] || JILI_FG_SYMBOLS['A'];
+      winningLines.push({ line, symbol: target, info: symInfo });
+      baseLineMultSum += symInfo.mult;
+    }
+  }
+
+  jiliFgWinningLines = winningLines;
+  const multValue = parseInt(jiliFgMult) || 1;
+
+  if (isLuckyWheel) {
+    // Fortune Gems 2 Lucky Wheel Bonus
+    triggerLuckyWheel();
+    return;
+  }
+
+  if (winningLines.length > 0) {
+    const totalWin = (baseLineMultSum * (jiliStake / 5.0)) * multValue;
+    updateWalletDisplay(totalWin);
+    syncWinToBackend(activeGame.id, jiliStake, totalWin);
+
+    const winRatio = totalWin / jiliStake;
+    if (winRatio >= 50) {
+      jiliFgBigWinBanner = { title: '👑 SUPER WIN!', amount: totalWin, color: '#ffd700' };
+      playTone(400, 1200, 0.6, 'sawtooth');
+    } else if (winRatio >= 20) {
+      jiliFgBigWinBanner = { title: '💎 MEGA WIN!', amount: totalWin, color: '#00e701' };
+      playTone(450, 950, 0.5, 'triangle');
+    } else if (winRatio >= 5) {
+      jiliFgBigWinBanner = { title: '⭐ BIG WIN!', amount: totalWin, color: '#f59e0b' };
+      playTone(500, 850, 0.4, 'sine');
+    }
+
+    triggerWinToast(multValue, totalWin);
+    pushHistoryBadge(`${winningLines.length}L • ${multValue}X = ₹${totalWin.toFixed(0)}`, '#00e701');
+  } else {
+    pushHistoryBadge('SPIN', '#64748b');
+  }
+
+  // Auto-spin handler
+  if (document.getElementById('chkJiliAuto')?.checked) {
+    const bal = isDemoMode ? demoBalance : wallet;
+    if (bal >= jiliStake) {
+      setTimeout(spinJiliGame, 1200);
+    }
+  }
+}
+
+function triggerLuckyWheel() {
+  jiliFgWheelActive = true;
+  jiliFgWheelAngle = 0;
+  const wheelSectors = [20, 50, 100, 200, 500, 1000];
+  const targetSector = wheelSectors[Math.floor(Math.random() * wheelSectors.length)];
+  jiliFgWheelTarget = targetSector;
+  playTone(400, 1100, 0.8, 'sawtooth');
+
+  let spinTicks = 0;
+  const wheelTimer = setInterval(() => {
+    jiliFgWheelAngle += 0.25;
+    spinTicks++;
+    if (spinTicks > 35) {
+      clearInterval(wheelTimer);
+      jiliFgWheelActive = false;
+      const wheelWin = jiliStake * targetSector;
+      updateWalletDisplay(wheelWin);
+      syncWinToBackend(activeGame.id, jiliStake, wheelWin);
+      jiliFgBigWinBanner = { title: `🎡 WHEEL ${targetSector}X JACKPOT!`, amount: wheelWin, color: '#ffd700' };
+      triggerWinToast(targetSector, wheelWin);
+    }
+  }, 60);
+}
+
+/* ==================== SUPER ACE ENGINE ==================== */
+function spinSuperAce() {
+  const isTurbo = document.getElementById('chkJiliTurbo')?.checked;
+  const dur = isTurbo ? 900 : 1800;
+  const t0 = performance.now();
+  playTone(320, 640, 0.3, 'sine');
+
+  function stepSa(now) {
+    if (now - t0 < dur) {
+      for (let r = 0; r < 5; r++) {
+        for (let row = 0; row < 4; row++) {
+          jiliSaGrid[r][row] = JILI_SA_SYMBOLS[Math.floor(Math.random() * JILI_SA_SYMBOLS.length)];
+        }
+      }
+      requestAnimationFrame(stepSa);
+    } else {
+      jiliSpinning = false;
+      playTone(520, 900, 0.2, 'triangle');
+      // Cascade multiplier evaluation
+      const hasAce = jiliSaGrid.some(col => col.includes('♠️ A'));
+      const hasWild = jiliSaGrid.some(col => col.includes('🃏 WILD'));
+      if (hasAce || hasWild) {
+        jiliSaMultiplierStep = Math.min(5, jiliSaMultiplierStep + 1);
+        const win = jiliStake * jiliSaMultiplierStep * (hasWild ? 3.5 : 2.0);
+        updateWalletDisplay(win);
+        syncWinToBackend(activeGame.id, jiliStake, win);
+        triggerWinToast(jiliSaMultiplierStep, win);
+        pushHistoryBadge(`ACE ${jiliSaMultiplierStep}X CASCADE`, '#00e701');
+      } else {
+        jiliSaMultiplierStep = 1;
+        pushHistoryBadge('TRY AGAIN', '#64748b');
+      }
+      if (document.getElementById('chkJiliAuto')?.checked) {
+        const bal = isDemoMode ? demoBalance : wallet;
+        if (bal >= jiliStake) setTimeout(spinJiliGame, 1000);
+      }
+    }
+  }
+  requestAnimationFrame(stepSa);
+}
+
+/* ==================== MONEY COMING ENGINE ==================== */
+function spinMoneyComing() {
+  const dur = 1400;
+  const t0 = performance.now();
+  const digits = ['10', '5', '1', '0', '00'];
+  const feats = ['2X', '5X', '10X', 'RESPIN', 'SUPER WHEEL'];
+  playTone(200, 500, 0.3, 'sawtooth');
+
+  function stepMc(now) {
+    if (now - t0 < dur) {
+      jiliMcReels = [
+        digits[Math.floor(Math.random() * digits.length)],
+        digits[Math.floor(Math.random() * digits.length)],
+        digits[Math.floor(Math.random() * digits.length)]
+      ];
+      jiliMcFeature = feats[Math.floor(Math.random() * feats.length)];
+      requestAnimationFrame(stepMc);
+    } else {
+      jiliSpinning = false;
+      playTone(600, 950, 0.25, 'triangle');
+      const baseNum = parseInt(jiliMcReels.join('')) || 0;
+      const featMult = parseInt(jiliMcFeature) || 1;
+      if (baseNum > 0) {
+        const win = (baseNum / 10.0) * jiliStake * featMult;
+        updateWalletDisplay(win);
+        syncWinToBackend(activeGame.id, jiliStake, win);
+        triggerWinToast(featMult, win);
+        pushHistoryBadge(`CASH ₹${win.toFixed(0)}`, '#00e701');
+      } else {
+        pushHistoryBadge('ZERO', '#64748b');
+      }
+      if (document.getElementById('chkJiliAuto')?.checked) {
+        const bal = isDemoMode ? demoBalance : wallet;
+        if (bal >= jiliStake) setTimeout(spinJiliGame, 1000);
+      }
+    }
+  }
+  requestAnimationFrame(stepMc);
+}
+
+/* ==================== DRAWING: JILI FORTUNE GEMS CANVAS ==================== */
+function drawJiliFortuneGems(W, H, now) {
+  // 1. Ancient Indian / Aztec Temple Background
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+  bgGrad.addColorStop(0, '#0a0d18');
+  bgGrad.addColorStop(0.5, '#120f24');
+  bgGrad.addColorStop(1, '#05070c');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Decorative Temple Pillars
+  ctx.fillStyle = '#b45309';
+  ctx.fillRect(8, 20, 16, H - 40);
+  ctx.fillRect(W - 24, 20, 16, H - 40);
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(8, 20, 16, H - 40);
+  ctx.strokeRect(W - 24, 20, 16, H - 40);
+
+  // Header Title Plaque
+  const plaqueW = Math.min(460, W - 60);
+  const plaqueX = (W - plaqueW) / 2;
+  const pGrad = ctx.createLinearGradient(plaqueX, 10, plaqueX + plaqueW, 50);
+  pGrad.addColorStop(0, '#78350f');
+  pGrad.addColorStop(0.5, '#b45309');
+  pGrad.addColorStop(1, '#451a03');
+  ctx.fillStyle = pGrad;
+  ctx.beginPath();
+  ctx.roundRect(plaqueX, 10, plaqueW, 40, 8);
+  ctx.fill();
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = '#ffd700';
+  ctx.font = '900 13px Inter';
+  ctx.textAlign = 'center';
+  const gameTitle = (activeGame.engine === 'jilifortunegems2') ? '💎 JILI FORTUNE GEMS 2 • LUCKY WHEEL 1000X' : '💎 JILI FORTUNE GEMS • 3x3 GARUDA GOLD';
+  ctx.fillText(gameTitle, W / 2, 26);
+  ctx.fillStyle = '#00e701';
+  ctx.font = '800 10.5px Inter';
+  ctx.fillText('★ 5 FIXED PAYLINES • 4TH MULTIPLIER REEL ACTIVE (UP TO 15X) ★', W / 2, 42);
+
+  // 2. Main Reels Geometry (Reels 0, 1, 2 = 3x3 matrix) + Reel 3 (Multiplier Reel)
+  const availW = W - 70;
+  const cellW = Math.min(88, Math.floor(availW / 4.3));
+  const cellH = Math.min(88, Math.floor((H - 90) / 3.3));
+  const gridW = cellW * 3 + 12;
+  const multReelW = Math.floor(cellW * 1.05);
+  const totalStageW = gridW + 16 + multReelW;
+  const startX = (W - totalStageW) / 2;
+  const startY = 60;
+
+  // Draw 3x3 Main Board Housing
+  ctx.fillStyle = '#0b0f1d';
+  ctx.beginPath();
+  ctx.roundRect(startX - 6, startY - 6, gridW + 12, cellH * 3 + 12, 10);
+  ctx.fill();
+  ctx.strokeStyle = '#b45309';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Draw Main 3x3 Cells
+  for (let r = 0; r < 3; r++) {
+    const rx = startX + r * (cellW + 4);
+    for (let row = 0; row < 3; row++) {
+      const ry = startY + row * (cellH + 4);
+      const symKey = jiliFgReels[r][row] || 'GARUDA';
+      const info = JILI_FG_SYMBOLS[symKey] || JILI_FG_SYMBOLS['GARUDA'];
+
+      // Cell Card Background
+      ctx.fillStyle = info.bg;
+      ctx.beginPath();
+      ctx.roundRect(rx, ry, cellW, cellH, 8);
+      ctx.fill();
+      ctx.strokeStyle = info.color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Symbol Icon
+      ctx.font = `${Math.floor(cellH * 0.42)}px Inter`;
+      ctx.textAlign = 'center';
+      ctx.fillText(info.icon, rx + cellW / 2, ry + cellH * 0.48);
+
+      // Symbol Name & Multiplier Tag
+      ctx.fillStyle = info.color;
+      ctx.font = '900 10.5px Inter';
+      ctx.fillText(info.isWild ? '★ WILD ★' : `${info.mult}x`, rx + cellW / 2, ry + cellH * 0.78);
+    }
+  }
+
+  // Draw Divider Spacer with Golden Gems
+  const divX = startX + gridW + 8;
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(divX, startY);
+  ctx.lineTo(divX, startY + cellH * 3);
+  ctx.stroke();
+
+  // Draw 4th Multiplier Reel Housing
+  const mx = divX + 8;
+  const mGrad = ctx.createLinearGradient(mx, startY, mx + multReelW, startY + cellH * 3);
+  mGrad.addColorStop(0, '#1c1300');
+  mGrad.addColorStop(0.5, '#3b2503');
+  mGrad.addColorStop(1, '#1c1300');
+  ctx.fillStyle = mGrad;
+  ctx.beginPath();
+  ctx.roundRect(mx - 4, startY - 6, multReelW + 8, cellH * 3 + 12, 10);
+  ctx.fill();
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Multiplier Reel Header Badge
+  ctx.fillStyle = '#ffd700';
+  ctx.font = '900 8.5px Inter';
+  ctx.textAlign = 'center';
+  ctx.fillText('4TH REEL', mx + multReelW / 2, startY - 10);
+
+  // Draw 4th Reel Slots (Center is Active Target)
+  const multSymbols = ['1X', jiliFgMult, '2X'];
+  for (let row = 0; row < 3; row++) {
+    const my = startY + row * (cellH + 4);
+    const isCenter = (row === 1);
+
+    if (isCenter) {
+      // Active Target Multiplier Spotlight
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.25)';
+      ctx.beginPath();
+      ctx.roundRect(mx, my, multReelW, cellH, 8);
+      ctx.fill();
+      ctx.strokeStyle = '#00e701';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.fillStyle = '#00e701';
+      ctx.font = '900 11px Inter';
+      ctx.fillText('▶ ACTIVE ◀', mx + multReelW / 2, my + 14);
+
+      ctx.fillStyle = '#ffd700';
+      ctx.font = '900 22px Inter';
+      ctx.fillText(jiliFgMult, mx + multReelW / 2, my + cellH * 0.65);
+    } else {
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.beginPath();
+      ctx.roundRect(mx, my, multReelW, cellH, 8);
+      ctx.fill();
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '800 13px Inter';
+      ctx.fillText(multSymbols[row], mx + multReelW / 2, my + cellH * 0.55);
+    }
+  }
+
+  // Draw Winning Paylines Laser Lines
+  if (jiliFgWinningLines && jiliFgWinningLines.length > 0) {
+    for (let win of jiliFgWinningLines) {
+      const line = win.line;
+      ctx.strokeStyle = win.info.color;
+      ctx.lineWidth = 4;
+      ctx.shadowColor = win.info.color;
+      ctx.shadowBlur = 12;
+
+      ctx.beginPath();
+      for (let i = 0; i < 3; i++) {
+        const c = line.coords[i];
+        const px = startX + c[0] * (cellW + 4) + cellW / 2;
+        const py = startY + c[1] * (cellH + 4) + cellH / 2;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  // Draw Big Win Overlay Banner if active
+  if (jiliFgBigWinBanner) {
+    const bwW = Math.min(420, W - 40);
+    const bwX = (W - bwW) / 2;
+    const bwY = H / 2 - 45;
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.beginPath();
+    ctx.roundRect(bwX, bwY, bwW, 90, 14);
+    ctx.fill();
+    ctx.strokeStyle = jiliFgBigWinBanner.color;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.fillStyle = jiliFgBigWinBanner.color;
+    ctx.font = '900 20px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText(jiliFgBigWinBanner.title, W / 2, bwY + 34);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '900 24px Inter';
+    ctx.fillText('+' + (isDemoMode ? '🪙 ' : '₹') + jiliFgBigWinBanner.amount.toFixed(2), W / 2, bwY + 68);
+  }
+
+  // Draw Lucky Wheel Overlay (Fortune Gems 2)
+  if (jiliFgWheelActive) {
+    drawLuckyWheelCanvas(W, H);
+  }
+}
+
+function drawLuckyWheelCanvas(W, H) {
+  const cx = W / 2, cy = H / 2, r = Math.min(130, Math.floor(W * 0.32));
+  ctx.fillStyle = 'rgba(0,0,0,0.88)';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(jiliFgWheelAngle);
+
+  const sectors = ['20X', '50X', '100X', '200X', '500X', '1000X'];
+  const colors = ['#f59e0b', '#ef4444', '#0ea5e9', '#10b981', '#a855f7', '#ffd700'];
+  const slice = (Math.PI * 2) / sectors.length;
+
+  for (let i = 0; i < sectors.length; i++) {
+    ctx.fillStyle = colors[i];
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, r, i * slice, (i + 1) * slice);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.save();
+    ctx.rotate(i * slice + slice / 2);
+    ctx.fillStyle = '#000';
+    ctx.font = '900 13px Inter';
+    ctx.textAlign = 'right';
+    ctx.fillText(sectors[i], r - 12, 5);
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // Wheel Center Hub & Pointer
+  ctx.fillStyle = '#ffd700';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#000';
+  ctx.font = '900 10px Inter';
+  ctx.textAlign = 'center';
+  ctx.fillText('JILI', cx, cy + 4);
+
+  // Top Pointer Arrow
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r - 12);
+  ctx.lineTo(cx - 10, cy - r + 8);
+  ctx.lineTo(cx + 10, cy - r + 8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.stroke();
+}
+
+/* ==================== DRAWING: JILI SUPER ACE CANVAS ==================== */
+function drawJiliSuperAce(W, H, now) {
+  ctx.fillStyle = '#0c0e1a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Header Title
+  ctx.fillStyle = '#6366f1';
+  ctx.font = '900 14px Inter';
+  ctx.textAlign = 'center';
+  ctx.fillText('♠️ JILI SUPER ACE • 1024 WAYS TO WIN', W / 2, 22);
+
+  // Multiplier Ladder Bar: 1X -> 2X -> 3X -> 5X
+  const mults = [1, 2, 3, 5];
+  const bW = 60, bH = 26;
+  const startX = (W - (bW * 4 + 18)) / 2;
+  for (let i = 0; i < 4; i++) {
+    const bx = startX + i * (bW + 6);
+    const isActive = (jiliSaMultiplierStep === mults[i]);
+    ctx.fillStyle = isActive ? '#00e701' : '#1e1b4b';
+    ctx.beginPath();
+    ctx.roundRect(bx, 34, bW, bH, 6);
+    ctx.fill();
+    ctx.strokeStyle = isActive ? '#00e701' : '#4338ca';
+    ctx.lineWidth = isActive ? 2 : 1;
+    ctx.stroke();
+
+    ctx.fillStyle = isActive ? '#000' : '#c7d2fe';
+    ctx.font = '900 11px Inter';
+    ctx.fillText(`${mults[i]}X`, bx + bW / 2, 51);
+  }
+
+  // 5x4 Grid
+  const cardW = Math.min(65, Math.floor((W - 50) / 5.2));
+  const cardH = Math.min(60, Math.floor((H - 85) / 4.4));
+  const gridStartX = (W - (cardW * 5 + 16)) / 2;
+  const gridStartY = 70;
+
+  for (let col = 0; col < 5; col++) {
+    for (let row = 0; row < 4; row++) {
+      const cx = gridStartX + col * (cardW + 4);
+      const cy = gridStartY + row * (cardH + 4);
+      const sym = jiliSaGrid[col][row];
+
+      ctx.fillStyle = '#1e1b4b';
+      ctx.beginPath();
+      ctx.roundRect(cx, cy, cardW, cardH, 6);
+      ctx.fill();
+      ctx.strokeStyle = (sym.includes('WILD') || sym.includes('A')) ? '#ffd700' : '#312e81';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = (sym.includes('♥️') || sym.includes('♦️')) ? '#ef4444' : '#ffffff';
+      ctx.font = '900 12px Inter';
+      ctx.textAlign = 'center';
+      ctx.fillText(sym, cx + cardW / 2, cy + cardH * 0.58);
+    }
+  }
+}
+
+/* ==================== DRAWING: JILI MONEY COMING CANVAS ==================== */
+function drawJiliMoneyComing(W, H, now) {
+  ctx.fillStyle = '#06160e';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = '#10b981';
+  ctx.font = '900 14px Inter';
+  ctx.textAlign = 'center';
+  ctx.fillText('💰 JILI MONEY COMING • INSTANT DIGIT JACKPOT', W / 2, 26);
+
+  const rW = Math.min(80, Math.floor((W - 60) / 4.2));
+  const rH = Math.min(100, Math.floor(H * 0.45));
+  const startX = (W - (rW * 4 + 18)) / 2;
+  const startY = H / 2 - rH / 2;
+
+  // 3 Digits Reels
+  for (let i = 0; i < 3; i++) {
+    const rx = startX + i * (rW + 6);
+    ctx.fillStyle = '#052e16';
+    ctx.beginPath();
+    ctx.roundRect(rx, startY, rW, rH, 10);
+    ctx.fill();
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffd700';
+    ctx.font = '900 28px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText(jiliMcReels[i], rx + rW / 2, startY + rH * 0.6);
+  }
+
+  // 4th Feature Reel
+  const fx = startX + 3 * (rW + 6);
+  ctx.fillStyle = '#14532d';
+  ctx.beginPath();
+  ctx.roundRect(fx, startY, rW, rH, 10);
+  ctx.fill();
+  ctx.strokeStyle = '#ffd700';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  ctx.fillStyle = '#00e701';
+  ctx.font = '900 16px Inter';
+  ctx.fillText(jiliMcFeature, fx + rW / 2, startY + rH * 0.6);
+}
+
+/* ==================== JILI PAYTABLE MODAL ==================== */
+function openPaytableModal() {
+  let m = document.getElementById('jiliPaytableModal');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'jiliPaytableModal';
+    m.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:99999; display:flex; align-items:center; justify-content:center; padding:16px;';
+    m.innerHTML = `
+      <div style="background:#0f172a; border:1px solid #ffd700; border-radius:12px; max-width:540px; width:100%; max-height:85vh; overflow-y:auto; padding:20px; color:#fff; font-family:'Inter',sans-serif;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; padding-bottom:10px; margin-bottom:14px;">
+          <h3 style="color:#ffd700; font-size:16px; font-weight:900;">📜 JILI GAMES PAYTABLE & RULES</h3>
+          <button onclick="closePaytableModal()" style="background:#334155; border:none; color:#fff; width:28px; height:28px; border-radius:6px; font-weight:900; cursor:pointer;">✕</button>
+        </div>
+        <div style="font-size:12px; line-height:1.6; color:#cbd5e1;">
+          <h4 style="color:#00e701; margin-bottom:6px;">💎 FORTUNE GEMS (3x3 + 4TH REEL)</h4>
+          <p style="margin-bottom:8px;">Match 3 symbols across any of the <strong>5 fixed paylines</strong>. All winning line payouts are multiplied by the <strong>4th Multiplier Reel</strong> (1x, 2x, 3x, 5x, 10x, 15x)!</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:14px; font-size:11.5px;">
+            <div style="background:#1e293b; padding:6px 10px; border-radius:6px; border:1px solid #ffd700;">🦅 Garuda Mask (WILD): <strong>25x</strong></div>
+            <div style="background:#1e293b; padding:6px 10px; border-radius:6px; border:1px solid #ef4444;">🔴 Red Phoenix: <strong>20x</strong></div>
+            <div style="background:#1e293b; padding:6px 10px; border-radius:6px; border:1px solid #0ea5e9;">🔵 Blue Peacock: <strong>15x</strong></div>
+            <div style="background:#1e293b; padding:6px 10px; border-radius:6px; border:1px solid #10b981;">🟢 Green Naga: <strong>10x</strong></div>
+            <div style="background:#1e293b; padding:6px 10px; border-radius:6px;">🅰️ Ace: <strong>5x</strong></div>
+            <div style="background:#1e293b; padding:6px 10px; border-radius:6px;">👑 King: <strong>4x</strong></div>
+            <div style="background:#1e293b; padding:6px 10px; border-radius:6px;">👸 Queen: <strong>3x</strong></div>
+            <div style="background:#1e293b; padding:6px 10px; border-radius:6px;">🃏 Jack: <strong>2x</strong></div>
+          </div>
+          <h4 style="color:#6366f1; margin-bottom:6px;">♠️ SUPER ACE (1024 WAYS)</h4>
+          <p style="margin-bottom:8px;">Consecutive cascading eliminations increase the round multiplier: <strong>1X → 2X → 3X → 5X</strong>! Golden cards turn into Wilds.</p>
+          <h4 style="color:#f59e0b; margin-bottom:6px;">🎮 FREE DEMO vs REAL CASH</h4>
+          <p>Toggle between <strong>🎮 FREE DEMO</strong> (10,000 virtual coins, unlimited refills) and <strong>💰 REAL CASH</strong> (live INR wallet) anytime in the top header!</p>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(m);
+  } else {
+    m.style.display = 'flex';
+  }
+}
+
+function closePaytableModal() {
+  const m = document.getElementById('jiliPaytableModal');
+  if (m) m.style.display = 'none';
+}
+
 </script>
 </body>
 </html>

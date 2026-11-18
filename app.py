@@ -1019,7 +1019,24 @@ GAME_ALIASES = {
     # Instant Games
     "plinkospribe": "plinko",
     "stakemines": "mines",
-    "spribedice": "dice"
+    "spribedice": "dice",
+
+    # JILI Games Suite
+    "jili": "fortune-gems",
+    "jiligames": "fortune-gems",
+    "jili-games": "fortune-gems",
+    "fortune-gems": "fortune-gems",
+    "fortunegems": "fortune-gems",
+    "fortune-gems-2": "fortune-gems-2",
+    "fortunegems2": "fortune-gems-2",
+    "super-ace": "super-ace",
+    "superace": "super-ace",
+    "money-coming": "money-coming",
+    "moneycoming": "money-coming",
+    "golden-empire": "golden-empire",
+    "goldenempire": "golden-empire",
+    "boxing-king": "boxing-king",
+    "boxingking": "boxing-king"
 }
 
 # Zoo Roulette: 28 sectors around the wheel (Priority #1)
