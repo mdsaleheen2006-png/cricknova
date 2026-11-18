@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Zoo Roulette • Royal 3D Safari | CrickNova VIP Casino</title>
+  <link rel="icon" type="image/png" href="/static/icon-192.png">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/static/js/unified_wallet.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Cinzel:wght@700;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(34, 197, 94, 0.22) 0%, rgba(6, 78, 59, 0.45) 45%, #061812 100%),
+        linear-gradient(135deg, #09261b 0%, #051610 100%);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .font-royal {
+      font-family: 'Cinzel', serif;
+    }
+    .font-racing {
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    /* Ornate Golden Jungle Cabinet Frame */
+    .zoo-cabinet {
+      background: linear-gradient(180deg, #4b2d12 0%, #2a1707 50%, #1c0f04 100%);
+      border: 3.5px solid #eab308;
+      border-radius: 20px;
+      box-shadow:
+        0 0 0 2px #78350f,
+        0 18px 45px rgba(0, 0, 0, 0.9),
+        inset 0 0 22px rgba(250, 204, 21, 0.25);
+      position: relative;
+    }
+
+    /* Inner Dark Slate / Velvet Arena */
+    .zoo-inner-arena {
+      background: radial-gradient(ellipse at center, #1e293b 0%, #0f172a 75%, #090d16 100%);
+      border: 2px solid #ca8a04;
+      border-radius: 14px;
+      box-shadow: inset 0 6px 20px rgba(0, 0, 0, 0.85);
+    }
+
+    /* Perimeter Track Tiles */
+    .track-tile {
+      border-radius: 8px;
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      border: 1.5px solid #785622;
+      box-shadow: inset 0 1px 3px rgba(255,255,255,0.18), 0 2px 5px rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, border-color 0.08s ease;
+    }
+    .track-tile.chase-head {
+      transform: scale(1.18);
+      border: 2px solid #fef08a;
+      background: radial-gradient(circle, #fde047 0%, #d97706 75%, #78350f 100%);
+      box-shadow:
+        0 0 18px 5px rgba(250, 204, 21, 0.95),
+        0 0 28px 8px rgba(249, 115, 22, 0.7);
+      z-index: 30;
+    }
+    .track-tile.chase-tail-1 {
+      transform: scale(1.08);
+      border-color: #facc15;
+      box-shadow: 0 0 10px 3px rgba(250, 204, 21, 0.65);
+      z-index: 25;
+    }
+    .track-tile.chase-tail-2 {
+      transform: scale(1.03);
+      border-color: #d97706;
+      box-shadow: 0 0 6px 2px rgba(217, 119, 6, 0.45);
+      z-index: 20;
+    }
+    .track-tile.winner-tile {
+      transform: scale(1.22);
+      border: 2.5px solid #ffffff;
+      background: radial-gradient(circle, #fef08a 0%, #eab308 70%, #b45309 100%);
+      box-shadow:
+        0 0 26px 8px rgba(250, 204, 21, 1),
+        0 0 40px 14px rgba(34, 197, 94, 0.7);
+      animation: tilePulse 0.45s ease-in-out infinite alternate;
+      z-index: 35;
+    }
+    @keyframes tilePulse {
+      0% { transform: scale(1.16); }
+      100% { transform: scale(1.26); }
+    }
+
+    /* Betting Cells */
+    .beast-cell {
+      background: linear-gradient(180deg, rgba(120, 75, 42, 0.78) 0%, rgba(69, 41, 20, 0.92) 100%);
+      border: 1.5px solid rgba(245, 158, 11, 0.45);
+    }
+    .bird-cell {
+      background: linear-gradient(180deg, rgba(30, 64, 120, 0.78) 0%, rgba(17, 36, 74, 0.92) 100%);
+      border: 1.5px solid rgba(96, 165, 250, 0.45);
+    }
+    .shark-cell {
+      background: linear-gradient(180deg, rgba(15, 45, 72, 0.9) 0%, rgba(8, 24, 42, 0.95) 100%);
+      border: 1.5px solid rgba(34, 211, 238, 0.55);
+    }
+    .zoo-bet-box {
+      position: relative;
+      border-radius: 10px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.1s ease, filter 0.15s ease, box-shadow 0.2s ease;
+      box-shadow: inset 0 1px 6px rgba(255,255,255,0.12), 0 3px 8px rgba(0,0,0,0.5);
+    }
+    .zoo-bet-box:active {
+      transform: scale(0.96);
+    }
+    .zoo-bet-box.winner-box {
+      border: 2.5px solid #fde047 !important;
+      box-shadow:
+        0 0 22px 4px rgba(250, 204, 21, 0.9),
+        inset 0 0 18px rgba(250, 204, 21, 0.45) !important;
+      animation: boxGlow 0.5s ease-in-out infinite alternate;
+    }
+    @keyframes boxGlow {
+      0% { filter: brightness(1); }
+      100% { filter: brightness(1.3); }
+    }
+
+    /* Scattered Mini Chips */
+    .mini-chip {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 9999px;
+      border: 1.5px dashed rgba(255,255,255,0.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 7px;
+      font-weight: 900;
+      color: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.75);
+      pointer-events: none;
+      animation: chipLand 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+    }
+    @keyframes chipLand {
+      0% { transform: scale(1.6) translateY(-10px); opacity: 0.35; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    /* Bottom Dock Chips */
+    .dock-chip {
+      border-radius: 9999px;
+      border: 2.5px dashed rgba(255, 255, 255, 0.85);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.65), inset 0 0 0 2px rgba(0, 0, 0, 0.25);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .dock-chip.active-chip {
+      transform: translateY(-4px) scale(1.15);
+      border-style: solid;
+      border-color: #fef08a;
+      box-shadow: 0 0 16px 4px rgba(250, 204, 21, 0.9), 0 5px 10px rgba(0, 0, 0, 0.75);
+    }
+
+    /* Ornate Center Ribbon Banner */
+    .phase-banner {
+      background: linear-gradient(90deg, rgba(88,28,135,0) 0%, #6b21a8 18%, #9333ea 50%, #6b21a8 82%, rgba(88,28,135,0) 100%);
+      border-top: 2px solid #fde047;
+      border-bottom: 2px solid #fde047;
+      box-shadow: 0 0 30px rgba(234, 179, 8, 0.75);
+      animation: popRibbon 0.28s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    @keyframes popRibbon {
+      0% { transform: scale(0.75); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Side Lever Buttons (Pay All / Take All) */
+    .lever-btn {
+      background: linear-gradient(180deg, #facc15 0%, #b45309 100%);
+      border: 2px solid #fef08a;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.75);
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-between min-h-screen p-1 sm:p-2.5">
+
+  <div class="w-full max-w-5xl flex flex-col justify-between min-h-[98vh] gap-1.5 sm:gap-2.5 relative">
+
+    <!-- 1. TOP CASINO BAR: CRICKNOVA BRAND + REAL UNIFIED WALLET + LIVE STATUS -->
+    <header class="flex items-center justify-between px-2 py-1.5 bg-black/60 backdrop-blur-md border border-amber-500/30 rounded-xl z-30 shadow-lg">
+      <!-- Left: Back to Lobby + Logo -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <a href="/casino" class="flex items-center gap-1 text-xs font-black text-amber-300 hover:text-yellow-200 bg-amber-950/60 hover:bg-amber-900 border border-amber-500/40 px-2.5 py-1 rounded-lg transition-all" title="Return to Casino Lobby">
+          <span>‹</span>
+          <span class="hidden sm:inline">Lobby</span>
+        </a>
+        <div class="flex items-center gap-1.5">
+          <span class="text-base sm:text-lg">🦁</span>
+          <div class="leading-tight">
+            <h1 class="font-royal text-xs sm:text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 tracking-wider">
+              ZOO ROULETTE 3D
+            </h1>
+            <span class="text-[9px] font-bold text-emerald-300/80 hidden sm:inline-block">CrickNova Safari Studio</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center: Gold Shark X100 & Live Timer Pill -->
+      <div class="flex items-center gap-1.5 sm:gap-2 bg-black/75 border border-amber-400/60 rounded-full px-2.5 sm:px-3.5 py-0.5 sm:py-1 shadow-inner">
+        <div class="flex items-center gap-1">
+          <span class="text-sm sm:text-base">🦈</span>
+          <span class="font-royal text-[10px] sm:text-xs font-black text-yellow-300">X100</span>
+        </div>
+        <span class="text-amber-500/40">|</span>
+        <div class="flex items-center gap-1 sm:gap-1.5">
+          <span id="phaseLabelText" class="text-[10px] sm:text-xs font-extrabold text-emerald-300 uppercase tracking-tight">Betting</span>
+          <span id="phaseTimerText" class="font-bold text-xs sm:text-sm text-white min-w-[18px] text-center">15</span>
+        </div>
+      </div>
+
+      <!-- Right: Real Unified Wallet Balance + Controls -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <div class="flex items-center gap-1.5 bg-gradient-to-r from-emerald-950/80 via-black/90 to-emerald-950/80 border border-emerald-400/60 rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 shadow-inner">
+          <span class="text-[10px] font-bold text-emerald-200/90 uppercase tracking-tight hidden sm:inline">Wallet</span>
+          <span id="wallet-balance" class="font-racing text-xs sm:text-sm font-black text-yellow-300 min-w-[55px] text-right">
+            ₹{{ "%.2f"|format(user.balance if user and user.balance is defined else 0.0) }}
+          </span>
+          <a href="/?deposit=1" class="w-4 h-4 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black font-black text-[11px] flex items-center justify-center leading-none" title="Deposit Money into Wallet">+</a>
+        </div>
+
+        <button id="btnSoundToggle" onclick="toggleSound()" class="px-2 py-1 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-amber-400/40 text-[11px] font-bold text-amber-200" title="Sound On/Off">
+          🔊
+        </button>
+        <button id="btnRulesModal" onclick="openRulesModal()" class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-amber-400/40 text-xs font-black text-amber-300" title="Game Rules">
+          ?
+        </button>
+      </div>
+    </header>
+
+    <!-- MOBILE-ONLY: TOP HORIZONTAL RECORD STRIP (Gives 100% of mobile width to the 9-col track) -->
+    <div class="flex sm:hidden items-center justify-between bg-black/60 border border-amber-500/30 rounded-xl px-2 py-1 z-20">
+      <span class="text-[9px] font-black text-amber-300 uppercase tracking-wider flex items-center gap-1">
+        <span>🏆</span> Recent
+      </span>
+      <div id="mobileRecordListContainer" class="flex items-center gap-1.5 overflow-x-auto py-0.5">
+        <!-- Injected via renderRecordStrips() -->
+      </div>
+    </div>
+
+    <!-- 2. MAIN ZOO ROULETTE CABINET (26-SLOT PERIMETER TRACK + INNER BETTING ARENA) -->
+    <div class="flex items-center justify-center gap-1 sm:gap-2.5 my-auto relative w-full">
+
+      <!-- DESKTOP-ONLY: Left Decorative Lever: Pay All -->
+      <div class="hidden sm:flex flex-col items-center gap-1 z-20 shrink-0">
+        <button id="btnPayAllSide" onclick="openRulesModal()" class="lever-btn w-12 h-12 rounded-full flex flex-col items-center justify-center text-[9px] font-black text-black leading-tight active:scale-95" title="Pay All Rules">
+          <span>💰</span>
+          <span>Pay All</span>
+        </button>
+      </div>
+
+      <!-- GOLDEN JUNGLE CABINET -->
+      <div class="zoo-cabinet flex-1 p-1.5 sm:p-3 relative max-w-[840px]">
+
+        <!-- TOP TRACK ROW (9 Slots: indices 0..8) -->
+        <div id="trackTopRow" class="grid grid-cols-9 gap-1 sm:gap-1.5 mb-1 sm:mb-1.5"></div>
+
+        <!-- MIDDLE SECTION: LEFT TRACK COL (4) + INNER ARENA + RIGHT TRACK COL (4) -->
+        <div class="grid grid-cols-9 gap-1 sm:gap-1.5 items-stretch">
+
+          <!-- LEFT TRACK COLUMN (4 Slots: indices 25, 24, 23, 22 top-to-bottom) -->
+          <div id="trackLeftCol" class="col-span-1 flex flex-col justify-between gap-1 sm:gap-1.5"></div>
+
+          <!-- INNER BETTING ARENA (7 Columns wide) -->
+          <div class="col-span-7 zoo-inner-arena p-1 sm:p-2.5 relative flex flex-col justify-between gap-1 sm:gap-1.5">
+
+            <!-- UPPER 3-COLUMN ARENA: [2x2 Beasts] | [Center Hero Card] | [2x2 Birds] -->
+            <div class="grid grid-cols-12 gap-1 sm:gap-2 flex-1">
+
+              <!-- LEFT 2x2 BEASTS (Monkey, Rabbit, Lion, Panda) -->
+              <div class="col-span-4 grid grid-cols-2 gap-1 sm:gap-1.5" id="leftBeastsGrid"></div>
+
+              <!-- CENTER HERO BATTLE ARTWORK / WINNER SPOTLIGHT CARD -->
+              <div class="col-span-4 rounded-xl border-2 border-amber-400/70 bg-gradient-to-b from-sky-900/80 via-slate-900 to-amber-950/90 relative overflow-hidden flex flex-col items-center justify-between p-1 sm:p-1.5 shadow-2xl">
+                <!-- Default Split Hero Artwork (Bird vs Beast) OR Winner Spotlight -->
+                <div id="centerHeroDisplay" class="w-full flex-1 flex flex-col items-center justify-center relative">
+                  <!-- Populated dynamically by renderCenterHero() -->
+                </div>
+                <!-- Total Bet Overlay Bar at Bottom of Hero Card -->
+                <div class="w-full bg-black/75 border border-amber-400/50 rounded-lg px-2 py-0.5 flex items-center justify-between text-[9px] sm:text-xs font-black z-10">
+                  <span class="text-amber-200">Total Bet</span>
+                  <span id="totalTableBetText" class="text-yellow-300 font-racing">0</span>
+                </div>
+              </div>
+
+              <!-- RIGHT 2x2 BIRDS (Swallow, Pigeon, Peacock, Eagle) -->
+              <div class="col-span-4 grid grid-cols-2 gap-1 sm:gap-1.5" id="rightBirdsGrid"></div>
+
+            </div>
+
+            <!-- LOWER 3-COLUMN CATEGORY & SHARK BAR: [Beast x2] | [Shark x24] | [Bird x2] -->
+            <div class="grid grid-cols-12 gap-1 sm:gap-2" id="bottomCategoryGrid"></div>
+
+            <!-- FLOATING CENTER RIBBON BANNER ("Place Your Bet" / "Stop Betting") -->
+            <div id="phaseBannerOverlay" class="hidden absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
+              <div class="phase-banner px-6 sm:px-8 py-2 text-center">
+                <div id="phaseBannerTitle" class="font-royal text-base sm:text-2xl font-black text-yellow-300 drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
+                  Place Your Bet
+                </div>
+                <div id="phaseBannerSub" class="text-[10px] sm:text-xs font-bold text-white/95 hidden"></div>
+              </div>
+            </div>
+
+            <!-- BIG 3-2-1 COUNTDOWN OVERLAY -->
+            <div id="countdownOverlay" class="hidden absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
+              <div id="countdownDigit" class="font-racing text-5xl sm:text-7xl font-black text-yellow-300 drop-shadow-[0_0_24px_rgba(250,204,21,0.95)] animate-ping" style="animation-duration: 0.9s;">
+                3
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT TRACK COLUMN (4 Slots: indices 9, 10, 11, 12 top-to-bottom) -->
+          <div id="trackRightCol" class="col-span-1 flex flex-col justify-between gap-1 sm:gap-1.5"></div>
+
+        </div>
+
+        <!-- BOTTOM TRACK ROW (9 Slots: indices 21..13 right-to-left) -->
+        <div id="trackBottomRow" class="grid grid-cols-9 gap-1 sm:gap-1.5 mt-1 sm:mt-1.5"></div>
+
+      </div>
+
+      <!-- DESKTOP-ONLY: Right Sidebar: Record Strip + Take All Lever -->
+      <div class="hidden sm:flex flex-col items-center gap-1.5 z-20 shrink-0">
+        <button id="btnTakeAllSide" onclick="openRecordModal()" class="lever-btn w-11 h-11 sm:w-12 sm:h-12 rounded-full flex flex-col items-center justify-center text-[8px] sm:text-[9px] font-black text-black leading-tight active:scale-95" title="Take All Records">
+          <span>🏆</span>
+          <span>Take All</span>
+        </button>
+        <div id="desktopSideRecordStrip" class="bg-black/65 border border-amber-400/60 rounded-xl p-1 flex flex-col items-center gap-1">
+          <!-- Populated by renderRecordStrips() -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 3. BOTTOM CASINO CONTROL DOCK (Unified Balance + 6 Chips + Action Buttons) -->
+    <footer class="bg-gradient-to-t from-black via-[#081812]/95 to-black/80 border-t border-amber-500/35 rounded-t-2xl px-2 sm:px-4 py-2 flex flex-wrap items-center justify-between gap-2 z-30">
+
+      <!-- Player Profile & Real Wallet Balance -->
+      <div class="flex items-center gap-2 bg-black/60 border border-amber-400/40 rounded-xl px-2.5 py-1.5">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-amber-500 p-0.5 flex items-center justify-center text-base shadow">
+          🦁
+        </div>
+        <div class="leading-tight">
+          <div class="text-[9px] font-bold text-amber-200/80">
+            {{ user.mobile if user and user.mobile else "Guest" }}
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span id="balanceText" class="font-racing text-xs sm:text-sm font-black text-yellow-300">
+              ₹{{ "%.2f"|format(user.balance if user and user.balance is defined else 0.0) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6 Casino Chips (10, 50, 100, 500, 1000, 5000) -->
+      <div id="chipDock" class="flex items-center gap-1 sm:gap-2 overflow-x-auto py-1">
+        <!-- Populated by renderChipDock() -->
+      </div>
+
+      <!-- Controls: x2, Clear, Rebet -->
+      <div class="flex items-center gap-1 sm:gap-1.5">
+        <button id="btnDoubleBet" onclick="doubleMyBets()" class="px-2.5 py-1.5 sm:py-2 rounded-xl bg-gradient-to-b from-amber-500 to-orange-700 hover:from-amber-400 border border-yellow-200 text-black font-black text-xs shadow-lg active:scale-95">
+          ×2
+        </button>
+        <button id="btnClearBet" onclick="clearMyBets()" class="px-2.5 py-1.5 sm:py-2 rounded-xl bg-gradient-to-b from-rose-600 to-rose-900 hover:from-rose-500 border border-rose-300/70 text-white font-bold text-xs shadow-lg active:scale-95">
+          Clear
+        </button>
+        <button id="btnRebet" onclick="rebetLastRound()" class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-b from-emerald-400 to-emerald-700 hover:from-emerald-300 border border-emerald-200 text-black font-black text-xs sm:text-sm shadow-[0_0_15px_rgba(16,185,129,0.5)] active:scale-95">
+          Rebet
+        </button>
+      </div>
+
+    </footer>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- A. RECORD HISTORY MODAL -->
+    <div id="recordModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-gradient-to-b from-[#133325] to-[#081710] border-2 border-amber-400 rounded-2xl max-w-md w-full p-5 shadow-2xl text-white">
+        <div class="flex items-center justify-between border-b border-amber-500/30 pb-3 mb-3">
+          <h3 class="font-royal text-base font-black text-amber-300">📜 RECENT WINNERS RECORD</h3>
+          <button id="btnCloseRecord" onclick="closeRecordModal()" class="w-7 h-7 rounded-full bg-black/50 text-amber-200 font-bold">✕</button>
+        </div>
+        <div id="recordGridBody" class="grid grid-cols-5 gap-2 max-h-60 overflow-y-auto p-1"></div>
+        <button id="btnCloseRecordDone" onclick="closeRecordModal()" class="mt-4 w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-black text-xs">CLOSE</button>
+      </div>
+    </div>
+
+    <!-- B. RULES MODAL -->
+    <div id="rulesModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-gradient-to-b from-[#133325] to-[#081710] border-2 border-amber-400 rounded-2xl max-w-md w-full p-5 shadow-2xl text-white">
+        <div class="flex items-center justify-between border-b border-amber-500/30 pb-3 mb-3">
+          <h3 class="font-royal text-base font-black text-amber-300">🦁 ZOO ROULETTE RULES</h3>
+          <button id="btnCloseRules" onclick="closeRulesModal()" class="w-7 h-7 rounded-full bg-black/50 text-amber-200 font-bold">✕</button>
+        </div>
+        <div class="space-y-2 text-xs text-emerald-100/90 leading-relaxed">
+          <p><strong>Auto Round Cycle:</strong> <strong>15s Betting</strong> → <strong>3-2-1 Stop Betting</strong> → <strong>26-Slot Track Draw</strong> → <strong>4s Idle</strong>.</p>
+          <div class="bg-black/45 p-3 rounded-xl border border-amber-500/30 space-y-1">
+            <div>🐾 <strong>Beasts (×2)</strong>: Monkey (×8), Rabbit (×8), Panda (×8), Lion (×12)</div>
+            <div>🪶 <strong>Birds (×2)</strong>: Swallow (×8), Pigeon (×8), Peacock (×8), Eagle (×12)</div>
+            <div>🦈 <strong>Shark</strong>: Silver Shark (×24) & Golden Shark Bonus (×100)!</div>
+          </div>
+          <p class="text-[11px] text-emerald-200/70">If any Beast wins, both that specific animal AND <strong>Beast ×2</strong> pay out! Same for Birds and <strong>Bird ×2</strong>.</p>
+        </div>
+        <button id="btnCloseRulesDone" onclick="closeRulesModal()" class="mt-4 w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-black text-xs">GOT IT</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. ZOO ROULETTE ANIMALS & MULTIPLIERS
+    // =========================================================================
+    const ANIMALS = {
+      monkey: {
+        id: 'monkey', name: 'Monkey', mult: 8, cat: 'beast', bg: '#f59e0b',
+        icon: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="20" cy="48" r="14" fill="#92400e" stroke="#451a03" stroke-width="3"/><circle cx="20" cy="48" r="8" fill="#fcd34d"/><circle cx="80" cy="48" r="14" fill="#92400e" stroke="#451a03" stroke-width="3"/><circle cx="80" cy="48" r="8" fill="#fcd34d"/><circle cx="50" cy="50" r="30" fill="#b45309" stroke="#451a03" stroke-width="3"/><ellipse cx="50" cy="58" rx="22" ry="18" fill="#fde68a"/><ellipse cx="41" cy="42" rx="10" ry="11" fill="#fde68a"/><ellipse cx="59" cy="42" rx="10" ry="11" fill="#fde68a"/><circle cx="42" cy="43" r="4.5" fill="#1e293b"/><circle cx="58" cy="43" r="4.5" fill="#1e293b"/><circle cx="43.5" cy="41.5" r="1.5" fill="#fff"/><circle cx="59.5" cy="41.5" r="1.5" fill="#fff"/><ellipse cx="46" cy="54" rx="2" ry="3" fill="#451a03"/><ellipse cx="54" cy="54" rx="2" ry="3" fill="#451a03"/><path d="M38 62 Q50 71 62 62" fill="none" stroke="#451a03" stroke-width="3.5" stroke-linecap="round"/></svg>`
+      },
+      rabbit: {
+        id: 'rabbit', name: 'Rabbit', mult: 8, cat: 'beast', bg: '#e2e8f0',
+        icon: `<svg viewBox="0 0 100 100" class="w-full h-full"><ellipse cx="36" cy="28" rx="9" ry="22" transform="rotate(-12 36 28)" fill="#f8fafc" stroke="#64748b" stroke-width="3"/><ellipse cx="36" cy="29" rx="4.5" ry="15" transform="rotate(-12 36 29)" fill="#fda4af"/><ellipse cx="64" cy="28" rx="9" ry="22" transform="rotate(12 64 28)" fill="#f8fafc" stroke="#64748b" stroke-width="3"/><ellipse cx="64" cy="29" rx="4.5" ry="15" transform="rotate(12 64 29)" fill="#fda4af"/><ellipse cx="50" cy="60" rx="28" ry="24" fill="#ffffff" stroke="#64748b" stroke-width="3"/><circle cx="39" cy="55" r="4.5" fill="#0f172a"/><circle cx="61" cy="55" r="4.5" fill="#0f172a"/><circle cx="40.5" cy="53.5" r="1.6" fill="#fff"/><circle cx="62.5" cy="53.5" r="1.6" fill="#fff"/><ellipse cx="50" cy="63" rx="4.5" ry="3" fill="#fb7185"/><path d="M43 69 Q50 74 57 69" fill="none" stroke="#475569" stroke-width="2.5" stroke-linecap="round"/></svg>`
+      },
+      lion: {
+        id: 'lion', name: 'Lion', mult: 12, cat: 'beast', bg: '#ea580c',
+        icon: `<svg viewBox="0 0 100 100" class="w-full h-full"><path d="M50 8 L61 17 L75 14 L79 28 L91 36 L85 50 L91 64 L79 72 L75 86 L61 83 L50 92 L39 83 L25 86 L21 72 L9 64 L15 50 L9 36 L21 28 L25 14 L39 17 Z" fill="#b45309" stroke="#451a03" stroke-width="3" stroke-linejoin="round"/><circle cx="30" cy="30" r="8" fill="#f59e0b" stroke="#451a03" stroke-width="2.5"/><circle cx="70" cy="30" r="8" fill="#f59e0b" stroke="#451a03" stroke-width="2.5"/><circle cx="50" cy="52" r="24" fill="#fbbf24" stroke="#78350f" stroke-width="3"/><ellipse cx="50" cy="60" rx="14" ry="11" fill="#fef3c7"/><circle cx="41" cy="46" r="4" fill="#1e293b"/><circle cx="59" cy="46" r="4" fill="#1e293b"/><circle cx="42.2" cy="44.8" r="1.4" fill="#fff"/><circle cx="60.2" cy="44.8" r="1.4" fill="#fff"/><polygon points="50,60 44,53 56,53" fill="#78350f"/><path d="M50 60 V65 M42 66 Q50 72 58 66" fill="none" stroke="#451a03" stroke-width="2.8" stroke-linecap="round"/></svg>`
+      },
+      panda: {
+        id: 'panda', name: 'Panda', mult: 8, cat: 'beast', bg: '#f8fafc',
+        icon: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="24" cy="26" r="13" fill="#0f172a"/><circle cx="76" cy="26" r="13" fill="#0f172a"/><ellipse cx="50" cy="54" rx="34" ry="30" fill="#ffffff" stroke="#1e293b" stroke-width="3.5"/><ellipse cx="36" cy="49" rx="9" ry="11" transform="rotate(-18 36 49)" fill="#0f172a"/><ellipse cx="64" cy="49" rx="9" ry="11" transform="rotate(18 64 49)" fill="#0f172a"/><circle cx="37" cy="48" r="3.5" fill="#fff"/><circle cx="63" cy="48" r="3.5" fill="#fff"/><circle cx="37" cy="48" r="1.8" fill="#0f172a"/><circle cx="63" cy="48" r="1.8" fill="#0f172a"/><ellipse cx="50" cy="61" rx="5.5" ry="3.8" fill="#0f172a"/><path d="M41 68 Q50 75 59 68" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/></svg>`
+      },
+      swallow: {
+        id: 'swallow', name: 'Swallow', mult: 8, cat: 'bird', bg: '#38bdf8',
+        icon: `<svg viewBox="0 0 100 100" class="w-full h-full"><path d="M12 36 Q34 16 54 44 L88 22 Q70 50 56 58 L76 80 L50 68 L28 84 L38 60 Q20 52 12 36 Z" fill="#0284c7" stroke="#0c4a6e" stroke-width="3" stroke-linejoin="round"/><ellipse cx="48" cy="58" rx="14" ry="11" fill="#f8fafc"/><circle cx="35" cy="43" r="3" fill="#fff"/><circle cx="35" cy="43" r="1.5" fill="#0f172a"/><polygon points="22,42 10,46 22,49" fill="#facc15"/></svg>`
+      },
+      pigeon: {
+        id: 'pigeon', name: 'Pigeon', mult: 8, cat: 'bird', bg: '#cbd5e1',
+        icon: `<svg viewBox="0 0 100 100" class="w-full h-full"><path d="M16 42 Q32 14 54 38 Q72 22 86 30 Q74 52 62 58 Q66 78 46 84 Q28 82 26 62 L14 58 Z" fill="#f8fafc" stroke="#475569" stroke-width="3" stroke-linejoin="round"/><path d="M46 44 Q64 34 78 36 Q66 52 52 54 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/><circle cx="33" cy="36" r="3" fill="#0f172a"/><polygon points="24,36 13,40 24,43" fill="#f59e0b"/></svg>`
+      },
+      peacock: {
+        id: 'peacock', name: 'Peacock', mult: 8, cat: 'bird', bg: '#10b981',
+        icon: `<svg viewBox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="38" fill="#059669" stroke="#064e3b" stroke-width="3"/><circle cx="26" cy="34" r="7" fill="#38bdf8"/><circle cx="26" cy="34" r="3.5" fill="#1e3a8a"/><circle cx="50" cy="22" r="7" fill="#38bdf8"/><circle cx="50" cy="22" r="3.5" fill="#1e3a8a"/><circle cx="74" cy="34" r="7" fill="#38bdf8"/><circle cx="74" cy="34" r="3.5" fill="#1e3a8a"/><circle cx="22" cy="58" r="7" fill="#facc15"/><circle cx="22" cy="58" r="3.5" fill="#065f46"/><circle cx="78" cy="58" r="7" fill="#facc15"/><circle cx="78" cy="58" r="3.5" fill="#065f46"/><path d="M44 44 C44 36 56 36 56 44 L60 76 C60 84 40 84 40 76 Z" fill="#1d4ed8" stroke="#fef08a" stroke-width="2.5"/><circle cx="47" cy="43" r="2" fill="#fff"/><polygon points="50,47 46,52 54,52" fill="#facc15"/></svg>`
+      },
+      eagle: {
+        id: 'eagle', name: 'Eagle', mult: 12, cat: 'bird', bg: '#b45309',
+        icon: `<svg viewBox="0 0 100 100" class="w-full h-full"><path d="M10 30 Q30 16 46 38 L54 38 Q70 16 90 30 Q80 54 62 60 L70 84 L50 74 L30 84 L38 60 Q20 54 10 30 Z" fill="#78350f" stroke="#451a03" stroke-width="3" stroke-linejoin="round"/><circle cx="50" cy="36" r="13" fill="#ffffff" stroke="#451a03" stroke-width="2.5"/><circle cx="45" cy="34" r="2.6" fill="#0f172a"/><circle cx="55" cy="34" r="2.6" fill="#0f172a"/><path d="M46 39 L50 48 L54 39 Z" fill="#facc15" stroke="#b45309" stroke-width="1.5"/></svg>`
+      },
+      goldshark: {
+        id: 'goldshark', name: 'Gold Shark', mult: 100, cat: 'shark', bg: '#eab308',
+        icon: `<svg viewBox="0 0 100 100" class="w-full h-full"><path d="M12 58 Q30 34 48 34 L56 14 L64 34 Q82 38 92 54 Q76 66 56 66 L32 76 L38 64 Q22 64 12 58 Z" fill="#facc15" stroke="#854d0e" stroke-width="3" stroke-linejoin="round"/><path d="M24 58 Q50 52 84 55 Q68 65 44 64 Z" fill="#fef9c3"/><circle cx="74" cy="47" r="3" fill="#0f172a"/><text x="50" y="92" text-anchor="middle" fill="#fde047" font-size="16" font-weight="900">X100</text></svg>`
+      },
+      shark: {
+        id: 'shark', name: 'Shark', mult: 24, cat: 'shark', bg: '#0284c7',
+        icon: `<svg viewBox="0 0 100 100" class="w-full h-full"><path d="M12 58 Q30 34 48 34 L56 14 L64 34 Q82 38 92 54 Q76 66 56 66 L32 76 L38 64 Q22 64 12 58 Z" fill="#0284c7" stroke="#0c4a6e" stroke-width="3" stroke-linejoin="round"/><path d="M24 58 Q50 52 84 55 Q68 65 44 64 Z" fill="#e0f2fe"/><circle cx="74" cy="47" r="3" fill="#0f172a"/><path d="M62 56 L66 60 L70 56 L74 60 L78 56" fill="none" stroke="#fff" stroke-width="2"/></svg>`
+      },
+      beast: {
+        id: 'beast', name: 'Beast', mult: 2, cat: 'group', bg: '#d97706',
+        icon: `<svg viewBox="0 0 100 100" class="w-full h-full"><ellipse cx="50" cy="64" rx="22" ry="18" fill="#fbbf24" stroke="#78350f" stroke-width="3"/><circle cx="24" cy="40" r="9" fill="#fbbf24" stroke="#78350f" stroke-width="3"/><circle cx="41" cy="26" r="9" fill="#fbbf24" stroke="#78350f" stroke-width="3"/><circle cx="59" cy="26" r="9" fill="#fbbf24" stroke="#78350f" stroke-width="3"/><circle cx="76" cy="40" r="9" fill="#fbbf24" stroke="#78350f" stroke-width="3"/></svg>`
+      },
+      bird: {
+        id: 'bird', name: 'Bird', mult: 2, cat: 'group', bg: '#2563eb',
+        icon: `<svg viewBox="0 0 100 100" class="w-full h-full"><path d="M18 72 Q22 24 82 18 Q68 48 48 58 Q66 56 72 64 Q44 76 18 72 Z" fill="#38bdf8" stroke="#1e3a8a" stroke-width="3" stroke-linejoin="round"/><path d="M24 68 Q46 42 74 26" fill="none" stroke="#e0f2fe" stroke-width="3" stroke-linecap="round"/></svg>`
+      }
+    };
+
+    // 26-Slot Perimeter Track (Clockwise 9x6 frame)
+    const TRACK_28_SLOTS = [
+      // Top Row (0..8)
+      'monkey', 'rabbit', 'rabbit', 'rabbit', 'goldshark', 'swallow', 'swallow', 'swallow', 'pigeon',
+      // Right Col (9..12 top-to-bottom)
+      'pigeon', 'pigeon', 'peacock', 'peacock',
+      // Bottom Row (13..21 right-to-left)
+      'peacock', 'eagle', 'eagle', 'eagle', 'shark', 'lion', 'lion', 'lion', 'panda',
+      // Left Col (22..25 bottom-to-top)
+      'panda', 'panda', 'monkey', 'monkey'
+    ];
+
+    const ALL_BET_KEYS = ['monkey', 'rabbit', 'lion', 'panda', 'swallow', 'pigeon', 'peacock', 'eagle', 'beast', 'shark', 'bird'];
+
+    const CHIPS = [
+      { val: 10,   bg: '#16a34a', text: '10' },
+      { val: 50,   bg: '#0284c7', text: '50' },
+      { val: 100,  bg: '#7e22ce', text: '100' },
+      { val: 500,  bg: '#dc2626', text: '500' },
+      { val: 1000, bg: '#ea580c', text: '1K' },
+      { val: 5000, bg: '#ca8a04', text: '5K' }
+    ];
+
+    // =========================================================================
+    // 2. UNIFIED WALLET & AUTHORITATIVE STATE
+    // =========================================================================
+    const userLoggedIn = {{ 'true' if user and not user.is_guest else 'false' }};
+    const initialServerBalance = Number("{{ user.balance if user and user.balance is defined else 0.0 }}");
+
+    const state = {
+      balance: initialServerBalance,
+      selectedChipIdx: 0,
+      phase: 'betting', // 'betting' | 'drawing' | 'idle'
+      phaseTimer: 15,
+      soundOn: true,
+
+      myBets: {},
+      crowdBets: {},
+      lastMyBets: {},
+      boxChips: {},
+
+      currentTrackIdx: 0,
+      winnerAnimalId: null,
+      recentRecords: ['eagle', 'panda', 'swallow', 'lion', 'peacock', 'rabbit', 'monkey', 'shark', 'pigeon', 'eagle']
+    };
+
+    ALL_BET_KEYS.forEach(k => {
+      state.myBets[k] = 0;
+      state.crowdBets[k] = 0;
+      state.lastMyBets[k] = 0;
+      state.boxChips[k] = [];
+    });
+
+    // Real-Time Zero-Refresh WebSocket Sync
+    window.addEventListener('cricknova:wallet_updated', function(e) {
+      if (e && e.detail && typeof e.detail.available === 'number') {
+        state.balance = e.detail.available;
+        updateReadouts();
+      }
+    });
+
+    // =========================================================================
+    // 3. SYNTHESIZED SOUND ENGINE
+    // =========================================================================
+    let audioCtx = null;
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) audioCtx = new AC();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function playSfx(type) {
+      if (!state.soundOn) return;
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        if (type === 'chip') {
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.type = 'sine';
+          o.frequency.setValueAtTime(1250, now);
+          o.frequency.exponentialRampToValueAtTime(1900, now + 0.05);
+          g.gain.setValueAtTime(0.11, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.055);
+          o.connect(g); g.connect(ctx.destination);
+          o.start(now); o.stop(now + 0.06);
+        } else if (type === 'tick') {
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.type = 'triangle';
+          o.frequency.setValueAtTime(780, now);
+          g.gain.setValueAtTime(0.08, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+          o.connect(g); g.connect(ctx.destination);
+          o.start(now); o.stop(now + 0.045);
+        } else if (type === 'step') {
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.type = 'sine';
+          o.frequency.setValueAtTime(500 + Math.random() * 160, now);
+          g.gain.setValueAtTime(0.06, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+          o.connect(g); g.connect(ctx.destination);
+          o.start(now); o.stop(now + 0.04);
+        } else if (type === 'win') {
+          [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+            const o = ctx.createOscillator(), g = ctx.createGain();
+            o.type = 'triangle';
+            const t = now + i * 0.08;
+            o.frequency.setValueAtTime(freq, t);
+            g.gain.setValueAtTime(0.18, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+            o.connect(g); g.connect(ctx.destination);
+            o.start(t); o.stop(t + 0.26);
+          });
+        }
+      } catch (e) {}
+    }
+
+    function toggleSound() {
+      state.soundOn = !state.soundOn;
+      document.getElementById('btnSoundToggle').textContent = state.soundOn ? '🔊' : '🔇';
+    }
+
+    // =========================================================================
+    // 4. BUILD 26-SLOT PERIMETER TRACK
+    // =========================================================================
+    function createTrackTileHTML(idx) {
+      const id = TRACK_28_SLOTS[idx];
+      const a = ANIMALS[id];
+      return `
+        <div id="trackTile_${idx}" class="track-tile h-8 sm:h-11 md:h-12" title="${a.name} (×${a.mult})">
+          <div class="w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)]">${a.icon}</div>
+        </div>
+      `;
+    }
+
+    function buildPerimeterTrack() {
+      // Top Row: 0..8
+      document.getElementById('trackTopRow').innerHTML =
+        [0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => createTrackTileHTML(i)).join('');
+
+      // Right Col: 9..12
+      document.getElementById('trackRightCol').innerHTML =
+        [9, 10, 11, 12].map(i => createTrackTileHTML(i)).join('');
+
+      // Bottom Row: 21 down to 13 (left-to-right visual order)
+      document.getElementById('trackBottomRow').innerHTML =
+        [21, 20, 19, 18, 17, 16, 15, 14, 13].map(i => createTrackTileHTML(i)).join('');
+
+      // Left Col: 25 down to 22 (top-to-bottom visual order)
+      document.getElementById('trackLeftCol').innerHTML =
+        [25, 24, 23, 22].map(i => createTrackTileHTML(i)).join('');
+    }
+
+    function highlightTrackChase(head, t1, t2, isWinner = false) {
+      for (let i = 0; i < 26; i++) {
+        const el = document.getElementById(`trackTile_${i}`);
+        if (!el) continue;
+        el.classList.remove('chase-head', 'chase-tail-1', 'chase-tail-2', 'winner-tile');
+        if (i === head) {
+          el.classList.add(isWinner ? 'winner-tile' : 'chase-head');
+        } else if (!isWinner && i === t1) {
+          el.classList.add('chase-tail-1');
+        } else if (!isWinner && i === t2) {
+          el.classList.add('chase-tail-2');
+        }
+      }
+    }
+
+    // =========================================================================
+    // 5. RENDER INNER BETTING GRIDS & CENTER HERO CARD
+    // =========================================================================
+    function createBetBoxHTML(key, cssClass, extraClasses = '') {
+      const a = ANIMALS[key];
+      const crowd = state.crowdBets[key] || 0;
+      const mine = state.myBets[key] || 0;
+      const winCat = state.winnerAnimalId ? ANIMALS[state.winnerAnimalId].cat : null;
+      const isWin = state.winnerAnimalId === key || (key === 'beast' && winCat === 'beast') || (key === 'bird' && winCat === 'bird');
+
+      const chipsHtml = (state.boxChips[key] || []).map(c =>
+        `<div class="mini-chip" style="left:${c.x}%; top:${c.y}%; background:${c.bg};">${c.text}</div>`
+      ).join('');
+
+      return `
+        <div id="betBox_${key}" onclick="placeMyBet('${key}')" class="zoo-bet-box ${cssClass} ${isWin ? 'winner-box' : ''} ${extraClasses} p-1 sm:p-1.5 flex flex-col justify-between min-h-[64px] sm:min-h-[78px] md:min-h-[86px]">
+          <div class="flex items-center justify-between text-[9px] sm:text-[10px] font-black z-20">
+            <span class="text-amber-200">${(crowd + mine).toLocaleString()}</span>
+            ${mine > 0 ? `<span class="bg-emerald-400 text-black px-1.5 rounded-full text-[8px] sm:text-[9px] font-black shadow">${mine}</span>` : ''}
+          </div>
+          <div class="absolute inset-0 pointer-events-none z-10 overflow-hidden">${chipsHtml}</div>
+          <div class="flex items-center justify-center gap-1 my-auto z-20">
+            <div class="w-8 h-8 sm:w-11 sm:h-11 md:w-12 md:h-12 drop-shadow-[0_2px_5px_rgba(0,0,0,0.8)]">${a.icon}</div>
+          </div>
+          <div class="flex items-center justify-between text-[9px] sm:text-[10px] font-bold z-20">
+            <span class="text-white/90">${a.name}</span>
+            <span class="text-yellow-300 font-black">×${a.mult}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderBettingGrids() {
+      // Left 2x2 Beasts
+      document.getElementById('leftBeastsGrid').innerHTML =
+        ['monkey', 'rabbit', 'lion', 'panda'].map(k => createBetBoxHTML(k, 'beast-cell')).join('');
+
+      // Right 2x2 Birds
+      document.getElementById('rightBirdsGrid').innerHTML =
+        ['swallow', 'pigeon', 'peacock', 'eagle'].map(k => createBetBoxHTML(k, 'bird-cell')).join('');
+
+      // Bottom Category Row: Beast x2 | Shark x24 | Bird x2
+      document.getElementById('bottomCategoryGrid').innerHTML =
+        createBetBoxHTML('beast', 'beast-cell', 'col-span-4 min-h-[50px] sm:min-h-[58px]') +
+        createBetBoxHTML('shark', 'shark-cell', 'col-span-4 min-h-[50px] sm:min-h-[58px]') +
+        createBetBoxHTML('bird',  'bird-cell',  'col-span-4 min-h-[50px] sm:min-h-[58px]');
+    }
+
+    function renderCenterHero() {
+      const hero = document.getElementById('centerHeroDisplay');
+      if (state.winnerAnimalId) {
+        const w = ANIMALS[state.winnerAnimalId];
+        hero.innerHTML = `
+          <div class="flex flex-col items-center justify-center animate-bounce" style="animation-duration:1.1s;">
+            <div class="w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20 drop-shadow-[0_0_20px_rgba(250,204,21,0.9)]">${w.icon}</div>
+            <div class="mt-1 bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 text-black font-black text-[10px] sm:text-xs px-2.5 sm:px-3 py-0.5 rounded-full shadow">
+              ★ ${w.name} ×${w.mult}
+            </div>
+          </div>
+        `;
+      } else {
+        hero.innerHTML = `
+          <div class="flex items-center justify-center gap-1.5 sm:gap-3 w-full">
+            <div class="flex flex-col items-center">
+              <div class="w-10 h-10 sm:w-13 sm:h-13 md:w-14 md:h-14 drop-shadow-[0_4px_10px_rgba(56,189,248,0.65)]">${ANIMALS.eagle.icon}</div>
+              <span class="text-[8px] sm:text-[9px] font-black text-sky-300 uppercase tracking-wider mt-0.5">Birds ×2</span>
+            </div>
+            <span class="font-royal text-xs sm:text-base font-black text-yellow-400">VS</span>
+            <div class="flex flex-col items-center">
+              <div class="w-10 h-10 sm:w-13 sm:h-13 md:w-14 md:h-14 drop-shadow-[0_4px_10px_rgba(245,158,11,0.65)]">${ANIMALS.lion.icon}</div>
+              <span class="text-[8px] sm:text-[9px] font-black text-amber-300 uppercase tracking-wider mt-0.5">Beasts ×2</span>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function renderChipDock() {
+      document.getElementById('chipDock').innerHTML = CHIPS.map((c, idx) => `
+        <button id="chipBtn_${c.val}" onclick="selectChip(${idx})" class="dock-chip w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 flex flex-col items-center justify-center text-white font-black ${idx === state.selectedChipIdx ? 'active-chip' : 'opacity-85 hover:opacity-100'}" style="background:${c.bg};">
+          <span class="text-[9px] sm:text-[11px] leading-none">${c.text}</span>
+          <span class="text-[6px] sm:text-[7px] opacity-85 uppercase">CHIP</span>
+        </button>
+      `).join('');
+    }
+
+    function updateReadouts() {
+      const totalTable = ALL_BET_KEYS.reduce((sum, k) => sum + state.crowdBets[k] + state.myBets[k], 0);
+      document.getElementById('totalTableBetText').textContent = totalTable.toLocaleString();
+      document.getElementById('balanceText').textContent = `₹${state.balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      const wb = document.getElementById('wallet-balance');
+      if (wb) wb.textContent = `₹${state.balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    // =========================================================================
+    // 6. BETTING ACTIONS (CONNECTED TO UNIFIED WALLET)
+    // =========================================================================
+    function selectChip(idx) {
+      state.selectedChipIdx = idx;
+      playSfx('chip');
+      renderChipDock();
+    }
+
+    function spawnChipInBox(key, chipObj) {
+      const arr = state.boxChips[key];
+      arr.push({
+        bg: chipObj.bg,
+        text: chipObj.text,
+        x: 16 + Math.random() * 62,
+        y: 24 + Math.random() * 48
+      });
+      if (arr.length > 10) arr.shift();
+    }
+
+    function placeMyBet(key) {
+      if (state.phase !== 'betting') {
+        showBanner('Stop Betting!', 'Wait for next round...', 850);
+        return;
+      }
+      if (!userLoggedIn) {
+        window.location.href = '/login';
+        return;
+      }
+      const chip = CHIPS[state.selectedChipIdx];
+      if (state.balance < chip.val) {
+        showBanner('Low Balance!', 'Please deposit to continue', 1400);
+        setTimeout(() => { window.location.href = '/?deposit=1'; }, 700);
+        return;
+      }
+      state.balance -= chip.val;
+      state.myBets[key] += chip.val;
+      spawnChipInBox(key, chip);
+      playSfx('chip');
+      renderBettingGrids();
+      updateReadouts();
+
+      // Authoritative atomic debit from UnifiedWalletService
+      fetch('/api/casino/bet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          game_id: 'zoo-roulette',
+          stake: chip.val,
+          bet_type: key
+        })
+      }).then(r => r.json()).then(data => {
+        if (data && typeof data.new_balance === 'number') {
+          state.balance = data.new_balance;
+          updateReadouts();
+        }
+      }).catch(err => console.warn('Zoo roulette bet error:', err));
+    }
+
+    function doubleMyBets() {
+      if (state.phase !== 'betting') return;
+      if (!userLoggedIn) { window.location.href = '/login'; return; }
+      const needed = ALL_BET_KEYS.reduce((s, k) => s + state.myBets[k], 0);
+      if (needed === 0) return;
+      if (state.balance < needed) {
+        showBanner('Low Balance!', 'Cannot double stakes', 1200);
+        return;
+      }
+      ALL_BET_KEYS.forEach(k => {
+        const amt = state.myBets[k];
+        if (amt > 0) {
+          state.balance -= amt;
+          state.myBets[k] += amt;
+          spawnChipInBox(k, CHIPS[state.selectedChipIdx]);
+          fetch('/api/casino/bet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              game_id: 'zoo-roulette',
+              stake: amt,
+              bet_type: k
+            })
+          }).then(r => r.json()).then(d => {
+            if (d && typeof d.new_balance === 'number') {
+              state.balance = d.new_balance;
+              updateReadouts();
+            }
+          }).catch(e => {});
+        }
+      });
+      playSfx('chip');
+      renderBettingGrids();
+      updateReadouts();
+    }
+
+    function clearMyBets() {
+      if (state.phase !== 'betting') return;
+      showBanner('Bets Locked!', 'Stakes placed on live table', 900);
+    }
+
+    function rebetLastRound() {
+      if (state.phase !== 'betting') return;
+      if (!userLoggedIn) { window.location.href = '/login'; return; }
+      const needed = ALL_BET_KEYS.reduce((s, k) => s + state.lastMyBets[k], 0);
+      if (needed === 0) {
+        placeMyBet('beast');
+        return;
+      }
+      if (state.balance < needed) {
+        showBanner('Low Balance!', 'Cannot rebet stakes', 1200);
+        return;
+      }
+      ALL_BET_KEYS.forEach(k => {
+        const amt = state.lastMyBets[k];
+        if (amt > 0) {
+          state.balance -= amt;
+          state.myBets[k] += amt;
+          spawnChipInBox(k, CHIPS[0]);
+          fetch('/api/casino/bet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              game_id: 'zoo-roulette',
+              stake: amt,
+              bet_type: k
+            })
+          }).then(r => r.json()).then(d => {
+            if (d && typeof d.new_balance === 'number') {
+              state.balance = d.new_balance;
+              updateReadouts();
+            }
+          }).catch(e => {});
+        }
+      });
+      playSfx('chip');
+      renderBettingGrids();
+      updateReadouts();
+    }
+
+    // =========================================================================
+    // 7. AUTOMATIC GAME LOOP: BETTING (15s) -> DRAWING (10s) -> IDLE (4s)
+    // =========================================================================
+    function showBanner(title, sub = '', duration = 1300) {
+      const overlay = document.getElementById('phaseBannerOverlay');
+      document.getElementById('phaseBannerTitle').textContent = title;
+      const subEl = document.getElementById('phaseBannerSub');
+      if (sub) { subEl.textContent = sub; subEl.classList.remove('hidden'); }
+      else subEl.classList.add('hidden');
+      overlay.classList.remove('hidden');
+      setTimeout(() => overlay.classList.add('hidden'), duration);
+    }
+
+    function startAutoLoop() {
+      enterBettingPhase();
+      setInterval(() => {
+        state.phaseTimer -= 1;
+
+        if (state.phase === 'betting') {
+          const burst = 1 + Math.floor(Math.random() * 3);
+          for (let i = 0; i < burst; i++) {
+            const k = ALL_BET_KEYS[Math.floor(Math.random() * ALL_BET_KEYS.length)];
+            const c = CHIPS[Math.floor(Math.random() * 3)];
+            state.crowdBets[k] += c.val;
+            spawnChipInBox(k, c);
+          }
+          renderBettingGrids();
+          updateReadouts();
+
+          const cdOverlay = document.getElementById('countdownOverlay');
+          const cdDigit = document.getElementById('countdownDigit');
+          if (state.phaseTimer <= 3 && state.phaseTimer >= 1) {
+            cdDigit.textContent = String(state.phaseTimer);
+            cdOverlay.classList.remove('hidden');
+            playSfx('tick');
+          } else {
+            cdOverlay.classList.add('hidden');
+          }
+
+          if (state.phaseTimer <= 0) {
+            cdOverlay.classList.add('hidden');
+            enterDrawingPhase();
+          }
+        } else if (state.phase === 'drawing') {
+          if (state.phaseTimer <= 0) enterIdlePhase();
+        } else if (state.phase === 'idle') {
+          if (state.phaseTimer <= 0) enterBettingPhase();
+        }
+
+        document.getElementById('phaseTimerText').textContent = String(Math.max(0, state.phaseTimer));
+      }, 1000);
+    }
+
+    function enterBettingPhase() {
+      state.phase = 'betting';
+      state.phaseTimer = 15;
+      state.winnerAnimalId = null;
+
+      ALL_BET_KEYS.forEach(k => {
+        state.myBets[k] = 0;
+        state.crowdBets[k] = 0;
+        state.boxChips[k] = [];
+      });
+
+      const lbl = document.getElementById('phaseLabelText');
+      lbl.textContent = 'Betting';
+      lbl.className = 'text-[10px] sm:text-xs font-extrabold text-emerald-300 uppercase tracking-tight';
+      document.getElementById('phaseTimerText').textContent = '15';
+
+      highlightTrackChase(-1, -1, -1, false);
+      renderCenterHero();
+      renderBettingGrids();
+      renderRecordStrips();
+      updateReadouts();
+      showBanner('Place Your Bet', '15 Seconds Open!', 1300);
+    }
+
+    function enterDrawingPhase() {
+      state.phase = 'drawing';
+      state.phaseTimer = 10;
+
+      const myTotal = ALL_BET_KEYS.reduce((s, k) => s + state.myBets[k], 0);
+      if (myTotal > 0) state.lastMyBets = { ...state.myBets };
+
+      const lbl = document.getElementById('phaseLabelText');
+      lbl.textContent = 'Drawing';
+      lbl.className = 'text-[10px] sm:text-xs font-extrabold text-amber-300 uppercase tracking-tight';
+      document.getElementById('phaseTimerText').textContent = '10';
+      showBanner('Stop Betting', 'Spinning Track...', 1100);
+
+      const targetIdx = Math.floor(Math.random() * 26);
+      const totalSteps = 26 * 3 + ((targetIdx - state.currentTrackIdx + 26) % 26);
+      let stepCount = 0;
+
+      function spinStep() {
+        state.currentTrackIdx = (state.currentTrackIdx + 1) % 26;
+        const t1 = (state.currentTrackIdx - 1 + 26) % 26;
+        const t2 = (state.currentTrackIdx - 2 + 26) % 26;
+        stepCount++;
+        const progress = stepCount / totalSteps;
+        playSfx('step');
+
+        if (stepCount >= totalSteps) {
+          highlightTrackChase(state.currentTrackIdx, -1, -1, true);
+          settleOutcome(TRACK_28_SLOTS[state.currentTrackIdx]);
+          return;
+        }
+
+        highlightTrackChase(state.currentTrackIdx, t1, t2, false);
+        let delay = 48;
+        if (progress < 0.12) delay = 90;
+        else if (progress > 0.72) delay = 80 + Math.pow((progress - 0.72) / 0.28, 2) * 290;
+        setTimeout(spinStep, delay);
+      }
+
+      setTimeout(spinStep, 450);
+    }
+
+    function renderRecordStrips() {
+      // 1. Mobile top horizontal container
+      const mobEl = document.getElementById('mobileRecordListContainer');
+      if (mobEl) {
+        mobEl.innerHTML = state.recentRecords.slice(0, 8).map((id, i) => {
+          const a = ANIMALS[id] || ANIMALS.eagle;
+          return `<div class="w-6 h-6 rounded-full bg-slate-900 border ${i === 0 ? 'border-yellow-300 ring-1 ring-yellow-400' : 'border-amber-500/40'} p-0.5 flex-shrink-0 shadow">${a.icon}</div>`;
+        }).join('');
+      }
+
+      // 2. Desktop vertical sidebar container
+      const deskEl = document.getElementById('desktopSideRecordStrip');
+      if (deskEl) {
+        deskEl.innerHTML = state.recentRecords.slice(0, 6).map((id, i) => {
+          const a = ANIMALS[id] || ANIMALS.eagle;
+          return `<div class="w-8 h-8 rounded-full bg-slate-900 border ${i === 0 ? 'border-yellow-300 ring-2 ring-yellow-400/70' : 'border-amber-500/40'} p-0.5 shadow">${a.icon}</div>`;
+        }).join('');
+      }
+    }
+
+    function settleOutcome(winningId) {
+      state.winnerAnimalId = winningId;
+      const animal = ANIMALS[winningId];
+
+      state.recentRecords.unshift(winningId);
+      if (state.recentRecords.length > 20) state.recentRecords.pop();
+
+      // Calculate payouts: Specific Animal + Category (Beast x2 or Bird x2)
+      let winAmount = (state.myBets[winningId] || 0) * animal.mult;
+      if (winningId === 'goldshark') winAmount += (state.myBets.shark || 0) * 100;
+      if (animal.cat === 'beast') winAmount += (state.myBets.beast || 0) * 2;
+      if (animal.cat === 'bird') winAmount += (state.myBets.bird || 0) * 2;
+
+      const myTotalStakes = ALL_BET_KEYS.reduce((s, k) => s + state.myBets[k], 0);
+
+      renderCenterHero();
+      renderBettingGrids();
+      renderRecordStrips();
+
+      if (winAmount > 0) {
+        state.balance += winAmount;
+        playSfx('win');
+        showBanner(`${animal.name.toUpperCase()} ×${animal.mult}!`, `YOU WON ₹${winAmount.toLocaleString('en-IN')}!`, 2600);
+
+        if (userLoggedIn) {
+          fetch('/api/casino/settle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              game_id: 'zoo-roulette',
+              outcome: 'WIN',
+              stake: myTotalStakes,
+              payout: winAmount
+            })
+          }).then(r => r.json()).then(data => {
+            if (data && typeof data.new_balance === 'number') {
+              state.balance = data.new_balance;
+              updateReadouts();
+            }
+          }).catch(err => console.warn('settle sync error:', err));
+        }
+      } else {
+        playSfx('win');
+        showBanner(`${animal.name.toUpperCase()} ×${animal.mult}!`, 'Next round starting soon', 2000);
+
+        if (userLoggedIn && myTotalStakes > 0) {
+          fetch('/api/casino/settle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              game_id: 'zoo-roulette',
+              outcome: 'LOSS',
+              stake: myTotalStakes,
+              payout: 0.0
+            })
+          }).catch(e => {});
+        }
+      }
+      updateReadouts();
+    }
+
+    function enterIdlePhase() {
+      state.phase = 'idle';
+      state.phaseTimer = 4;
+      const lbl = document.getElementById('phaseLabelText');
+      lbl.textContent = 'Idle';
+      lbl.className = 'text-[10px] sm:text-xs font-extrabold text-sky-300 uppercase tracking-tight';
+      document.getElementById('phaseTimerText').textContent = '4';
+    }
+
+    // =========================================================================
+    // 8. MODALS (RECORD, RULES)
+    // =========================================================================
+    function openRecordModal() {
+      document.getElementById('recordGridBody').innerHTML = state.recentRecords.map((id, i) => {
+        const a = ANIMALS[id] || ANIMALS.eagle;
+        return `
+          <div class="bg-black/45 border ${i === 0 ? 'border-yellow-300 ring-1 ring-yellow-400' : 'border-amber-500/30'} rounded-xl p-2 flex flex-col items-center">
+            <div class="w-8 h-8">${a.icon}</div>
+            <span class="text-[9px] font-bold text-amber-200 mt-0.5">${a.name}</span>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('recordModal').classList.remove('hidden');
+    }
+    function closeRecordModal() { document.getElementById('recordModal').classList.add('hidden'); }
+
+    function openRulesModal() { document.getElementById('rulesModal').classList.remove('hidden'); }
+    function closeRulesModal() { document.getElementById('rulesModal').classList.add('hidden'); }
+
+    // =========================================================================
+    // 9. STARTUP INITIALIZATION
+    // =========================================================================
+    window.onload = function() {
+      buildPerimeterTrack();
+      renderCenterHero();
+      renderBettingGrids();
+      renderRecordStrips();
+      renderChipDock();
+      updateReadouts();
+      startAutoLoop();
+    };
+  </script>
+</body>
+</html>

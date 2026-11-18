@@ -1520,6 +1520,12 @@ GAME_ALIASES = {
     "carroulette": "car-roulette",
     "car_roulette": "car-roulette",
     "car": "car-roulette",
+
+    # Zoo Roulette Royal 3D Safari
+    "zoo-roulette": "zoo-roulette",
+    "zooroulette": "zoo-roulette",
+    "zoo_roulette": "zoo-roulette",
+    "zoo": "zoo-roulette",
     # 0. Integrated Originals & 3D Games
     "crash": "crash",
     "cricknova-crash": "crash",
@@ -1592,7 +1598,6 @@ GAME_ALIASES = {
     "european-roulette": "wheel",
     "american-roulette": "wheel",
     "speed-roulette": "wheel",
-    "zoo-roulette": "wheel",
     "megawheel": "wheel",
     "mega-wheel": "wheel",
     "crazywheel": "wheel",
@@ -2143,6 +2148,24 @@ async def car_roulette_page(request: Request):
         }
     )
 
+@app.get("/casino/zoo-roulette", response_class=HTMLResponse)
+@app.get("/casino/zooroulette", response_class=HTMLResponse)
+@app.get("/zoo-roulette", response_class=HTMLResponse)
+async def zoo_roulette_page(request: Request):
+    user = get_active_user(request)
+    recalculate_user_exposure(user)
+    save_all_user_data()
+    all_data = load_all_user_data()
+    payment_config = all_data.get("payment_config", {})
+    return templates.TemplateResponse(
+        request=request,
+        name="zoo_roulette.html",
+        context={
+            "user": user,
+            "payment_config": payment_config
+        }
+    )
+
 @app.get("/casino", response_class=HTMLResponse)
 @app.get("/casino/{game_slug}", response_class=HTMLResponse)
 async def casino_arena(request: Request, game_slug: str = "lobby"):
@@ -2153,6 +2176,8 @@ async def casino_arena(request: Request, game_slug: str = "lobby"):
         return RedirectResponse(url="/casino/jhandi-munda", status_code=302)
     elif game_slug in ("car-roulette", "carroulette", "car"):
         return RedirectResponse(url="/casino/car-roulette", status_code=302)
+    elif game_slug in ("zoo-roulette", "zooroulette", "zoo_roulette", "zoo"):
+        return RedirectResponse(url="/casino/zoo-roulette", status_code=302)
     elif game_slug in ("crash", "plinko", "mines", "roulette-3d", "roulette_3d", "gold", "wheel", "bingo"):
         return RedirectResponse(url="/casino", status_code=302)
 

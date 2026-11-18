@@ -322,6 +322,7 @@ const aviator="<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-
 const games=[
  ['jhandi','Jhandi Munda 3D','Royal Indian 6-dice · 30s auto live roll',5],
  ['car-roulette','Car Roulette 3D','Royal Supercar Stadium · 20× Supercars',4],
+ ['zoo-roulette','Zoo Roulette 3D','Royal Safari Track · Shark 100×',8],
  ['flight','Aviator','Spribe official cockpit · auto cashout',10],
  ['andar','Speed Andar Bahar','Matching-card live table',7],
  ['storm','Storm of the Nile','Six reels · free spins megaways',6]
@@ -435,6 +436,7 @@ const rules={
 function openRoom(k){
  if(k==='jhandi'||k==='jhandi-munda'){window.location.href='/casino/jhandi-munda';return}
  if(k==='car-roulette'||k==='car'||k==='carroulette'){window.location.href='/casino/car-roulette';return}
+ if(k==='zoo-roulette'||k==='zoo'||k==='zooroulette'){window.location.href='/casino/zoo-roulette';return}
  if(k==='crash'||k==='plinko'||k==='mines'||k==='roulette-3d'||k==='gold'||k==='wheel'||k==='bingo'){window.location.href='/casino';return}
  if(!games.some(g=>g[0]===k))return;room=k;roundToken++;bets=[];auto=false;free=0;chip=10;locked=false;balance(0);try{history.replaceState(null,'','/casino/'+k)}catch(e){}
  if(k==='flight'){balance(0);app.innerHTML='<div style="padding:8px 12px;background:#0d1117;display:flex;align-items:center;justify-content:space-between;">'+btn('‹ Casino Lobby','back')+'<span style="font-size:13px;font-weight:700;color:#94a3b8;">🚀 Aviator Cockpit</span></div><iframe title="Aviator" style="height:calc(100dvh - 110px);"></iframe>';app.querySelector('iframe').srcdoc=aviator;return}
@@ -463,6 +465,7 @@ const initialSlug = "{{ active_slug|default('') }}".toLowerCase().trim();
 const slugMap = {
   'jhandi': 'jhandi', 'jhandi-munda': 'jhandi', 'jhandimunda': 'jhandi', 'dice': 'jhandi',
   'car-roulette': 'car-roulette', 'car': 'car-roulette', 'carroulette': 'car-roulette',
+  'zoo-roulette': 'zoo-roulette', 'zoo': 'zoo-roulette', 'zooroulette': 'zoo-roulette',
   'crash': 'crash', 'cricknova-crash': 'crash',
   'plinko': 'plinko', 'cricknova-plinko': 'plinko',
   'mines': 'mines', 'cricknova-mines': 'mines',

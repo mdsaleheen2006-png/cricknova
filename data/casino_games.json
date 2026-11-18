@@ -63,5 +63,18 @@
     "gradient": "linear-gradient(135deg, #9333ea, #2e1065)",
     "description": "High-octane luxury car roulette featuring 24-slot oval track, 8 supercar brands (Maserati, Ferrari, Lambo, Porsche X20; BMW, Mercedes, Jaguar, Land Rover X5) and continuous 15s auto-rounds.",
     "play_url": "/casino/car-roulette"
+  },
+  {
+    "id": "zoo-roulette",
+    "slug": "zoo-roulette",
+    "name": "Zoo Roulette • Royal 3D Safari",
+    "category": "roulette",
+    "provider": "CrickNova Safari Studio",
+    "badge": "SHARK X100",
+    "players": 2450,
+    "icon": "🦁",
+    "gradient": "linear-gradient(135deg, #059669, #064e3b)",
+    "description": "Exotic royal jungle roulette featuring 26-slot perimeter track, 8 safari animals (Monkey, Rabbit, Lion, Panda; Swallow, Pigeon, Peacock, Eagle), Gold Shark X100 bonus and 15s auto-rounds.",
+    "play_url": "/casino/zoo-roulette"
   }
 ]
