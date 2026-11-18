@@ -535,6 +535,49 @@ function openDepositModal() {
   if (modal) {
     modal.classList.add('active');
     syncSliceDepositSession();
+    loadRecentDepositsInModal();
+  }
+}
+
+async function loadRecentDepositsInModal() {
+  const container = document.getElementById('modal-deposit-history-list');
+  if (!container) return;
+  try {
+    const res = await fetch('/api/user/deposit-history');
+    if (!res.ok) {
+      container.innerHTML = '<div style="color:var(--text-dim); text-align:center; padding:6px; font-size:10.5px;">Sign in to view recent claims.</div>';
+      return;
+    }
+    const data = await res.json();
+    const deposits = data.deposits || [];
+    if (deposits.length === 0) {
+      container.innerHTML = '<div style="color:var(--text-dim); text-align:center; padding:6px; font-size:10.5px;">No recent deposit claims yet.</div>';
+      return;
+    }
+    let html = '<div style="display:flex; flex-direction:column; gap:6px;">';
+    deposits.slice(0, 3).forEach(d => {
+      const isApproved = d.status === 'APPROVED';
+      const isDeclined = d.status === 'DECLINED';
+      const color = isApproved ? '#00e676' : (isDeclined ? '#ef4444' : '#f5a623');
+      const bg = isApproved ? 'rgba(0,230,118,0.15)' : (isDeclined ? 'rgba(239,68,68,0.15)' : 'rgba(245,166,35,0.15)');
+      const label = isApproved ? '✅ APPROVED' : (isDeclined ? '❌ DECLINED' : '⏳ PENDING REVIEW');
+      const utrText = d.utr ? `UTR: ${d.utr}` : 'Verifying against Slice...';
+      html += `
+        <div style="background:var(--bg-darkest); border:1px solid var(--border-dark); border-radius:5px; padding:7px 10px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:900; color:#fff; font-size:12.5px;">₹${Number(d.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+            <div style="font-size:10px; color:#94a3b8; font-family:monospace;">${d.id} • ${utrText}</div>
+          </div>
+          <span style="font-size:10px; font-weight:800; color:${color}; background:${bg}; border:1px solid ${color}; padding:2px 7px; border-radius:4px;">
+            ${label}
+          </span>
+        </div>
+      `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+  } catch (err) {
+    container.innerHTML = `<div style="color:#ef4444; font-size:10px; text-align:center;">Failed to load recent requests: ${err.message}</div>`;
   }
 }
 
@@ -706,6 +749,7 @@ async function submitDepositRequestWithProof() {
         `;
       }
       alert(`✅ Deposit Claim of ₹${amount.toLocaleString('en-IN')} submitted successfully!\n\nStatus: PENDING REVIEW.\nYour deposit is registered and being verified against Slice.`);
+      loadRecentDepositsInModal();
     } else {
       const errMsg = (data && (data.detail || data.message)) || `Server returned error status ${res.status}`;
       alert('❌ ' + errMsg);
@@ -1061,26 +1105,47 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 // ==================== 7. TRANSACTION HISTORY (DEPOSIT & WITHDRAWAL) ====================
+let historyPollingTimer = null;
+let currentHistoryTab = 'deposit';
+
 function openHistoryModal(tab = 'deposit') {
+  closeDepositModal();
+  closeWithdrawModal();
   const modal = document.getElementById('history-modal');
   if (modal) {
     modal.classList.add('active');
-    switchHistoryTab(tab);
+    currentHistoryTab = tab;
+    switchHistoryTab(tab, false);
+    if (!historyPollingTimer) {
+      historyPollingTimer = setInterval(() => {
+        if (modal.classList.contains('active')) {
+          switchHistoryTab(currentHistoryTab, true);
+        } else {
+          clearInterval(historyPollingTimer);
+          historyPollingTimer = null;
+        }
+      }, 4000);
+    }
   }
 }
 
 function closeHistoryModal() {
   const modal = document.getElementById('history-modal');
   if (modal) modal.classList.remove('active');
+  if (historyPollingTimer) {
+    clearInterval(historyPollingTimer);
+    historyPollingTimer = null;
+  }
 }
 
-async function switchHistoryTab(tab) {
+async function switchHistoryTab(tab, isSilent = false) {
+  currentHistoryTab = tab;
   const depBtn = document.getElementById('tab-btn-deposit-history');
   const wthBtn = document.getElementById('tab-btn-withdraw-history');
   const container = document.getElementById('history-list-container');
   const loading = document.getElementById('history-loading');
-  if (loading) loading.style.display = 'block';
-  if (container) container.innerHTML = '';
+  if (!isSilent && loading) loading.style.display = 'block';
+  if (!isSilent && container) container.innerHTML = '';
 
   if (tab === 'deposit') {
     if (depBtn) {
@@ -1095,39 +1160,57 @@ async function switchHistoryTab(tab) {
       const res = await fetch('/api/user/deposit-history');
       const data = await res.json();
       if (loading) loading.style.display = 'none';
+
+      // Update live wallet balance if returned
+      if (data.user_balance !== undefined) {
+        const balHdr = document.getElementById('wallet-balance');
+        const balMob = document.getElementById('android-wallet-val');
+        const balAcc = document.getElementById('account-bal-val');
+        if (balHdr) balHdr.innerText = '₹' + Number(data.user_balance).toLocaleString('en-IN', {minimumFractionDigits: 2});
+        if (balMob) balMob.innerText = Number(data.user_balance).toLocaleString('en-IN', {maximumFractionDigits: 0});
+        if (balAcc) balAcc.innerText = '₹' + Number(data.user_balance).toLocaleString('en-IN', {minimumFractionDigits: 2});
+      }
+
       const deposits = data.deposits || [];
       if (deposits.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:30px 10px; color:#64748b; font-size:12px;">No deposit requests found yet.</div>';
+        if (container) container.innerHTML = '<div style="text-align:center; padding:30px 10px; color:#64748b; font-size:12px;">No deposit requests found yet.</div>';
         return;
       }
       let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
       deposits.forEach(d => {
-        const badgeColor = d.status === 'APPROVED' ? '#00e676' : d.status === 'DECLINED' ? '#ef4444' : '#f5a623';
-        const badgeBg = d.status === 'APPROVED' ? 'rgba(0,230,118,0.15)' : d.status === 'DECLINED' ? 'rgba(239,68,68,0.15)' : 'rgba(245,166,35,0.15)';
+        const isApproved = d.status === 'APPROVED';
+        const isDeclined = d.status === 'DECLINED';
+        const badgeColor = isApproved ? '#00e676' : (isDeclined ? '#ef4444' : '#f5a623');
+        const badgeBg = isApproved ? 'rgba(0,230,118,0.15)' : (isDeclined ? 'rgba(239,68,68,0.15)' : 'rgba(245,166,35,0.15)');
+        const badgeLabel = isApproved ? '✅ APPROVED & CREDITED' : (isDeclined ? '❌ DECLINED' : '⏳ PENDING VERIFICATION');
         html += `
-          <div style="background:var(--bg-darkest); border:1px solid var(--border-dark); border-radius:6px; padding:12px; font-size:12px;">
+          <div style="background:var(--bg-darkest); border:1px solid ${isApproved ? 'rgba(0,230,118,0.3)' : 'var(--border-dark)'}; border-radius:6px; padding:12px; font-size:12px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
               <span style="font-family:monospace; color:var(--winbuzz-gold); font-weight:800;">${d.id || 'DEP'}</span>
-              <span style="font-size:11px; padding:2px 8px; border-radius:4px; font-weight:800; color:${badgeColor}; background:${badgeBg}; border:1px solid ${badgeColor};">
-                ${d.status}
+              <span style="font-size:10.5px; padding:2px 8px; border-radius:4px; font-weight:800; color:${badgeColor}; background:${badgeBg}; border:1px solid ${badgeColor};">
+                ${badgeLabel}
               </span>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-              <span style="font-size:14px; font-weight:900; color:#fff;">₹${Number(d.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+              <span style="font-size:15px; font-weight:900; color:#fff;">₹${Number(d.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
               <span style="font-size:11px; color:#94a3b8;">${d.created_at || ''}</span>
             </div>
             <div style="font-size:11px; color:#94a3b8; font-family:monospace;">
-              UTR: <span style="color:#e2e8f0;">${d.utr || '—'}</span>
+              Ref/UTR: <span style="color:#e2e8f0; font-weight:700;">${d.utr || '—'}</span>
             </div>
-            ${d.decline_reason ? `<div style="font-size:10.5px; color:#ef4444; margin-top:4px;">Reason: ${d.decline_reason}</div>` : ''}
+            <div style="font-size:10.5px; color:#64748b; margin-top:2px;">
+              Payee: ${d.receiving_payee || 'Tarana Nasreen'} (${d.receiving_vpa || '9693554087@slc'})
+            </div>
+            ${d.approved_at ? `<div style="font-size:10.5px; color:#00e676; margin-top:4px; font-weight:700;">Credited to Wallet on ${d.approved_at}</div>` : ''}
+            ${d.decline_reason ? `<div style="font-size:10.5px; color:#ef4444; margin-top:4px;">Notice: ${d.decline_reason}</div>` : ''}
           </div>
         `;
       });
       html += '</div>';
-      container.innerHTML = html;
+      if (container) container.innerHTML = html;
     } catch (e) {
       if (loading) loading.style.display = 'none';
-      container.innerHTML = `<div style="color:#ef4444; font-size:12px; text-align:center;">Failed to load deposits: ${e.message}</div>`;
+      if (container) container.innerHTML = `<div style="color:#ef4444; font-size:12px; text-align:center;">Failed to load deposits: ${e.message}</div>`;
     }
   } else {
     if (depBtn) {
@@ -1144,40 +1227,44 @@ async function switchHistoryTab(tab) {
       if (loading) loading.style.display = 'none';
       const wths = data.withdrawals || [];
       if (wths.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:30px 10px; color:#64748b; font-size:12px;">No withdrawal requests found yet.</div>';
+        if (container) container.innerHTML = '<div style="text-align:center; padding:30px 10px; color:#64748b; font-size:12px;">No withdrawal requests found yet.</div>';
         return;
       }
       let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
       wths.forEach(w => {
-        const badgeColor = (w.status === 'PAID' || w.status === 'COMPLETED') ? '#00e676' : w.status === 'DECLINED' ? '#ef4444' : '#f5a623';
-        const badgeBg = (w.status === 'PAID' || w.status === 'COMPLETED') ? 'rgba(0,230,118,0.15)' : w.status === 'DECLINED' ? 'rgba(239,68,68,0.15)' : 'rgba(245,166,35,0.15)';
+        const isPaid = (w.status === 'PAID' || w.status === 'COMPLETED');
+        const isDeclined = w.status === 'DECLINED';
+        const badgeColor = isPaid ? '#00e676' : (isDeclined ? '#ef4444' : '#f5a623');
+        const badgeBg = isPaid ? 'rgba(0,230,118,0.15)' : (isDeclined ? 'rgba(239,68,68,0.15)' : 'rgba(245,166,35,0.15)');
+        const badgeLabel = isPaid ? '✅ PAID TO BANK' : (isDeclined ? '❌ DECLINED' : '⏳ PENDING PAYOUT');
         html += `
-          <div style="background:var(--bg-darkest); border:1px solid var(--border-dark); border-radius:6px; padding:12px; font-size:12px;">
+          <div style="background:var(--bg-darkest); border:1px solid ${isPaid ? 'rgba(0,230,118,0.3)' : 'var(--border-dark)'}; border-radius:6px; padding:12px; font-size:12px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
               <span style="font-family:monospace; color:var(--winbuzz-gold); font-weight:800;">${w.id || 'WTH'}</span>
-              <span style="font-size:11px; padding:2px 8px; border-radius:4px; font-weight:800; color:${badgeColor}; background:${badgeBg}; border:1px solid ${badgeColor};">
-                ${w.status}
+              <span style="font-size:10.5px; padding:2px 8px; border-radius:4px; font-weight:800; color:${badgeColor}; background:${badgeBg}; border:1px solid ${badgeColor};">
+                ${badgeLabel}
               </span>
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-              <span style="font-size:14px; font-weight:900; color:#fff;">₹${Number(w.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+              <span style="font-size:15px; font-weight:900; color:#fff;">₹${Number(w.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
               <span style="font-size:11px; color:#94a3b8;">${w.created_at || ''}</span>
             </div>
             <div style="font-size:11px; color:#94a3b8;">
               Account: <span style="color:#e2e8f0; font-family:monospace;">${w.bank_account_masked || 'Bank'}</span> (${w.bank_holder_name || ''})
             </div>
-            ${w.payout_bank_utr ? `<div style="font-size:11px; color:#00e676; margin-top:3px; font-family:monospace;">Bank Transfer UTR: ${w.payout_bank_utr}</div>` : ''}
+            ${w.payout_bank_utr ? `<div style="font-size:11px; color:#00e676; margin-top:3px; font-family:monospace; font-weight:700;">Bank Transfer UTR: ${w.payout_bank_utr}</div>` : ''}
             ${w.decline_reason ? `<div style="font-size:10.5px; color:#ef4444; margin-top:4px;">Reason: ${w.decline_reason}</div>` : ''}
           </div>
         `;
       });
       html += '</div>';
-      container.innerHTML = html;
+      if (container) container.innerHTML = html;
     } catch (e) {
       if (loading) loading.style.display = 'none';
-      container.innerHTML = `<div style="color:#ef4444; font-size:12px; text-align:center;">Failed to load withdrawals: ${e.message}</div>`;
+      if (container) container.innerHTML = `<div style="color:#ef4444; font-size:12px; text-align:center;">Failed to load withdrawals: ${e.message}</div>`;
     }
   }
+}
 }
 
   // Modal backdrop click handler

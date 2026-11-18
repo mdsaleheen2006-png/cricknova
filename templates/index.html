@@ -151,6 +151,9 @@
             <span id="android-wallet-val" class="android-wallet-val">{{ "{:,.0f}".format(user.balance) }}</span>
           </div>
           <button class="btn-m-deposit-plus" onclick="openDepositModal()" title="Add Money">+</button>
+          <button class="btn-header" style="font-size: 11px; padding: 4px 8px; background: rgba(245,166,35,0.18); color: var(--winbuzz-gold); border: 1px solid var(--winbuzz-gold); border-radius: 4px; font-weight: 800; display: inline-flex; align-items: center; gap: 3px;" onclick="openHistoryModal('deposit')" title="Deposit & Withdrawal Statement">
+            📜 HISTORY
+          </button>
           <a href="/logout" class="android-btn-logout" title="Sign Out">✕</a>
         {% else %}
           <a href="/login" class="btn-m-login">LOGIN</a>
@@ -1279,6 +1282,19 @@
         </button>
 
         <div id="deposit-result-box" style="display: none; margin-top: 12px; padding: 10px; border-radius: 6px; font-size: 11.5px; line-height: 1.5;"></div>
+
+        <!-- Live Recent Deposit Requests & Status -->
+        <div style="margin-top: 14px; border-top: 1px solid var(--border-dark); padding-top: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 11px; font-weight: 800; color: #cbd5e1;">📋 RECENT CLAIMS & STATUS</span>
+            <button type="button" class="btn-header" style="font-size: 10px; padding: 3px 8px; background: rgba(245, 166, 35, 0.15); color: var(--winbuzz-gold); border: 1px solid var(--winbuzz-gold); border-radius: 4px; cursor: pointer; font-weight: 800;" onclick="openHistoryModal('deposit')">
+              📜 FULL STATEMENT →
+            </button>
+          </div>
+          <div id="modal-deposit-history-list" style="font-size: 11px; max-height: 140px; overflow-y: auto;">
+            <div style="text-align: center; color: var(--text-dim); padding: 8px;">Loading your recent claims...</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1344,8 +1360,8 @@
   </div>
 
   <!-- MODAL 5: TRANSACTION HISTORY (WINBUZZ STYLE DEPOSIT & WITHDRAWAL LOGS) -->
-  <div class="modal-overlay" id="history-modal">
-    <div class="modal-box" style="max-width: 500px; max-height: 85vh; display: flex; flex-direction: column;">
+  <div class="modal-overlay" id="history-modal" style="z-index: 99999;">
+    <div class="modal-box" style="max-width: 500px; max-height: 88vh; display: flex; flex-direction: column;">
       <div class="modal-header">
         <h3 id="history-modal-title">📜 TRANSACTION STATEMENT</h3>
         <button class="modal-close" onclick="closeHistoryModal()">✕</button>

@@ -2755,7 +2755,24 @@ async def youpi_webhook_handler(request: Request):
     utr = str(payload.get("utr", "")).strip()
 
     reqs = all_data.get("deposit_requests", [])
-    target = next((r for r in reqs if r.get("id") == order_id or r.get("order_id") == order_id or r.get("gateway_payment_id") == payment_id), None)
+    target = next((
+        r for r in reqs 
+        if (utr and len(utr) >= 6 and r.get("utr") == utr)
+        or r.get("id") == order_id 
+        or r.get("order_id") == order_id 
+        or r.get("gateway_payment_id") == payment_id
+    ), None)
+
+    # Fallback for direct QR payments: match pending claim for the same amount
+    if not target and utr and event in ["SUCCESS", "OBSERVED_SUCCESS", "COMPLETED", "RECONCILED"]:
+        obs_amount = float(payload.get("amount", 0.0))
+        target = next((
+            r for r in reqs 
+            if r.get("status") == "PENDING" 
+            and (abs(float(r.get("amount", 0.0)) - obs_amount) < 0.01 or not obs_amount)
+        ), None)
+        if target:
+            target["utr"] = utr
 
     if event in ["SUCCESS", "OBSERVED_SUCCESS", "COMPLETED", "RECONCILED"]:
         # Automated Approval from Bank Observation (Gmail / Android SMS Observer)
@@ -2990,19 +3007,31 @@ async def submit_deposit_request(request: Request):
 async def get_user_deposit_history(request: Request):
     user = get_active_user(request)
     if user.get("is_guest") or not user.get("mobile"):
+        phone = request.query_params.get("mobile") or request.query_params.get("phone")
+        if phone:
+            all_data = load_all_user_data()
+            if phone in all_data.get("users", {}):
+                user = all_data["users"][phone]
+    if user.get("is_guest") or not user.get("mobile"):
         raise HTTPException(status_code=401, detail="Please login.")
     all_data = load_all_user_data()
     reqs = [r for r in all_data.get("deposit_requests", []) if r.get("user_mobile") == user["mobile"] or r.get("mobile") == user["mobile"]]
-    return JSONResponse(content={"status": "success", "deposits": reqs})
+    return JSONResponse(content={"status": "success", "deposits": reqs, "user_balance": user.get("balance", 0.0)})
 
 @app.get("/api/user/withdrawal-history")
 async def get_user_withdrawal_history(request: Request):
     user = get_active_user(request)
     if user.get("is_guest") or not user.get("mobile"):
+        phone = request.query_params.get("mobile") or request.query_params.get("phone")
+        if phone:
+            all_data = load_all_user_data()
+            if phone in all_data.get("users", {}):
+                user = all_data["users"][phone]
+    if user.get("is_guest") or not user.get("mobile"):
         raise HTTPException(status_code=401, detail="Please login.")
     all_data = load_all_user_data()
     reqs = [r for r in all_data.get("withdrawal_requests", []) if r.get("user_mobile") == user["mobile"] or r.get("mobile") == user["mobile"]]
-    return JSONResponse(content={"status": "success", "withdrawals": reqs})
+    return JSONResponse(content={"status": "success", "withdrawals": reqs, "user_balance": user.get("balance", 0.0)})
 
 @app.post("/api/ocr/extract-utr")
 async def extract_utr_api(request: Request):
@@ -3477,12 +3506,16 @@ async def admin_deposit_action(request: Request):
     req_id = str(data.get("request_id", "")).strip()
     action = str(data.get("action", "APPROVE")).upper()
     reason = str(data.get("reason", "Declined by admin")).strip()
+    utr_override = str(data.get("utr", "")).strip()
 
     all_data = load_all_user_data()
     reqs = all_data.get("deposit_requests", [])
     target_req = next((r for r in reqs if r.get("id") == req_id), None)
     if not target_req:
         raise HTTPException(status_code=404, detail="Deposit request not found")
+
+    if utr_override:
+        target_req["utr"] = utr_override
 
     # Idempotent: If already approved, return success without double crediting
     if target_req.get("status") == "APPROVED":
