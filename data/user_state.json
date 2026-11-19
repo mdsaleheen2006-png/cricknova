@@ -562,7 +562,7 @@
       "amount_paise": 200000
     }
   ],
-  "default_user_mobile": "9123456789",
+  "default_user_mobile": "",
   "sms_config": {
     "provider": "fast2sms",
     "api_key": "xufCvAq3FjACsArkesyaZcTlMrDoxcVXLsGfIDr0sRAKDmKOhuI1m1NwoBUuyIFTmbwhBWxVzShw4qjB",

@@ -2678,15 +2678,25 @@ async def execute_casino_action(request: Request):
 # ==================== REAL-TIME UNIFIED WALLET WEBSOCKET & API ====================
 @app.websocket("/ws/wallet")
 async def websocket_wallet_endpoint(websocket: WebSocket):
-    # Retrieve user from cookie or session
+    # Retrieve user from cookie or session (Never fall back to any default user!)
     cookie_header = websocket.headers.get("cookie", "")
     user_mobile = ""
-    if "session=" in cookie_header:
+
+    # 1. Primary: cricknova_user cookie
+    if "cricknova_user=" in cookie_header:
+        try:
+            m = re.search(r'cricknova_user=([^;]+)', cookie_header)
+            if m:
+                user_mobile = m.group(1).strip()
+        except Exception:
+            pass
+
+    # 2. Secondary: session= cookie
+    if not user_mobile and "session=" in cookie_header:
         try:
             m = re.search(r'session=([^;]+)', cookie_header)
             if m:
                 sval = m.group(1).strip()
-                # find mobile from sessions
                 all_data = load_all_user_data()
                 for mob, u in all_data.get("users", {}).items():
                     if u.get("session_token") == sval or u.get("mobile") == sval:
@@ -2694,12 +2704,27 @@ async def websocket_wallet_endpoint(websocket: WebSocket):
                         break
         except Exception:
             pass
-    if not user_mobile:
-        all_data = load_all_user_data()
-        def_mob = all_data.get("default_user_mobile", "")
-        if def_mob in all_data.get("users", {}):
-            user_mobile = def_mob
 
+    # 3. Tertiary: query parameter (e.g. ?phone= or ?user_mobile=)
+    if not user_mobile:
+        user_mobile = websocket.query_params.get("phone") or websocket.query_params.get("user_mobile") or ""
+
+    # Validate against registered users in database
+    if user_mobile:
+        clean_key = str(user_mobile).strip().replace(" ", "").replace("+91", "").lower()
+        all_data = load_all_user_data()
+        users = all_data.get("users", {})
+        matched = None
+        if clean_key in users:
+            matched = clean_key
+        else:
+            for k, u in users.items():
+                if str(k).lower() == clean_key or str(u.get("mobile", "")).replace("+91", "").strip() == clean_key:
+                    matched = k
+                    break
+        user_mobile = matched if matched else ""
+
+    # Strict isolation: if user is not authenticated, DO NOT associate with any user
     await wallet_broadcaster.connect(websocket, user_mobile)
     try:
         if user_mobile:
@@ -2722,6 +2747,18 @@ async def websocket_wallet_endpoint(websocket: WebSocket):
 @app.get("/api/user/wallet")
 async def get_current_user_wallet(request: Request):
     user = get_active_user(request)
+    if user.get("is_guest") or not user.get("mobile"):
+        phone = request.query_params.get("mobile") or request.query_params.get("phone")
+        if phone:
+            all_data = load_all_user_data()
+            clean_p = str(phone).strip().replace(" ", "").replace("+91", "").lower()
+            if clean_p in all_data.get("users", {}):
+                user = all_data["users"][clean_p]
+            else:
+                for k, u in all_data.get("users", {}).items():
+                    if str(k).lower() == clean_p or str(u.get("mobile", "")).replace("+91", "").strip() == clean_p:
+                        user = u
+                        break
     if user.get("is_guest") or not user.get("mobile"):
         raise HTTPException(status_code=401, detail="Please login first.")
     all_data = load_all_user_data()

@@ -204,12 +204,6 @@
           <span>+₹</span>
         </a>
 
-        <!-- Jackpot Pool Indicator -->
-        <div class="bg-black/60 border border-amber-500/40 rounded-lg px-2 py-1 flex flex-col items-center leading-tight">
-          <span class="text-[9px] text-amber-300 uppercase font-bold">Jackpot</span>
-          <span id="jackpotDisplay" class="text-[11px] font-black text-yellow-400">₹98.52</span>
-        </div>
-
         <!-- Sound Toggle -->
         <button id="btnSoundToggle" onclick="toggleSound()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 flex items-center justify-center text-sm" title="Mute / Unmute Sound">
           🔊
@@ -1486,7 +1480,8 @@
       const totalBet = Object.values(state.bets).reduce((a, b) => a + b, 0);
       document.getElementById('balanceText').textContent = `₹${state.balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       document.getElementById('totalBetText').textContent = `₹${totalBet.toLocaleString('en-IN')}`;
-      document.getElementById('jackpotDisplay').textContent = `₹${state.jackpot.toFixed(2)}`;
+      const jpEl = document.getElementById('jackpotDisplay');
+      if (jpEl) jpEl.textContent = `₹${state.jackpot.toFixed(2)}`;
       document.getElementById('roundNumberText').textContent = `No.${state.roundSerial.toString()}`;
     }
 

@@ -79,8 +79,23 @@
     }));
   }
 
+  function getStoredUserPhone() {
+    try {
+      var phone = localStorage.getItem('cricknova_user_phone') || '';
+      if (!phone) {
+        var match = document.cookie.match(/cricknova_user=([^;]+)/);
+        if (match) phone = match[1].trim();
+      }
+      return phone;
+    } catch(e) {
+      return '';
+    }
+  }
+
   function pollBalanceFallback() {
-    fetch('/api/user/wallet', { credentials: 'same-origin' })
+    var phone = getStoredUserPhone();
+    var url = '/api/user/wallet' + (phone ? '?phone=' + encodeURIComponent(phone) : '');
+    fetch(url, { credentials: 'same-origin' })
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data && data.status === 'success' && typeof data.balance === 'number') {
@@ -95,8 +110,9 @@
 
   function connectWalletSocket() {
     try {
+      var phone = getStoredUserPhone();
       var protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
-      var wsUrl = protocol + location.host + '/ws/wallet';
+      var wsUrl = protocol + location.host + '/ws/wallet' + (phone ? '?phone=' + encodeURIComponent(phone) : '');
       ws = new WebSocket(wsUrl);
 
       ws.onopen = function() {
@@ -110,6 +126,11 @@
         try {
           var msg = JSON.parse(event.data);
           if (msg && msg.type === 'WALLET_SYNC' && typeof msg.balance === 'number') {
+            var currentPhone = getStoredUserPhone();
+            // If message includes target mobile, ensure it matches current user
+            if (msg.mobile && currentPhone && msg.mobile !== currentPhone) {
+              return; // Ignore updates intended for different user
+            }
             updateDomBalances(msg.balance, msg.available, msg.exposure);
           }
         } catch(e) {}
