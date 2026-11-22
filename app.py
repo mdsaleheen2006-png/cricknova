@@ -3115,6 +3115,7 @@ def send_email_otp(recipient_email: str, otp_code: str, purpose: str = "Registra
 
     return False
 
+@app.post("/api/auth/email/send-otp")
 @app.post("/api/auth/send-email-otp")
 async def send_email_otp_api(request: Request):
     """Sends authentic 6-digit OTP to the user's email inbox."""
@@ -3153,6 +3154,7 @@ async def send_email_otp_api(request: Request):
         "user_exists": user_exists
     })
 
+@app.post("/api/auth/email/verify-otp")
 @app.post("/api/auth/verify-email-otp")
 async def verify_email_otp_api(request: Request):
     """Verifies email OTP, registers new user with ₹500 bonus (or logs in) and sets session."""
@@ -3241,6 +3243,7 @@ async def verify_email_otp_api(request: Request):
     response.set_cookie("cricknova_user", target_key, max_age=86400 * 365, httponly=False, samesite="lax", path="/")
     return response
 
+@app.post("/api/auth/email/reset-password")
 @app.post("/api/auth/reset-password-email")
 async def reset_password_email_api(request: Request):
     """Resets user password securely using Email OTP."""
