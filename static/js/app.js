@@ -216,10 +216,10 @@ function closeLoginModal() {
   if (modal) modal.classList.remove('active');
 }
 
-function isUserLoggedIn() {
+function hasUserSession() {
   const phone = localStorage.getItem('cricknova_user_phone');
   const hasCookie = document.cookie.includes('cricknova_user=');
-  return !!(phone || hasCookie);
+  return !!(isUserLoggedIn || phone || hasCookie);
 }
 
 function switchAuthTab(tabName) {
@@ -551,7 +551,7 @@ async function syncSliceDepositSession() {
 }
 
 function openDepositModal() {
-  if (!isUserLoggedIn()) {
+  if (!hasUserSession()) {
     alert('⚠️ Please login to your account to deposit money.');
     openLoginModal('login');
     return;
@@ -794,7 +794,7 @@ const submitDepositRequest = submitDepositRequestWithProof;
 
 // ==================== 6. WITHDRAWAL ====================
 function openWithdrawModal() {
-  if (!isUserLoggedIn()) {
+  if (!hasUserSession()) {
     alert('⚠️ Please login to your account to withdraw money.');
     openLoginModal('login');
     return;
@@ -885,7 +885,7 @@ if ('serviceWorker' in navigator) {
 
 // ==================== 8. MOBILE SLIDING BET SLIP ====================
 function openMobileBetSlip(matchId, matchName, runner, type, price, marketType = 'match_odds') {
-  if (!isUserLoggedIn()) {
+  if (!hasUserSession()) {
     alert('⚠️ Please login to your account to place bets.');
     openLoginModal('login');
     return;
