@@ -1055,11 +1055,11 @@
         <button type="button" class="auth-tab-btn active" id="tab-btn-login" onclick="switchAuthTab('login')">
           🔑 Login (Password)
         </button>
-        <button type="button" class="auth-tab-btn" id="tab-btn-register" onclick="switchAuthTab('register')">
-          ⚡ Register (New)
-        </button>
         <button type="button" class="auth-tab-btn" id="tab-btn-otp" onclick="switchAuthTab('otp')">
-          📲 Login (OTP)
+          ✉️ Login (OTP)
+        </button>
+        <button type="button" class="auth-tab-btn" id="tab-btn-forgot" onclick="switchAuthTab('forgot')">
+          🔒 Forgot Password
         </button>
       </div>
 
@@ -1068,16 +1068,15 @@
         <!-- ================= PANEL 1: LOGIN WITH PASSWORD (DEFAULT) ================= -->
         <div id="auth-panel-login" class="auth-panel active">
           <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
-            Login securely with your 10-digit mobile number and secret password.
+            Login securely with your Mobile Number or Email and password.
           </p>
 
           <form onsubmit="handlePasswordLogin(event)">
             <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 3px;">
-              MOBILE NUMBER (10 DIGITS)
+              MOBILE NUMBER OR EMAIL
             </label>
             <div style="display: flex; gap: 6px; margin-bottom: 10px;">
-              <span style="background: var(--bg-darkest); border: 1px solid var(--border-light); padding: 8px 10px; color: #fff; font-weight: 800; border-radius: var(--radius-xs);">+91</span>
-              <input type="tel" id="pwd-login-mobile" placeholder="9876543210" maxlength="10" required
+              <input type="text" id="pwd-login-mobile" placeholder="10-digit mobile or email address" required
                      style="flex: 1; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 13.5px; font-weight: 800; border-radius: var(--radius-xs);">
             </div>
 
@@ -1096,8 +1095,8 @@
           </form>
 
           <div style="display: flex; justify-content: space-between; margin-top: 12px; font-size: 10.5px;">
-            <a href="javascript:void(0)" onclick="switchAuthTab('register')" style="color: var(--winbuzz-gold); text-decoration: none; font-weight: 800;">
-              New player? Register Account →
+            <a href="javascript:void(0)" onclick="switchAuthTab('otp')" style="color: var(--winbuzz-gold); text-decoration: none; font-weight: 800;">
+              ✉️ Login with OTP →
             </a>
             <a href="javascript:void(0)" onclick="switchAuthTab('forgot')" style="color: var(--text-muted); text-decoration: none;">
               Forgot Password?
@@ -1105,92 +1104,28 @@
           </div>
         </div>
 
-
-        <!-- ================= PANEL 2: REGISTER NEW ACCOUNT (OTP + SET PASSWORD) ================= -->
-        <div id="auth-panel-register" class="auth-panel">
-          <div style="background: rgba(0, 230, 118, 0.1); border: 1px solid var(--color-green); border-radius: 4px; padding: 7px 10px; font-size: 11px; margin-bottom: 12px;">
-            <strong style="color: var(--color-green);">🎁 Welcome Bonus:</strong> Instant ₹500 credited to your wallet upon mobile verification!
-          </div>
-
-          <!-- Step 1: Request Mobile OTP -->
-          <div id="reg-step-mobile">
-            <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 3px;">
-              ENTER YOUR MOBILE NUMBER (10 DIGITS)
-            </label>
-            <div style="display: flex; gap: 6px; margin-bottom: 12px;">
-              <span style="background: var(--bg-darkest); border: 1px solid var(--border-light); padding: 8px 10px; color: #fff; font-weight: 800; border-radius: var(--radius-xs);">+91</span>
-              <input type="tel" id="reg-mobile" placeholder="9876543210" maxlength="10"
-                     style="flex: 1; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 13.5px; font-weight: 800; border-radius: var(--radius-xs);">
-            </div>
-
-            <button type="button" id="btn-reg-send-otp" class="btn-deposit" style="width: 100%; padding: 10px; justify-content: center; font-size: 12px; font-weight: 900;" onclick="sendRegisterOtp()">
-              SEND OTP TO MOBILE 📲
-            </button>
-          </div>
-
-          <!-- Step 2: Verify OTP and Set Password -->
-          <div id="reg-step-verify" style="display: none;">
-            <div style="background: rgba(0, 176, 255, 0.1); border: 1px solid #00b0ff; border-radius: 4px; padding: 6px 10px; font-size: 10.5px; margin-bottom: 10px;">
-              <span style="color: #00b0ff; font-weight: 800;">📲 OTP sent to your phone!</span>
-              <span style="color: #cbd5e1; margin-left: 4px;">(Demo / Backup OTP: <strong style="color: var(--winbuzz-gold);">123456</strong>)</span>
-            </div>
-
-            <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 3px;">
-              ENTER 6-DIGIT OTP CODE
-            </label>
-            <input type="text" id="reg-otp" placeholder="123456" maxlength="6"
-                   style="width: 100%; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 15px; font-weight: 900; letter-spacing: 3px; text-align: center; border-radius: var(--radius-xs); margin-bottom: 10px;">
-
-            <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 3px;">
-              SET YOUR SECRET PASSWORD (MINIMUM 6 CHARACTERS)
-            </label>
-            <div style="position: relative; margin-bottom: 10px;">
-              <input type="password" id="reg-password" placeholder="Create strong password"
-                     style="width: 100%; padding: 8px 36px 8px 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 13px; font-weight: 700; border-radius: var(--radius-xs);">
-              <span onclick="togglePasswordVisibility('reg-password', this)" style="position: absolute; right: 10px; top: 9px; cursor: pointer; color: var(--text-dim); font-size: 14px;">👁️</span>
-            </div>
-
-            <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 3px;">
-              CONFIRM PASSWORD
-            </label>
-            <input type="password" id="reg-password-confirm" placeholder="Re-type password"
-                   style="width: 100%; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 13px; font-weight: 700; border-radius: var(--radius-xs); margin-bottom: 14px;">
-
-            <button type="button" id="btn-reg-complete" class="btn-deposit" style="width: 100%; padding: 11px; justify-content: center; font-size: 12.5px; font-weight: 900;" onclick="completeRegistration()">
-              ✓ VERIFY OTP & CREATE ACCOUNT
-            </button>
-            <div style="text-align: center; margin-top: 8px;">
-              <button style="background: transparent; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer; text-decoration: underline;" onclick="document.getElementById('reg-step-verify').style.display='none'; document.getElementById('reg-step-mobile').style.display='block';">
-                ← Change Mobile Number
-              </button>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- ================= PANEL 3: LOGIN WITH OTP / FORGOT PASSWORD ================= -->
+        <!-- ================= PANEL 2: LOGIN WITH OTP (EMAIL / MOBILE) ================= -->
         <div id="auth-panel-otp" class="auth-panel">
           <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
-            Forgot your password or want to login directly with SMS OTP? Enter your mobile number below.
+            Enter your Email or Mobile number to receive a verification OTP code.
           </p>
 
-          <!-- Step 1: Mobile -->
+          <!-- Step 1: Input -->
           <div id="otp-login-step-mobile">
             <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 3px;">
-              MOBILE NUMBER (10 DIGITS)
+              MOBILE NUMBER OR EMAIL
             </label>
             <div style="display: flex; gap: 6px; margin-bottom: 12px;">
-              <span style="background: var(--bg-darkest); border: 1px solid var(--border-light); padding: 8px 10px; color: #fff; font-weight: 800; border-radius: var(--radius-xs);">+91</span>
-              <input type="tel" id="otp-only-mobile" placeholder="9876543210" maxlength="10"
+              <input type="text" id="otp-only-mobile" placeholder="e.g. 9876543210 or name@gmail.com"
                      style="flex: 1; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 13.5px; font-weight: 800; border-radius: var(--radius-xs);">
             </div>
 
             <button type="button" id="btn-otp-only-send" class="btn-deposit" style="width: 100%; padding: 10px; justify-content: center; font-size: 12px; font-weight: 900;" onclick="sendOtpOnly()">
-              REQUEST OTP CODE 📲
+              REQUEST OTP CODE ✉️
             </button>
           </div>
 
-          <!-- Step 2: Verify & Option to Set/Reset Password -->
+          <!-- Step 2: Verify & Login -->
           <div id="otp-login-step-verify" style="display: none;">
             <div style="background: rgba(0, 230, 118, 0.1); border: 1px solid var(--color-green); border-radius: 4px; padding: 6px 10px; font-size: 10.5px; margin-bottom: 10px;">
               <span style="color: var(--color-green); font-weight: 800;">⚡ OTP Sent!</span>
@@ -1204,9 +1139,9 @@
                    style="width: 100%; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 15px; font-weight: 900; letter-spacing: 3px; text-align: center; border-radius: var(--radius-xs); margin-bottom: 10px;">
 
             <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 3px;">
-              SET NEW PASSWORD (OPTIONAL / RESET)
+              SET PASSWORD (OPTIONAL)
             </label>
-            <input type="password" id="otp-only-new-pwd" placeholder="Enter new password (optional)"
+            <input type="password" id="otp-only-new-pwd" placeholder="Enter password (optional)"
                    style="width: 100%; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 12.5px; font-weight: 700; border-radius: var(--radius-xs); margin-bottom: 14px;">
 
             <button type="button" id="btn-otp-only-verify" class="btn-deposit" style="width: 100%; padding: 11px; justify-content: center; font-size: 12.5px; font-weight: 900;" onclick="completeOtpOnlyLogin()">
@@ -1214,7 +1149,67 @@
             </button>
             <div style="text-align: center; margin-top: 8px;">
               <button style="background: transparent; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer; text-decoration: underline;" onclick="document.getElementById('otp-login-step-verify').style.display='none'; document.getElementById('otp-login-step-mobile').style.display='block';">
-                ← Change Mobile Number
+                ← Change Email / Mobile
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= PANEL 3: FORGOT PASSWORD ================= -->
+        <div id="auth-panel-forgot" class="auth-panel">
+          <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+            Reset your account password using verification OTP sent to your Mobile or Email.
+          </p>
+
+          <!-- Step 1: Input Identifier -->
+          <div id="forgot-step-input">
+            <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 3px;">
+              REGISTERED MOBILE OR EMAIL
+            </label>
+            <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+              <input type="text" id="forgot-identifier" placeholder="e.g. 9876543210 or name@gmail.com"
+                     style="flex: 1; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 13.5px; font-weight: 800; border-radius: var(--radius-xs);">
+            </div>
+
+            <button type="button" id="btn-forgot-send" class="btn-deposit" style="width: 100%; padding: 10px; justify-content: center; font-size: 12px; font-weight: 900;" onclick="sendForgotOtp()">
+              SEND RESET OTP 📲
+            </button>
+          </div>
+
+          <!-- Step 2: Verify & Reset Password -->
+          <div id="forgot-step-verify" style="display: none;">
+            <div style="background: rgba(0, 176, 255, 0.1); border: 1px solid #00b0ff; border-radius: 4px; padding: 6px 10px; font-size: 10.5px; margin-bottom: 10px;">
+              <span style="color: #00b0ff; font-weight: 800;">📲 Reset OTP Sent!</span>
+              <span style="color: #cbd5e1; margin-left: 4px;">(Demo / Backup OTP: <strong style="color: var(--winbuzz-gold);">123456</strong>)</span>
+            </div>
+
+            <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 3px;">
+              ENTER 6-DIGIT OTP CODE
+            </label>
+            <input type="text" id="forgot-otp" placeholder="123456" maxlength="6"
+                   style="width: 100%; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 15px; font-weight: 900; letter-spacing: 3px; text-align: center; border-radius: var(--radius-xs); margin-bottom: 10px;">
+
+            <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 3px;">
+              NEW PASSWORD (MINIMUM 6 CHARACTERS)
+            </label>
+            <div style="position: relative; margin-bottom: 10px;">
+              <input type="password" id="forgot-new-pwd" placeholder="Create new strong password"
+                     style="width: 100%; padding: 8px 36px 8px 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 13px; font-weight: 700; border-radius: var(--radius-xs);">
+              <span onclick="togglePasswordVisibility('forgot-new-pwd', this)" style="position: absolute; right: 10px; top: 9px; cursor: pointer; color: var(--text-dim); font-size: 14px;">👁️</span>
+            </div>
+
+            <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); display: block; margin-bottom: 3px;">
+              CONFIRM NEW PASSWORD
+            </label>
+            <input type="password" id="forgot-confirm-pwd" placeholder="Re-type new password"
+                   style="width: 100%; padding: 8px; background: var(--bg-darkest); border: 1px solid var(--border-light); color: #fff; font-size: 13px; font-weight: 700; border-radius: var(--radius-xs); margin-bottom: 14px;">
+
+            <button type="button" id="btn-forgot-submit" class="btn-deposit" style="width: 100%; padding: 11px; justify-content: center; font-size: 12.5px; font-weight: 900;" onclick="completeForgotPassword()">
+              🔒 RESET PASSWORD & LOGIN
+            </button>
+            <div style="text-align: center; margin-top: 8px;">
+              <button style="background: transparent; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer; text-decoration: underline;" onclick="document.getElementById('forgot-step-verify').style.display='none'; document.getElementById('forgot-step-input').style.display='block';">
+                ← Change Email / Mobile
               </button>
             </div>
           </div>

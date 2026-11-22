@@ -1501,6 +1501,11 @@
     }
 
     function placeBetOnSymbol(symbolId) {
+      if (!userLoggedIn) {
+        showStatusMessage('PLEASE LOGIN FIRST TO PLAY JHANDI MUNDA', 'text-amber-300');
+        setTimeout(() => { window.location.href = '/login'; }, 800);
+        return;
+      }
       if (state.isRolling || state.isBettingLocked) {
         showStatusMessage('🔒 BETTING CLOSED (LAST 5s)! WAIT FOR NEXT ROUND', 'text-red-300');
         return;

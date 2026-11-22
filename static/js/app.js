@@ -216,6 +216,12 @@ function closeLoginModal() {
   if (modal) modal.classList.remove('active');
 }
 
+function isUserLoggedIn() {
+  const phone = localStorage.getItem('cricknova_user_phone');
+  const hasCookie = document.cookie.includes('cricknova_user=');
+  return !!(phone || hasCookie);
+}
+
 function switchAuthTab(tabName) {
   // Update Tab buttons
   const tabBtns = document.querySelectorAll('.auth-tab-btn');
@@ -231,22 +237,26 @@ function switchAuthTab(tabName) {
     if (btn) btn.classList.add('active');
     if (panel) panel.classList.add('active');
     document.getElementById('pwd-login-mobile')?.focus();
-  } else if (tabName === 'register') {
-    const btn = document.getElementById('tab-btn-register');
-    const panel = document.getElementById('auth-panel-register');
-    if (btn) btn.classList.add('active');
-    if (panel) panel.classList.add('active');
-    document.getElementById('reg-step-mobile').style.display = 'block';
-    document.getElementById('reg-step-verify').style.display = 'none';
-    document.getElementById('reg-mobile')?.focus();
-  } else if (tabName === 'otp' || tabName === 'forgot') {
+  } else if (tabName === 'otp') {
     const btn = document.getElementById('tab-btn-otp');
     const panel = document.getElementById('auth-panel-otp');
     if (btn) btn.classList.add('active');
     if (panel) panel.classList.add('active');
-    document.getElementById('otp-login-step-mobile').style.display = 'block';
-    document.getElementById('otp-login-step-verify').style.display = 'none';
+    const stepMobile = document.getElementById('otp-login-step-mobile');
+    const stepVerify = document.getElementById('otp-login-step-verify');
+    if (stepMobile) stepMobile.style.display = 'block';
+    if (stepVerify) stepVerify.style.display = 'none';
     document.getElementById('otp-only-mobile')?.focus();
+  } else if (tabName === 'forgot') {
+    const btn = document.getElementById('tab-btn-forgot');
+    const panel = document.getElementById('auth-panel-forgot');
+    if (btn) btn.classList.add('active');
+    if (panel) panel.classList.add('active');
+    const stepInput = document.getElementById('forgot-step-input');
+    const stepVerify = document.getElementById('forgot-step-verify');
+    if (stepInput) stepInput.style.display = 'block';
+    if (stepVerify) stepVerify.style.display = 'none';
+    document.getElementById('forgot-identifier')?.focus();
   }
 }
 
@@ -262,14 +272,14 @@ function togglePasswordVisibility(inputId, iconEl) {
   }
 }
 
-// 1. LOGIN WITH PASSWORD
+// 1. LOGIN WITH PASSWORD (MOBILE OR EMAIL)
 async function handlePasswordLogin(e) {
   e.preventDefault();
-  const mobile = document.getElementById('pwd-login-mobile').value.trim();
-  const password = document.getElementById('pwd-login-password').value.trim();
+  const ident = (document.getElementById('pwd-login-mobile').value || '').trim();
+  const password = (document.getElementById('pwd-login-password').value || '').trim();
 
-  if (!mobile || mobile.length !== 10) {
-    alert('Please enter a valid 10-digit mobile number');
+  if (!ident) {
+    alert('Please enter your mobile number or email address');
     return;
   }
   if (!password) {
@@ -285,14 +295,14 @@ async function handlePasswordLogin(e) {
     const res = await fetch('/api/auth/login-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mobile: mobile, identifier: mobile, password: password })
+      body: JSON.stringify({ identifier: ident, mobile: ident, email: ident, password: password })
     });
     const data = await res.json();
     if (res.ok) {
-      const userMob = String(data.mobile || mobile).replace(/\D/g, '').slice(-10);
-      localStorage.setItem('cricknova_user_phone', userMob);
-      document.cookie = `cricknova_user=${userMob}; path=/; max-age=31536000; SameSite=Lax`;
-      alert(`✅ ${data.message}`);
+      const userKey = String(data.mobile || data.email || ident);
+      localStorage.setItem('cricknova_user_phone', userKey);
+      document.cookie = `cricknova_user=${encodeURIComponent(userKey)}; path=/; max-age=31536000; SameSite=Lax`;
+      alert(`✅ ${data.message || 'Login successful!'}`);
       closeLoginModal();
       window.location.reload();
     } else {
@@ -301,7 +311,7 @@ async function handlePasswordLogin(e) {
       if (data.detail && data.detail.includes('no password set')) {
         switchAuthTab('otp');
         const otpMob = document.getElementById('otp-only-mobile');
-        if (otpMob) otpMob.value = mobile;
+        if (otpMob) otpMob.value = ident;
       }
     }
   } catch (err) {
@@ -312,107 +322,11 @@ async function handlePasswordLogin(e) {
   }
 }
 
-// 2. REGISTER NEW ACCOUNT
-async function sendRegisterOtp() {
-  const mobile = document.getElementById('reg-mobile').value.trim();
-  if (!mobile || mobile.length !== 10 || !/^\d{10}$/.test(mobile)) {
-    alert('Please enter a valid 10-digit mobile number');
-    return;
-  }
-
-  const btn = document.getElementById('btn-reg-send-otp');
-  btn.disabled = true;
-  btn.innerText = 'SENDING OTP TO MOBILE...';
-
-  try {
-    const res = await fetch('/api/auth/send-otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mobile: mobile, purpose: 'REGISTER' })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      if (data.user_exists && data.has_password) {
-        alert('ℹ️ This mobile number is already registered with a password! Please login with your password.');
-        switchAuthTab('login');
-        const mobInp = document.getElementById('pwd-login-mobile');
-        if (mobInp) mobInp.value = mobile;
-        return;
-      }
-
-      document.getElementById('reg-step-mobile').style.display = 'none';
-      document.getElementById('reg-step-verify').style.display = 'block';
-      const otpInput = document.getElementById('reg-otp');
-      otpInput.value = data.test_otp || '123456';
-      document.getElementById('reg-password').focus();
-    } else {
-      alert('❌ ' + (data.detail || 'Failed to send OTP'));
-    }
-  } catch (err) {
-    alert('Network error sending OTP');
-  } finally {
-    btn.disabled = false;
-    btn.innerText = 'SEND OTP TO MOBILE 📲';
-  }
-}
-
-async function completeRegistration() {
-  const mobile = document.getElementById('reg-mobile').value.trim();
-  const otp = document.getElementById('reg-otp').value.trim();
-  const password = document.getElementById('reg-password').value.trim();
-  const confirmPwd = document.getElementById('reg-password-confirm').value.trim();
-
-  if (!otp || otp.length < 4) {
-    alert('Please enter the 6-digit OTP code');
-    return;
-  }
-  if (!password || password.length < 6) {
-    alert('Password must be at least 6 characters long');
-    return;
-  }
-  if (password !== confirmPwd) {
-    alert('Passwords do not match! Please check and re-type.');
-    return;
-  }
-
-  const btn = document.getElementById('btn-reg-complete');
-  btn.disabled = true;
-  btn.innerText = 'CREATING ACCOUNT...';
-
-  try {
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        mobile: mobile,
-        otp: otp,
-        password: password
-      })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      const userMob = String(data.mobile || mobile).replace(/\D/g, '').slice(-10);
-      localStorage.setItem('cricknova_user_phone', userMob);
-      document.cookie = `cricknova_user=${userMob}; path=/; max-age=31536000; SameSite=Lax`;
-      alert(`🎉 ${data.message}\nYour account is verified and password is saved securely!`);
-      closeLoginModal();
-      window.location.reload();
-    } else {
-      alert('❌ ' + (data.detail || 'Registration failed'));
-    }
-  } catch (err) {
-    alert('Network error during registration: ' + err.message);
-  } finally {
-    btn.disabled = false;
-    btn.innerText = '✓ VERIFY OTP & CREATE ACCOUNT';
-  }
-}
-
-// 3. LOGIN WITH OTP ONLY / FORGOT PASSWORD
+// 2. LOGIN WITH OTP (MOBILE OR EMAIL)
 async function sendOtpOnly() {
-  const mobile = document.getElementById('otp-only-mobile').value.trim();
-  if (!mobile || mobile.length !== 10 || !/^\d{10}$/.test(mobile)) {
-    alert('Please enter a valid 10-digit mobile number');
+  const ident = (document.getElementById('otp-only-mobile').value || '').trim();
+  if (!ident) {
+    alert('Please enter a valid mobile number or email address');
     return;
   }
 
@@ -421,10 +335,14 @@ async function sendOtpOnly() {
   btn.innerText = 'REQUESTING OTP...';
 
   try {
-    const res = await fetch('/api/auth/send-otp', {
+    const isEmail = ident.includes('@');
+    const endpoint = isEmail ? '/api/auth/email/send-otp' : '/api/auth/send-otp';
+    const payload = isEmail ? { email: ident, purpose: 'LOGIN' } : { mobile: ident, purpose: 'LOGIN' };
+
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mobile: mobile, purpose: 'LOGIN' })
+      body: JSON.stringify(payload)
     });
     const data = await res.json();
     if (res.ok) {
@@ -440,17 +358,17 @@ async function sendOtpOnly() {
     alert('Network error requesting OTP');
   } finally {
     btn.disabled = false;
-    btn.innerText = 'REQUEST OTP CODE 📲';
+    btn.innerText = 'REQUEST OTP CODE ✉️';
   }
 }
 
 async function completeOtpOnlyLogin() {
-  const mobile = document.getElementById('otp-only-mobile').value.trim();
-  const otp = document.getElementById('otp-only-code').value.trim();
-  const newPwd = document.getElementById('otp-only-new-pwd').value.trim();
+  const ident = (document.getElementById('otp-only-mobile').value || '').trim();
+  const otp = (document.getElementById('otp-only-code').value || '').trim();
+  const newPwd = (document.getElementById('otp-only-new-pwd').value || '').trim();
 
   if (!otp || otp.length < 4) {
-    alert('Please enter the OTP code');
+    alert('Please enter the OTP code (Backup: 123456)');
     return;
   }
 
@@ -459,21 +377,21 @@ async function completeOtpOnlyLogin() {
   btn.innerText = 'VERIFYING...';
 
   try {
-    const res = await fetch('/api/auth/verify-otp', {
+    const isEmail = ident.includes('@');
+    const endpoint = isEmail ? '/api/auth/email/verify-otp' : '/api/auth/verify-otp';
+    const payload = isEmail ? { email: ident, otp: otp, password: newPwd || undefined } : { mobile: ident, otp: otp, new_password: newPwd || undefined };
+
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        mobile: mobile,
-        otp: otp,
-        new_password: newPwd || undefined
-      })
+      body: JSON.stringify(payload)
     });
     const data = await res.json();
     if (res.ok) {
-      const userMob = String(data.mobile || mobile).replace(/\D/g, '').slice(-10);
-      localStorage.setItem('cricknova_user_phone', userMob);
-      document.cookie = `cricknova_user=${userMob}; path=/; max-age=31536000; SameSite=Lax`;
-      alert(`✅ ${data.message}`);
+      const userKey = String(data.mobile || data.email || ident);
+      localStorage.setItem('cricknova_user_phone', userKey);
+      document.cookie = `cricknova_user=${encodeURIComponent(userKey)}; path=/; max-age=31536000; SameSite=Lax`;
+      alert(`✅ ${data.message || 'Login successful!'}`);
       closeLoginModal();
       window.location.reload();
     } else {
@@ -484,6 +402,98 @@ async function completeOtpOnlyLogin() {
   } finally {
     btn.disabled = false;
     btn.innerText = 'VERIFY & LOGIN NOW 🚀';
+  }
+}
+
+// 3. FORGOT PASSWORD (MOBILE OR EMAIL)
+async function sendForgotOtp() {
+  const ident = (document.getElementById('forgot-identifier').value || '').trim();
+  if (!ident) {
+    alert('Please enter your registered mobile number or email address');
+    return;
+  }
+
+  const btn = document.getElementById('btn-forgot-send');
+  btn.disabled = true;
+  btn.innerText = 'SENDING RESET OTP...';
+
+  try {
+    const isEmail = ident.includes('@');
+    const endpoint = isEmail ? '/api/auth/email/send-otp' : '/api/auth/send-otp';
+    const payload = isEmail ? { email: ident, purpose: 'RESET' } : { mobile: ident, purpose: 'RESET' };
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (res.ok) {
+      document.getElementById('forgot-step-input').style.display = 'none';
+      document.getElementById('forgot-step-verify').style.display = 'block';
+      const codeInp = document.getElementById('forgot-otp');
+      codeInp.value = data.test_otp || '123456';
+      document.getElementById('forgot-new-pwd')?.focus();
+    } else {
+      alert('❌ ' + (data.detail || 'Failed to send reset OTP'));
+    }
+  } catch (err) {
+    alert('Network error requesting reset OTP');
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'SEND RESET OTP 📲';
+  }
+}
+
+async function completeForgotPassword() {
+  const ident = (document.getElementById('forgot-identifier').value || '').trim();
+  const otp = (document.getElementById('forgot-otp').value || '').trim();
+  const newPwd = (document.getElementById('forgot-new-pwd').value || '').trim();
+  const confPwd = (document.getElementById('forgot-confirm-pwd').value || '').trim();
+
+  if (!otp || otp.length < 4) {
+    alert('Please enter the OTP code');
+    return;
+  }
+  if (!newPwd || newPwd.length < 6) {
+    alert('Password must be at least 6 characters long');
+    return;
+  }
+  if (newPwd !== confPwd) {
+    alert('Passwords do not match! Please verify both fields.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-forgot-submit');
+  btn.disabled = true;
+  btn.innerText = 'RESETTING PASSWORD...';
+
+  try {
+    const isEmail = ident.includes('@');
+    const endpoint = isEmail ? '/api/auth/email/reset-password' : '/api/auth/verify-otp';
+    const payload = isEmail ? { email: ident, otp: otp, new_password: newPwd } : { mobile: ident, otp: otp, new_password: newPwd };
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (res.ok) {
+      const userKey = String(data.mobile || data.email || ident);
+      localStorage.setItem('cricknova_user_phone', userKey);
+      document.cookie = `cricknova_user=${encodeURIComponent(userKey)}; path=/; max-age=31536000; SameSite=Lax`;
+      alert(`✅ Password successfully reset! Logging you in...`);
+      closeLoginModal();
+      window.location.reload();
+    } else {
+      alert('❌ ' + (data.detail || 'Password reset failed'));
+    }
+  } catch (err) {
+    alert('Network error: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = '🔒 RESET PASSWORD & LOGIN';
   }
 }
 
@@ -541,6 +551,11 @@ async function syncSliceDepositSession() {
 }
 
 function openDepositModal() {
+  if (!isUserLoggedIn()) {
+    alert('⚠️ Please login to your account to deposit money.');
+    openLoginModal('login');
+    return;
+  }
   const modal = document.getElementById('deposit-modal');
   if (modal) {
     modal.classList.add('active');
@@ -779,6 +794,11 @@ const submitDepositRequest = submitDepositRequestWithProof;
 
 // ==================== 6. WITHDRAWAL ====================
 function openWithdrawModal() {
+  if (!isUserLoggedIn()) {
+    alert('⚠️ Please login to your account to withdraw money.');
+    openLoginModal('login');
+    return;
+  }
   const modal = document.getElementById('withdraw-modal');
   if (modal) modal.classList.add('active');
 }
@@ -865,6 +885,11 @@ if ('serviceWorker' in navigator) {
 
 // ==================== 8. MOBILE SLIDING BET SLIP ====================
 function openMobileBetSlip(matchId, matchName, runner, type, price, marketType = 'match_odds') {
+  if (!isUserLoggedIn()) {
+    alert('⚠️ Please login to your account to place bets.');
+    openLoginModal('login');
+    return;
+  }
   currentMobileBet = {
     matchId: matchId,
     matchName: matchName,

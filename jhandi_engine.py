@@ -1,10 +1,10 @@
-import time, hashlib, threading
+import os, time, hashlib, threading
 from typing import List, Dict, Any, Optional
 
 SYMBOLS = ['club', 'crown', 'spade', 'diamond', 'flag', 'heart']
 ROUND_SECONDS = 30
 BETTING_CLOSE_SECONDS = 5 # Last 5 seconds are locked
-SERVER_SECRET = "cricknova_jhandi_royal_secret_salt_2026"
+SERVER_SECRET = os.environ.get("JHANDI_SERVER_SECRET", "cricknova_jhandi_royal_secret_salt_2026_super_secure_8877_auth")
 
 _lock = threading.Lock()
 # round_id -> { mobile -> { bets: {sym: paise}, settled: bool, payout_paise: int } }
